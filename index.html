@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的网站</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            line-height: 1.6;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        header {
+            text-align: center;
+            padding: 40px 0;
+        }
+        h1 {
+            font-size: 3rem;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            font-size: 1.2rem;
+            color: #7f8c8d;
+        }
+        main {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            padding: 20px;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            transition: transform 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-10px);
+        }
+        .card h2 {
+            color: #3498db;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+        footer {
+            text-align: center;
+            padding: 30px;
+            color: #7f8c8d;
+            margin-top: 40px;
+        }
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.2rem;
+            }
+            main {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>欢迎来到我的网站</h1>
+            <p class="subtitle">响应式现代网页设计 | 2025年最新版本</p>
+        </header>
+        
+        <main>
+            <section class="card">
+                <h2>关于我们</h2>
+                <p>我们是一家专注于创新网页设计的团队，致力于打造用户友好的网络体验。从概念到实现，我们提供全方位的数字解决方案。</p>
+            </section>
+            
+            <section class="card">
+                <h2>核心服务</h2>
+                <ul>
+                    <li>响应式网站开发</li>
+                    <li>UI/UX设计</li>
+                    <li>移动应用开发</li>
+                    <li>性能优化</li>
+                </ul>
+            </section>
+            
+            <section class="card">
+                <h2>技术优势</h2>
+                <p>采用最新前端技术栈：HTML5, CSS3, JavaScript ES6+，支持所有现代浏览器，确保最佳用户体验和性能表现。</p>
+            </section>
+        </main>
+        
+        <footer>
+            <p>&copy; 2025 我的网站 | 设计：DeepSeek-R1</p>
+        </footer>
+    </div>
+</body>
+</html>
