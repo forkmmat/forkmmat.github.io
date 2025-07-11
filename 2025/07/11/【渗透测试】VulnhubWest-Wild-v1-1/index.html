@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <meta name="author" content="John Doe">
+
+
+
+
+
+<title>【渗透测试】VulnhubWest-Wild-v1.1 | Hexo</title>
+
+
+
+    <link rel="icon" href="/drink.ico">
+
+
+
+
+    <!-- stylesheets list from _config.yml -->
+    
+    <link rel="stylesheet" href="/css/style.css">
+    
+
+
+
+    <!-- scripts list from _config.yml -->
+    
+    <script src="/js/script.js"></script>
+    
+    <script src="/js/tocbot.min.js"></script>
+    
+
+
+
+    
+    
+        
+    
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+    <script>
+        // this function is used to check current theme before page loaded.
+        (() => {
+            const currentTheme = window.localStorage && window.localStorage.getItem('theme') || '';
+            const isDark = currentTheme === 'dark';
+            const pagebody = document.getElementsByTagName('body')[0]
+            if (isDark) {
+                pagebody.classList.add('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Dark"
+            } else {
+                pagebody.classList.remove('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Light"
+            }
+        })();
+    </script>
+
+    <div class="wrapper">
+        <header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-header header-logo"><a href="/">bobo&#39;s Blog</a></div>
+            <div class="menu navbar-right">
+                
+                    <a class="menu-item" href="/archives">Posts</a>
+                
+                    <a class="menu-item" href="/category">Categories</a>
+                
+                    <a class="menu-item" href="/tag">Tags</a>
+                
+                    <a class="menu-item" href="/about">About</a>
+                
+                <input id="switch_default" type="checkbox" class="switch_default">
+                <label for="switch_default" class="toggleBtn"></label>
+            </div>
+        </div>
+    </nav>
+
+    
+    <nav class="navbar-mobile" id="nav-mobile">
+        <div class="container">
+            <div class="navbar-header">
+                <div>
+                    <a href="/">bobo&#39;s Blog</a><a id="mobile-toggle-theme">·&nbsp;Light</a>
+                </div>
+                <div class="menu-toggle" onclick="mobileBtn()">&#9776; Menu</div>
+            </div>
+            <div class="menu" id="mobile-menu">
+                
+                    <a class="menu-item" href="/archives">Posts</a>
+                
+                    <a class="menu-item" href="/category">Categories</a>
+                
+                    <a class="menu-item" href="/tag">Tags</a>
+                
+                    <a class="menu-item" href="/about">About</a>
+                
+            </div>
+        </div>
+    </nav>
+
+</header>
+<script>
+    var mobileBtn = function f() {
+        var toggleMenu = document.getElementsByClassName("menu-toggle")[0];
+        var mobileMenu = document.getElementById("mobile-menu");
+        if(toggleMenu.classList.contains("active")){
+           toggleMenu.classList.remove("active")
+            mobileMenu.classList.remove("active")
+        }else{
+            toggleMenu.classList.add("active")
+            mobileMenu.classList.add("active")
+        }
+    }
+</script>
+            <div class="main">
+                <div class="container">
+    
+    
+        <div class="post-toc">
+    <div class="tocbot-list">
+    </div>
+    <div class="tocbot-list-menu">
+        <a class="tocbot-toc-expand" onclick="expand_toc()">Expand all</a>
+        <a onclick="go_top()">Back to top</a>
+        <a onclick="go_bottom()">Go to bottom</a>
+    </div>
+</div>
+
+<script>
+    document.ready(
+        function () {
+            tocbot.init({
+                tocSelector: '.tocbot-list',
+                contentSelector: '.post-content',
+                headingSelector: 'h1, h2, h3, h4, h5',
+                collapseDepth: 1,
+                orderedList: false,
+                scrollSmooth: true,
+            })
+        }
+    )
+
+    function expand_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 6,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "collapse_toc()");
+        b.innerHTML = "Collapse all"
+    }
+
+    function collapse_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 1,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "expand_toc()");
+        b.innerHTML = "Expand all"
+    }
+
+    function go_top() {
+        window.scrollTo(0, 0);
+    }
+
+    function go_bottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+</script>
+    
+
+    
+    <article class="post-wrap">
+        <header class="post-header">
+            <h1 class="post-title">【渗透测试】VulnhubWest-Wild-v1.1</h1>
+            
+                <div class="post-meta">
+                    
+                        Author: <a itemprop="author" rel="author" href="/">John Doe</a>
+                    
+
+                    
+                        <span class="post-time">
+                        Date: <a href="#">July 11, 2025&nbsp;&nbsp;10:30:57</a>
+                        </span>
+                    
+                    
+                </div>
+            
+        </header>
+
+        <div class="post-content">
+            <h1 id="【渗透测试】VulnhubWest-Wild-v1-1"><a href="#【渗透测试】VulnhubWest-Wild-v1-1" class="headerlink" title="【渗透测试】VulnhubWest-Wild-v1.1"></a>【渗透测试】VulnhubWest-Wild-v1.1</h1><h2 id="一-渗透环境环境准备"><a href="#一-渗透环境环境准备" class="headerlink" title="一.渗透环境环境准备"></a>一.渗透环境环境准备</h2><h3 id="Vulnhub靶机下载："><a href="#Vulnhub靶机下载：" class="headerlink" title="Vulnhub靶机下载："></a>Vulnhub靶机下载：</h3><p>官网地址 :  <a target="_blank" rel="noopener" href="https://www.vulnhub.com/entry/westwild-11,338/">WestWild: 1.1 ~ VulnHub</a></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">攻击机:192.168.207.130 本机</span><br><span class="line">靶机：192.168.207.131</span><br></pre></td></tr></table></figure>
+
+<p>安装靶机请看文章:<a target="_blank" rel="noopener" href="https://blog.mikuuu.icu/2024/08/04/%E5%AE%89%E8%A3%85%E9%9D%B6%E6%9C%BA%E5%AF%BC%E5%85%A5%E5%88%B0%E8%99%9A%E6%8B%9F%E6%9C%BA%E6%95%99%E7%A8%8B/">靶机导入到虚拟机教程 | Luo 666 (mikuuu.icu)</a></p>
+<p>下载好靶机之后直接使用VMware Workstation Pro虚拟机导入环境，启动即可，将网段设置为NAT模式 目标：获取目标靶机root目录下的flag</p>
+<p><strong>开始渗透</strong></p>
+<h2 id="二-信息收集"><a href="#二-信息收集" class="headerlink" title="二. 信息收集"></a>二. 信息收集</h2><h4 id="1-主机扫描"><a href="#1-主机扫描" class="headerlink" title="1. 主机扫描"></a>1. 主机扫描</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">arp-scan -l</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://c.img.dasctf.com/LightPicture/2024/08/35084c2a422be512.png" alt="35084c2a422be512.png"></p>
+<h3 id="2-端口扫描"><a href="#2-端口扫描" class="headerlink" title="2.端口扫描"></a>2.端口扫描</h3><p>使用<strong>nmap</strong>获取目标靶机开放的端口</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nmap -sS -sV -sC -p- 192.168.207.128 -oN nmap_full_scan</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://c.img.dasctf.com/LightPicture/2024/08/f4e050a05959e728.png" alt="f4e050a05959e728.png"></p>
+<p>发现<code>22 80 139 445 </code>四个端口开放 </p>
+<h3 id="3-漏洞扫描和目录扫描"><a href="#3-漏洞扫描和目录扫描" class="headerlink" title="3.漏洞扫描和目录扫描"></a>3.漏洞扫描和目录扫描</h3><p>这里我们扫描漏洞，发现80端口有一个**<code>CVE:CVE-2007-6750</code>**，上网查找资料，发现是一个让对方网站上不了网的一个漏洞，这里对我们渗透靶机没有帮助</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">nmap --script=vuln -p22,80,139,445 192.168.207.133</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dirsearch -u 192.168.207.133</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://c.img.dasctf.com/LightPicture/2024/08/51d0e9bdf81c86ad.png" alt="51d0e9bdf81c86ad.png"></p>
+<p>并没有扫描出什么有用文件</p>
+<h2 id="三-渗透测试"><a href="#三-渗透测试" class="headerlink" title="三.渗透测试"></a>三.渗透测试</h2><h4 id="1-先访问web-页面"><a href="#1-先访问web-页面" class="headerlink" title="1.先访问web 页面"></a>1.先访问web 页面</h4><p><img src="https://c.img.dasctf.com/LightPicture/2024/08/8236667f09ca2774.png" alt="8236667f09ca2774.png"></p>
+<p>看了看源码也没发现什么。</p>
+<p>提示翻译hint：</p>
+<p><code>这太简单了，你只要跟着到wave 就行了 </code></p>
+<h3 id="2-使用smb服务"><a href="#2-使用smb服务" class="headerlink" title="2.使用smb服务"></a>2.使用smb服务</h3><p>简单来说就是内网里面文件共享功能  </p>
+<p>具体请看文章：  <a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_44159028/article/details/104022577">windows中的文件共享（SMB服务）_smb共享名称-CSDN博客</a></p>
+<p>我们前面通过端口扫描，发现139和445端口，都是smb服务</p>
+<p><img src="https://c.img.dasctf.com/LightPicture/2024/08/f7ffa6a1d422aba1.png" alt="f7ffa6a1d422aba1.png"></p>
+<p>这里利用**<code>smbmap</code>**扫描查看有哪些共享文件夹可以查看</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">smbmap -H 192.168.207.133</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://c.img.dasctf.com/LightPicture/2024/08/3c67621b166aa523.png" alt="3c67621b166aa523.png"></p>
+<p><code>&quot;print$&quot;是打印驱动程序共享，没有访问权限。</code></p>
+<p><code>&quot;wave&quot;是只读共享(WaveDoor)，有读取权限。</code></p>
+<p><code>&quot;IPC$&quot;是IPC服务共享，没有访问权限。</code></p>
+<p>使用**<code>smbclient</code>**工具连接到192.168.207.133上的”wave”共享，利用匿名登录</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">smbclient //192.168.207.133/wave</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://c.img.dasctf.com/LightPicture/2024/08/2eb17a8b3b728571.png" alt="2eb17a8b3b728571.png"></p>
+<p>发现 文件 FLAG1.txt  ，message_from_aveng.txt</p>
+<p>然后利用**<code>get</code>**命令，把两个文件进行下载</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">get FLAG1.txt</span><br><span class="line">get message_from_aveng.txt</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://c.img.dasctf.com/LightPicture/2024/08/00db25da0661f657.png" alt="00db25da0661f657.png"></p>
+<p><img src="https://c.img.dasctf.com/LightPicture/2024/08/c02a0bd68b50c17d.png" alt="c02a0bd68b50c17d.png"></p>
+<p>下载完成后可以查看内容看看</p>
+<p><img src="https://c.img.dasctf.com/LightPicture/2024/08/d631432aff24abdb.png" alt="d631432aff24abdb.png"></p>
+<p>我们解码FLAG1.txt里面的文件看起来像base64，我们解码看看</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">echo</span> <span class="string">&quot;RmxhZzF7V2VsY29tZV9UMF9USEUtVzNTVC1XMUxELUIwcmRlcn0KdXNlcjp3YXZleApwYXNzd29yZDpkb29yK29wZW4K&quot;</span> | <span class="built_in">base64</span> --decode</span><br></pre></td></tr></table></figure>
+
+<p>这里我们是使用的命令，也可以其他方法</p>
+<h5 id="第一个flag"><a href="#第一个flag" class="headerlink" title="第一个flag"></a>第一个flag</h5><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">┌──(root㉿kali)-[/home/kali]</span><br><span class="line">└─# <span class="built_in">echo</span> <span class="string">&quot;RmxhZzF7V2VsY29tZV9UMF9USEUtVzNTVC1XMUxELUIwcmRlcn0KdXNlcjp3YXZleApwYXNzd29yZDpkb29yK29wZW4K&quot;</span> | <span class="built_in">base64</span> --decode</span><br><span class="line">Flag1&#123;Welcome_T0_THE-W3ST-W1LD-B0rder&#125;</span><br><span class="line">user:wavex</span><br><span class="line">password:door+open</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>这里我们发现了第一个flag ，也知道了用户名和密码</p>
+<p>既然知道了用户名和密码了，接下来我们就要ssh连接了。</p>
+<h3 id="3-ssh连接"><a href="#3-ssh连接" class="headerlink" title="3.ssh连接"></a>3.ssh连接</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ssh wavex@192.168.207.133</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://c.img.dasctf.com/LightPicture/2024/08/60150028e1b3c999.png" alt="60150028e1b3c999.png"></p>
+<p>连接成功</p>
+<h2 id="四-提权过程"><a href="#四-提权过程" class="headerlink" title="四.提权过程"></a>四.提权过程</h2><h3 id="1-SUID、sudo提权"><a href="#1-SUID、sudo提权" class="headerlink" title="1.SUID、sudo提权"></a>1.SUID、sudo提权</h3><p>这里我们试试看</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> -l</span><br><span class="line">find / -perm -u=s -<span class="built_in">type</span> f 2&gt;/dev/null</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://c.img.dasctf.com/LightPicture/2024/08/8f82419c3147db6e.png" alt="8f82419c3147db6e.png"></p>
+<h3 id="2-内网信息收集"><a href="#2-内网信息收集" class="headerlink" title="2.内网信息收集"></a>2.内网信息收集</h3><p>查看是否有定时任务，查看&#x2F;home目录下的 账户文件是否有提示，</p>
+<figure class="highlight txt"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">`crontab -l` 是一个用来查看当前用户设定的定时任务（cron jobs）列表的命令。在Linux和类Unix系统中，cron 是一个用来定期执行指定任务的工具，通过 cron 可以实现很多自动化的任务调度工作。</span><br><span class="line"></span><br><span class="line">具体来说，`crontab -l` 的作用是列出当前用户设置的所有 cron 任务的详细信息，包括它们的执行时间、执行命令等。这个命令通常用于查看当前系统中哪些定时任务已经设置，以及它们的调度情况。</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://c.img.dasctf.com/LightPicture/2024/08/6702bcb3ab17ec86.png" alt="6702bcb3ab17ec86.png"></p>
+<p>接着我们去看看wavex目录下的文件，再去查看&#x2F;etc&#x2F;passwd文件的权限，发现都是没有写入的权限，</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cat</span> .viminfo</span><br><span class="line"><span class="built_in">ls</span> -l /etc/passwd</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://c.img.dasctf.com/LightPicture/2024/08/25569fac11391c8f.png" alt="25569fac11391c8f.png"></p>
+<p><strong>解释一下</strong>:</p>
+<figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">-rw-r--r-- 1 root root 1261 Jul 30  2019 /etc/passwd: 这是 ls -l 命令的输出结果，具体解释如下：</span><br><span class="line">-rw-r--r--: 这部分显示了文件的权限。具体解释是：</span><br><span class="line">rw-: 所有者（root）有读（r）和写（w）的权限。</span><br><span class="line">r--: 所属组（也是root）有只读（r）的权限。</span><br><span class="line">r--: 其他用户（非root用户和非root所属组的用户）也有只读（r）的权限。</span><br><span class="line">1: 表示与此文件或目录相关联的硬链接数目。</span><br><span class="line">root: 表示所有者（owner）的用户名。</span><br><span class="line">root: 表示所属组（group）的组名。</span><br><span class="line">1261: 表示文件的大小（字节数）。</span><br><span class="line">Jul 30  2019: 表示文件的最后修改时间。</span><br><span class="line">/etc/passwd: 是文件的路径和名称。</span><br></pre></td></tr></table></figure>
+
+<p>查一下有没有这个账户可写的文件</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">find  / -perm 0777 -<span class="built_in">type</span> f 2&gt;/dev/null</span><br><span class="line">这条命令 find / -perm 0777 -<span class="built_in">type</span> f 2&gt;/dev/null 的含义是：</span><br><span class="line"></span><br><span class="line">find: 是一个在文件系统中查找文件的命令。</span><br><span class="line">/: 是查找的起始路径，这里表示从根目录开始查找。</span><br><span class="line">-perm 0777: 是 find 命令的选项之一，用于指定文件的权限。0777 表示找出权限为 777 的文件。权限数字中的每一位分别表示用户、组和其他用户的权限，其中：</span><br><span class="line">7 表示读（4）+写（2）+执行（1）权限。</span><br><span class="line">因此 0777 表示所有用户（用户、组、其他用户）都具有读、写、执行权限。</span><br><span class="line">-<span class="built_in">type</span> f: 是另一个 find 命令的选项，表示查找普通文件（regular files），排除目录和其他类型的文件。</span><br><span class="line">2&gt;/dev/null: 是将标准错误输出重定向到 /dev/null，这样可以忽略权限不足的错误信息，只输出符合条件的文件路径。</span><br><span class="line">综合起来，这条命令的作用是在整个文件系统中查找并列出所有权限为 777 的普通文件，并忽略掉权限不足的错误信息。</span><br><span class="line"><span class="built_in">cat</span> /usr/share/av/westsidesecret/ififoregt.sh</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://c.img.dasctf.com/LightPicture/2024/08/c410eacd8288144e.png" alt="c410eacd8288144e.png"></p>
+<p>发现账号密码</p>
+<p>登录看看</p>
+<p><img src="https://c.img.dasctf.com/LightPicture/2024/08/cb9f146ebc71697f.png" alt="cb9f146ebc71697f.png"></p>
+<h3 id="3-提权"><a href="#3-提权" class="headerlink" title="3.提权"></a>3.提权</h3><h5 id="最后一个flag"><a href="#最后一个flag" class="headerlink" title="最后一个flag"></a>最后一个flag</h5><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> -l</span><br><span class="line"><span class="built_in">sudo</span> /bin/bash</span><br><span class="line"><span class="built_in">ls</span></span><br><span class="line"><span class="built_in">cat</span> FLAG2.txt</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://c.img.dasctf.com/LightPicture/2024/08/97b6b232e9740502.png" alt="97b6b232e9740502.png"></p>
+<p>问题解决。</p>
+<p>总结：非常有意义学到了  提权信息查找 学习到了smb服务。</p>
+
+        </div>
+
+        
+            <section class="post-copyright">
+                
+                    <p class="copyright-item">
+                        <span>Author:</span>
+                        <span>John Doe</span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>Permalink:</span>
+                        <span><a href="http://example.com/2025/07/11/%E3%80%90%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95%E3%80%91VulnhubWest-Wild-v1-1/">http://example.com/2025/07/11/%E3%80%90%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95%E3%80%91VulnhubWest-Wild-v1-1/</a></span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>License:</span>
+                        <span>Copyright (c) 2019 <a target="_blank" rel="noopener" href="http://creativecommons.org/licenses/by-nc/4.0/">CC-BY-NC-4.0</a> LICENSE</span>
+                    </p>
+                
+                
+                     <p class="copyright-item">
+                         <span>Slogan:</span>
+                         <span>Do you believe in <strong>DESTINY</strong>?</span>
+                     </p>
+                
+
+            </section>
+        
+        <section class="post-tags">
+            <div>
+                <span>Tag(s):</span>
+                <span class="tag">
+                    
+                </span>
+            </div>
+            <div>
+                <a href="javascript:window.history.back();">back</a>
+                <span>· </span>
+                <a href="/">home</a>
+            </div>
+        </section>
+        <section class="post-nav">
+            
+            
+            <a class="next" rel="next" href="/2025/07/07/AndroidLearn/">Android视图基础</a>
+            
+        </section>
+
+
+    </article>
+</div>
+
+            </div>
+            <footer id="footer" class="footer">
+    <div class="copyright">
+        <span>© John Doe | Powered by <a href="https://hexo.io" target="_blank">Hexo</a> & <a href="https://github.com/Siricee/hexo-theme-Chic" target="_blank">Chic</a></span>
+    </div>
+</footer>
+
+    </div>
+</body>
+
+</html>
