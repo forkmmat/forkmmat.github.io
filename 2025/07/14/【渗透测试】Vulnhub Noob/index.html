@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <meta name="author" content="John Doe">
+
+
+
+
+
+<title>【渗透测试】vulnhub Noob | Hexo</title>
+
+
+
+    <link rel="icon" href="/drink.ico">
+
+
+
+
+    <!-- stylesheets list from _config.yml -->
+    
+    <link rel="stylesheet" href="/css/style.css">
+    
+
+
+
+    <!-- scripts list from _config.yml -->
+    
+    <script src="/js/script.js"></script>
+    
+    <script src="/js/tocbot.min.js"></script>
+    
+
+
+
+    
+    
+        
+    
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+    <script>
+        // this function is used to check current theme before page loaded.
+        (() => {
+            const currentTheme = window.localStorage && window.localStorage.getItem('theme') || '';
+            const isDark = currentTheme === 'dark';
+            const pagebody = document.getElementsByTagName('body')[0]
+            if (isDark) {
+                pagebody.classList.add('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Dark"
+            } else {
+                pagebody.classList.remove('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Light"
+            }
+        })();
+    </script>
+
+    <div class="wrapper">
+        <header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-header header-logo"><a href="/">bobo&#39;s Blog</a></div>
+            <div class="menu navbar-right">
+                
+                    <a class="menu-item" href="/archives">Posts</a>
+                
+                    <a class="menu-item" href="/category">Categories</a>
+                
+                    <a class="menu-item" href="/tag">Tags</a>
+                
+                    <a class="menu-item" href="/about">About</a>
+                
+                <input id="switch_default" type="checkbox" class="switch_default">
+                <label for="switch_default" class="toggleBtn"></label>
+            </div>
+        </div>
+    </nav>
+
+    
+    <nav class="navbar-mobile" id="nav-mobile">
+        <div class="container">
+            <div class="navbar-header">
+                <div>
+                    <a href="/">bobo&#39;s Blog</a><a id="mobile-toggle-theme">·&nbsp;Light</a>
+                </div>
+                <div class="menu-toggle" onclick="mobileBtn()">&#9776; Menu</div>
+            </div>
+            <div class="menu" id="mobile-menu">
+                
+                    <a class="menu-item" href="/archives">Posts</a>
+                
+                    <a class="menu-item" href="/category">Categories</a>
+                
+                    <a class="menu-item" href="/tag">Tags</a>
+                
+                    <a class="menu-item" href="/about">About</a>
+                
+            </div>
+        </div>
+    </nav>
+
+</header>
+<script>
+    var mobileBtn = function f() {
+        var toggleMenu = document.getElementsByClassName("menu-toggle")[0];
+        var mobileMenu = document.getElementById("mobile-menu");
+        if(toggleMenu.classList.contains("active")){
+           toggleMenu.classList.remove("active")
+            mobileMenu.classList.remove("active")
+        }else{
+            toggleMenu.classList.add("active")
+            mobileMenu.classList.add("active")
+        }
+    }
+</script>
+            <div class="main">
+                <div class="container">
+    
+    
+        <div class="post-toc">
+    <div class="tocbot-list">
+    </div>
+    <div class="tocbot-list-menu">
+        <a class="tocbot-toc-expand" onclick="expand_toc()">Expand all</a>
+        <a onclick="go_top()">Back to top</a>
+        <a onclick="go_bottom()">Go to bottom</a>
+    </div>
+</div>
+
+<script>
+    document.ready(
+        function () {
+            tocbot.init({
+                tocSelector: '.tocbot-list',
+                contentSelector: '.post-content',
+                headingSelector: 'h1, h2, h3, h4, h5',
+                collapseDepth: 1,
+                orderedList: false,
+                scrollSmooth: true,
+            })
+        }
+    )
+
+    function expand_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 6,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "collapse_toc()");
+        b.innerHTML = "Collapse all"
+    }
+
+    function collapse_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 1,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "expand_toc()");
+        b.innerHTML = "Expand all"
+    }
+
+    function go_top() {
+        window.scrollTo(0, 0);
+    }
+
+    function go_bottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+</script>
+    
+
+    
+    <article class="post-wrap">
+        <header class="post-header">
+            <h1 class="post-title">【渗透测试】vulnhub Noob</h1>
+            
+                <div class="post-meta">
+                    
+                        Author: <a itemprop="author" rel="author" href="/">John Doe</a>
+                    
+
+                    
+                        <span class="post-time">
+                        Date: <a href="#">July 14, 2025&nbsp;&nbsp;18:50:09</a>
+                        </span>
+                    
+                    
+                </div>
+            
+        </header>
+
+        <div class="post-content">
+            <h1 id="【渗透测试】Vulnhub-Noob"><a href="#【渗透测试】Vulnhub-Noob" class="headerlink" title="【渗透测试】Vulnhub Noob"></a>【渗透测试】Vulnhub Noob</h1><h2 id="一-渗透环境环境准备"><a href="#一-渗透环境环境准备" class="headerlink" title="一.渗透环境环境准备"></a>一.渗透环境环境准备</h2><p><strong>靶机描述</strong></p>
+<p><strong>Vulnhub靶机下载：</strong></p>
+<p><a target="_blank" rel="noopener" href="https://www.vulnhub.com/entry/noob-1,746/">https://www.vulnhub.com/entry/noob-1,746/</a></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">攻击机ip：192.168.243.128(kali)</span><br><span class="line">靶机ip：192.168.243.130 （Noob）</span><br></pre></td></tr></table></figure>
+
+<p><strong>注：靶机与Kali的IP地址只需要在同一局域网即可（同一个网段,即两虚拟机处于同一网络模式）</strong></p>
+<p>下载好靶机之后直接使用VMware Workstation Pro虚拟机导入环境，启动即可，将网段设置为NAT模式 目标：获取目标靶机root目录下的flag</p>
+<p><strong>开始渗透</strong></p>
+<h2 id="二-信息收集"><a href="#二-信息收集" class="headerlink" title="二. 信息收集"></a>二. 信息收集</h2><h3 id="主机扫描"><a href="#主机扫描" class="headerlink" title="主机扫描"></a>主机扫描</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">arp-scan -l</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/5e26df059556c331.png" alt="5e26df059556c331.png"></p>
+<h3 id="端口扫描"><a href="#端口扫描" class="headerlink" title="端口扫描"></a>端口扫描</h3><p>使用<strong>nmap</strong>获取目标靶机开放的端口</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nmap -sS -sV -sC -p- 192.168.243.130 -oN nmap_full_scan</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/fe3b8c2e69d12a16.png" alt="fe3b8c2e69d12a16.png"></p>
+<p>发现开放了21、80、和55077的ssh服务端口。</p>
+<p>我们发现21 端口还有<strong>ftp</strong>开放（先收集，后面再解决看看）</p>
+<h3 id="漏洞扫描和目录扫描"><a href="#漏洞扫描和目录扫描" class="headerlink" title="漏洞扫描和目录扫描"></a>漏洞扫描和目录扫描</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nmap --script=vuln -p21,80,55077 192.168.243.130</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/00df50491246c15f.png" alt="00df50491246c15f.png"></p>
+<p>发现存在HTTP 服务存在 CSRF 风险</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dirsearch  -u 192.168.243.130</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/24896edc297564e2.png" alt="24896edc297564e2.png"></p>
+<h2 id="三-渗透测试"><a href="#三-渗透测试" class="headerlink" title="三.渗透测试"></a>三.渗透测试</h2><h3 id="网页测试"><a href="#网页测试" class="headerlink" title="网页测试"></a>网页测试</h3><p>访问</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">192.168.243.130</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/664e9ec305437ed4.png" alt="664e9ec305437ed4.png"></p>
+<p>一个普通的登录界面</p>
+<h3 id="FTP-访问："><a href="#FTP-访问：" class="headerlink" title="FTP 访问："></a>FTP 访问：</h3><p>在kali中</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ftp 192.168.243.130</span><br></pre></td></tr></table></figure>
+
+<p>之后登录使用anonymous登录</p>
+<p>密码随便输</p>
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/16878aa23c890366.png" alt="16878aa23c890366.png"></p>
+<p>在window 中</p>
+<p>文件管理器中输入 </p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ftp://192.168.243.130</span><br></pre></td></tr></table></figure>
+
+<p>即可访问到</p>
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/6d834cf241fde2b1.png" alt="6d834cf241fde2b1.png"></p>
+<p>我们可查看到</p>
+<p><strong>下载文件到 Kali 本地</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">ftp&gt; get cred.txt  <span class="comment"># 下载cred.txt</span></span><br><span class="line">ftp&gt; get welcome   <span class="comment"># 下载welcome</span></span><br><span class="line">ftp&gt; quit          <span class="comment"># 退出FTP</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cat</span> *</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/06f6a1962ec1aa03.png" alt="06f6a1962ec1aa03.png"></p>
+<p>即可看到文件内容</p>
+<p>给cred.txt    base64解码看看</p>
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/0cb42f082265380e.png" alt="0cb42f082265380e.png"></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">champ:password</span><br></pre></td></tr></table></figure>
+
+<p>然后我们用这个用户名和密码登录那个网页</p>
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/d18109b5c52b7987.png" alt="d18109b5c52b7987.png"></p>
+<p>点击 About Us 会下载一个压缩包：</p>
+<p>其内容：</p>
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/c0a03733350a9044.png" alt="c0a03733350a9044.png"></p>
+<p>sudo 文件内容</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Did you notice the file name? Isn&#x27;t is interesting?</span><br><span class="line">(你注意到文件名了吗？它是不是很有趣)</span><br></pre></td></tr></table></figure>
+
+<p>着重研究图片</p>
+<h3 id="steghide"><a href="#steghide" class="headerlink" title="steghide"></a>steghide</h3><p>使用steghide工具分析图片看看</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">steghide info funny.bmp</span><br></pre></td></tr></table></figure>
+
+<p>之后我们猜测密码为sudo</p>
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/bce9630e891f630d.png" alt="bce9630e891f630d.png"></p>
+<p>出现提示</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">steghide info funny.jpg</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/cbb8a9f1f72c35a4.png" alt="cbb8a9f1f72c35a4.png"></p>
+<p>分别提取一下文件</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">steghide extract -sf funny.bmp</span><br><span class="line">steghide extract -sf funny.jpg</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/714a6b3c1d47c781.png" alt="714a6b3c1d47c781.png"></p>
+<p>分别查看其内容</p>
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/47a2a2378ecba7fb.png" alt="47a2a2378ecba7fb.png"></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">This is_not a python file but you are revolving around.</span><br><span class="line">well, try_ to rotate some words too.</span><br><span class="line">jgs:guvf bar vf n fvzcyr bar</span><br></pre></td></tr></table></figure>
+
+<p>交给ai给我解出</p>
+<p>根据提示，这段密文使用的是 ROT13 编码（即将字母表旋转 13 位），并且文件名中的下划线<code>_</code>需要替换为空格。解码步骤如下：</p>
+<ol>
+<li><strong>替换下划线为空格</strong>：<code>This is_not a python file</code> → <code>This is not a python file</code></li>
+<li><strong>对字母应用 ROT13</strong>：每个字母在字母表中向后移动 13 位（如 A→N, B→O）</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">msg:this one is a simple one(AI 解出来的)</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">wtf:this one is a simple one (这是解码网站给我解出来的) (http://www.rot13.de/index.php)</span><br></pre></td></tr></table></figure>
+
+<p>这个账号和密码对应ssh 服务的用户名和密码</p>
+<h3 id="SSH服务"><a href="#SSH服务" class="headerlink" title="SSH服务"></a>SSH服务</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ssh  wtf@192.168.243.130 -p 55077</span><br></pre></td></tr></table></figure>
+
+<p>连接后输入密码</p>
+<p>进入界面</p>
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/7fafade0372a4eb0.png" alt="7fafade0372a4eb0.png"></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python3 -c <span class="string">&#x27;import pty;pty.spawn(&quot;/bin/bash&quot;)&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p>使用这个命令可以将这个界面可视化（但是不知道为什么这里没什么鸟用）</p>
+<h2 id="四-提权过程"><a href="#四-提权过程" class="headerlink" title="四.提权过程"></a>四.提权过程</h2><h3 id="查找后门"><a href="#查找后门" class="headerlink" title="查找后门"></a>查找后门</h3><p>在<code>Documents</code>发现了一个<code>backup.sh </code>文件，我们cat 看看</p>
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/3025c5685ddf61ab.png" alt="3025c5685ddf61ab.png"></p>
+<p>分析一下<br>得到有用信息,分析脚本发现了账户密码</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">n00b:aw3s0m3p@$$w0rd</span><br></pre></td></tr></table></figure>
+
+<h3 id="Flag"><a href="#Flag" class="headerlink" title="Flag"></a>Flag</h3><p>在 <code>Downloads </code>发现了个<code>flag-1.txt</code>：</p>
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/b766243add291f64.png" alt="b766243add291f64.png"></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">VGhlIGZsYWcgaXMgdGhlIGVuY29kZWQgc3RyaW5nIGl0c2VsZg</span><br><span class="line">解码后</span><br><span class="line">The flag is the encoded string itself</span><br></pre></td></tr></table></figure>
+
+<p>在<code>Pictures</code>发现了个<code>echo.sh</code></p>
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/81a2065d6ec02179.png" alt="81a2065d6ec02179.png"></p>
+<p>wtf目录下就这些东西了</p>
+<p>回到最开始的那个脚本，我们利用其中的账户密码，切换用户试试</p>
+<h3 id="用户登录"><a href="#用户登录" class="headerlink" title="用户登录"></a>用户登录</h3><p>切换成<code>n00b </code>用户</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">su n00b</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/340ad33a6982ba46.png" alt="340ad33a6982ba46.png"></p>
+<h3 id="SUID、sudo提权"><a href="#SUID、sudo提权" class="headerlink" title="SUID、sudo提权"></a>SUID、sudo提权</h3><p>直接<code>sudo -l</code>查看可利用的程序</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> -l</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/c5c2f10a8761d712.png" alt="c5c2f10a8761d712.png"></p>
+<p>找到了<code>/bin/nano</code>（root 权限）</p>
+<p>在 <code>https://gtfobins.github.io/</code>网站上查询：<code>nano</code></p>
+<p>点击sudo</p>
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/a9d8d704ebb5e675.png" alt="a9d8d704ebb5e675.png"></p>
+<p>我们终端输入该命令</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> nano</span><br><span class="line">ctrl+r ，Ctrl+x</span><br><span class="line">输入 reset; sh 1&gt;&amp;0 2&gt;&amp;0 然后回车</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/77b6d77975fa8efc.png" alt="77b6d77975fa8efc.png"></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">whoami</span></span><br><span class="line"><span class="built_in">cd</span> /root</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/1f83f686d9b63f51.png" alt="1f83f686d9b63f51.png"></p>
+<h3 id="root-txt"><a href="#root-txt" class="headerlink" title="root.txt"></a>root.txt</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">RW5kb3JzZSBtZSBvbiBsaW5rZWRpbiA9PiBodHRwczovL3d3dy5saW5rZWRpbi5jb20vaW4vZGVlcGFrLWFoZWVyCg==</span><br><span class="line">解码后</span><br><span class="line">Endorse me on linkedin =&gt; https://www.linkedin.com/in/deepak-aheer</span><br></pre></td></tr></table></figure>
+
+
+
+<p>总结</p>
+<p>一个偏misc的靶机</p>
+<p>考点有</p>
+<ol>
+<li><p>steghide 工具的使用</p>
+</li>
+<li><p>base64、rot13解密</p>
+</li>
+<li><p>nano提权</p>
+</li>
+</ol>
+
+        </div>
+
+        
+            <section class="post-copyright">
+                
+                    <p class="copyright-item">
+                        <span>Author:</span>
+                        <span>John Doe</span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>Permalink:</span>
+                        <span><a href="http://example.com/2025/07/14/%E3%80%90%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95%E3%80%91Vulnhub%20Noob/">http://example.com/2025/07/14/%E3%80%90%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95%E3%80%91Vulnhub%20Noob/</a></span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>License:</span>
+                        <span>Copyright (c) 2019 <a target="_blank" rel="noopener" href="http://creativecommons.org/licenses/by-nc/4.0/">CC-BY-NC-4.0</a> LICENSE</span>
+                    </p>
+                
+                
+                     <p class="copyright-item">
+                         <span>Slogan:</span>
+                         <span>Do you believe in <strong>DESTINY</strong>?</span>
+                     </p>
+                
+
+            </section>
+        
+        <section class="post-tags">
+            <div>
+                <span>Tag(s):</span>
+                <span class="tag">
+                    
+                </span>
+            </div>
+            <div>
+                <a href="javascript:window.history.back();">back</a>
+                <span>· </span>
+                <a href="/">home</a>
+            </div>
+        </section>
+        <section class="post-nav">
+            
+            
+            <a class="next" rel="next" href="/2025/07/11/%E3%80%90%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95%E3%80%91VulnhubWest-Wild-v1-1/">【渗透测试】VulnhubWest-Wild-v1.1</a>
+            
+        </section>
+
+
+    </article>
+</div>
+
+            </div>
+            <footer id="footer" class="footer">
+    <div class="copyright">
+        <span>© John Doe | Powered by <a href="https://hexo.io" target="_blank">Hexo</a> & <a href="https://github.com/Siricee/hexo-theme-Chic" target="_blank">Chic</a></span>
+    </div>
+</footer>
+
+    </div>
+</body>
+
+</html>
