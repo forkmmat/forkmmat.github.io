@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <meta name="author" content="rowen">
+
+
+
+
+
+<title>两道go SSTI | Hexo</title>
+
+
+
+    <link rel="icon" href="/drink.ico">
+
+
+
+
+    <!-- stylesheets list from _config.yml -->
+    
+    <link rel="stylesheet" href="/css/style.css">
+    
+
+
+
+    <!-- scripts list from _config.yml -->
+    
+    <script src="/js/script.js"></script>
+    
+    <script src="/js/tocbot.min.js"></script>
+    
+
+
+
+    
+    
+        
+    
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+    <!-- 引入jQuery -->
+<script type="text/javascript" src="//libs.baidu.com/jquery/1.8.3/jquery.min.js"></script>
+<!-- 雪花特效2 -->
+ <script type="text/javascript" src="/js/snow2.js"></script>
+    <script>
+        // this function is used to check current theme before page loaded.
+        (() => {
+            const currentTheme = window.localStorage && window.localStorage.getItem('theme') || '';
+            const isDark = currentTheme === 'dark';
+            const pagebody = document.getElementsByTagName('body')[0]
+            if (isDark) {
+                pagebody.classList.add('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Dark"
+            } else {
+                pagebody.classList.remove('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Light"
+            }
+        })();
+    </script>
+<script>
+!
+function() {
+function n(n, e, t) {
+return n.getAttribute(e) || t
+}
+function e(n) {
+return document.getElementsByTagName(n)
+}
+function t() {
+var t = e("script"),
+o = t.length,
+i = t[o - 1];
+return {
+l: o,
+z: n(i, "zIndex", -1), //置于主页面背后
+o: n(i, "opacity", .5), //线条透明度
+c: n(i, "color", "0,0,0"), //线条颜色
+n: n(i, "count", 100) //线条数量
+}
+}
+function o() {
+a = m.width = window.innerWidth ||
+document.documentElement.clientWidth || document.body.clientWidth,
+c = m.height = window.innerHeight ||
+document.documentElement.clientHeight || document.body.clientHeight
+}
+function i() {
+r.clearRect(0, 0, a, c);
+var n, e, t, o, m, l;
+s.forEach(function(i, x) {
+for (i.x += i.xa, i.y += i.ya, i.xa *= i.x > a || i.x < 0 ? -1 :
+1, i.ya *= i.y > c || i.y < 0 ? -1 : 1, r.fillRect(i.x - .5, i.y - .5, 1,
+1), e = x + 1; e < u.length; e++) n = u[e],
+null !== n.x && null !== n.y && (o = i.x - n.x, m = i.y - n.y, l
+= o * o + m * m, l < n.max && (n === y && l >= n.max / 2 && (i.x -= .03 * o,
+i.y -= .03 * m), t = (n.max - l) / n.max, r.beginPath(), r.lineWidth = t /
+2, r.strokeStyle = "rgba(" + d.c + "," + (t + .2) + ")", r.moveTo(i.x, i.y),
+r.lineTo(n.x, n.y), r.stroke()))
+}),
+x(i)
+}
+var a, c, u, m = document.createElement("canvas"),
+d = t(),
+l = "c_n" + d.l,
+r = m.getContext("2d"),
+x = window.requestAnimationFrame || window.webkitRequestAnimationFrame
+|| window.mozRequestAnimationFrame || window.oRequestAnimationFrame ||
+window.msRequestAnimationFrame ||
+function(n) {
+window.setTimeout(n, 1e3 / 45)
+},
+w = Math.random,
+y = {
+x: null,
+y: null,
+max: 2e4
+};
+m.id = l,
+m.style.cssText = "position:fixed;top:0;left:0;z-index:" + d.z +
+";opacity:" + d.o,
+e("body")[0].appendChild(m),
+o(),
+window.onresize = o,
+window.onmousemove = function(n) {
+n = n || window.event,
+y.x = n.clientX,
+y.y = n.clientY
+},
+window.onmouseout = function() {
+y.x = null,
+y.y = null
+};
+for (var s = [], f = 0; d.n > f; f++) {
+var h = w() * a,
+g = w() * c,
+v = 2 * w() - 1,
+p = 2 * w() - 1;
+s.push({
+x: h,
+y: g,
+xa: v,
+ya: p,
+max: 6e3
+})
+}
+u = s.concat([y]),
+setTimeout(function() {
+i()
+},
+100)
+} ();
+</script>
+    <div class="wrapper">
+        <header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-header header-logo"><a href="/">bobo&#39;s Blog</a></div>
+            <div class="menu navbar-right">
+                
+                    <a class="menu-item" href="/archives">📖博文</a>
+                
+                    <a class="menu-item" href="/category">📚类别</a>
+                
+                    <a class="menu-item" href="/tag">🏷️标签</a>
+                
+                    <a class="menu-item" href="/about">💡关于</a>
+                
+                    <a class="menu-item" href="/links">🔗友链</a>
+                
+                <input id="switch_default" type="checkbox" class="switch_default">
+                <label for="switch_default" class="toggleBtn"></label>
+            </div>
+        </div>
+    </nav>
+
+    
+    <nav class="navbar-mobile" id="nav-mobile">
+        <div class="container">
+            <div class="navbar-header">
+                <div>
+                    <a href="/">bobo&#39;s Blog</a><a id="mobile-toggle-theme">·&nbsp;Light</a>
+                </div>
+                <div class="menu-toggle" onclick="mobileBtn()">&#9776; Menu</div>
+            </div>
+            <div class="menu" id="mobile-menu">
+                
+                    <a class="menu-item" href="/archives">📖博文</a>
+                
+                    <a class="menu-item" href="/category">📚类别</a>
+                
+                    <a class="menu-item" href="/tag">🏷️标签</a>
+                
+                    <a class="menu-item" href="/about">💡关于</a>
+                
+                    <a class="menu-item" href="/links">🔗友链</a>
+                
+            </div>
+        </div>
+    </nav>
+
+</header>
+<script>
+    var mobileBtn = function f() {
+        var toggleMenu = document.getElementsByClassName("menu-toggle")[0];
+        var mobileMenu = document.getElementById("mobile-menu");
+        if(toggleMenu.classList.contains("active")){
+           toggleMenu.classList.remove("active")
+            mobileMenu.classList.remove("active")
+        }else{
+            toggleMenu.classList.add("active")
+            mobileMenu.classList.add("active")
+        }
+    }
+</script>
+            <div class="main">
+                <div class="container">
+    
+    
+        <div class="post-toc">
+    <div class="tocbot-list">
+    </div>
+    <div class="tocbot-list-menu">
+        <a class="tocbot-toc-expand" onclick="expand_toc()">Expand all</a>
+        <a onclick="go_top()">Back to top</a>
+        <a onclick="go_bottom()">Go to bottom</a>
+    </div>
+</div>
+
+<script>
+    document.ready(
+        function () {
+            tocbot.init({
+                tocSelector: '.tocbot-list',
+                contentSelector: '.post-content',
+                headingSelector: 'h1, h2, h3, h4, h5',
+                collapseDepth: 1,
+                orderedList: false,
+                scrollSmooth: true,
+            })
+        }
+    )
+
+    function expand_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 6,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "collapse_toc()");
+        b.innerHTML = "Collapse all"
+    }
+
+    function collapse_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 1,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "expand_toc()");
+        b.innerHTML = "Expand all"
+    }
+
+    function go_top() {
+        window.scrollTo(0, 0);
+    }
+
+    function go_bottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+</script>
+    
+
+    
+    <article class="post-wrap">
+        <header class="post-header">
+            <h1 class="post-title">两道go SSTI</h1>
+            
+                <div class="post-meta">
+                    
+                        Author: <a itemprop="author" rel="author" href="/">rowen</a>
+                    
+
+                    
+                        <span class="post-time">
+                        Date: <a href="#">July 19, 2025&nbsp;&nbsp;18:42:12</a>
+                        </span>
+                    
+                    
+                        <span class="post-category">
+                    Category:
+                            
+                                <a href="/categories/go%E9%A2%98%E7%9B%AE%E5%A4%8D%E7%8E%B0/">go题目复现</a>
+                            
+                        </span>
+                    
+                </div>
+            
+        </header>
+
+        <div class="post-content">
+            <h1 id="LineCTF2022-gotm复现"><a href="#LineCTF2022-gotm复现" class="headerlink" title="[LineCTF2022]gotm复现"></a>[LineCTF2022]gotm复现</h1><p>开题前自我的概述：</p>
+<p>最近要出道go题（之前都没写过，只是听说过连go语言还没学过），于是找了个go ssti题来学学，到底go 题的流程是怎么样的</p>
+<p>参考博客：[<a target="_blank" rel="noopener" href="https://kinsey973.github.io/2024/11/13/LineCTF2022-gotm/">LineCTF2022]gotm | 北歌</a>（北歌师傅）</p>
+<p>复现平台：<a href="%5BLineCTF2022%5Dgotm">BUUCTF</a></p>
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/edae3ab5fed2e48c.png" alt="edae3ab5fed2e48c.png"></p>
+<p>下载好附件，我们开始代码审计</p>
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/d9a4c36a6ba7a997.png" alt="d9a4c36a6ba7a997.png"></p>
+<p>包含这些文件</p>
+<p>其中</p>
+<p>Dockerfile和run.sh还有go.sum,go.mod 是配置相关的文件</p>
+<p>go代码审计主要审计的是main.go 文件</p>
+<h2 id="go代码审计"><a href="#go代码审计" class="headerlink" title="go代码审计"></a>go代码审计</h2><h3 id="功能模块分析"><a href="#功能模块分析" class="headerlink" title="功能模块分析"></a>功能模块分析</h3><p>这段 Go 代码的作用是导入声明表明</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;encoding/json&quot;</span></span><br><span class="line">	<span class="string">&quot;fmt&quot;</span></span><br><span class="line">	<span class="string">&quot;log&quot;</span></span><br><span class="line">	<span class="string">&quot;net/http&quot;</span></span><br><span class="line">	<span class="string">&quot;os&quot;</span></span><br><span class="line">	<span class="string">&quot;text/template&quot;</span></span><br><span class="line"></span><br><span class="line">	<span class="string">&quot;github.com/golang-jwt/jwt&quot;</span></span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<p>有个Account结构体，主要四个属性</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Account <span class="keyword">struct</span> &#123;</span><br><span class="line">	id         <span class="type">string</span></span><br><span class="line">	pw         <span class="type">string</span></span><br><span class="line">	is_admin   <span class="type">bool</span></span><br><span class="line">	secret_key <span class="type">string</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="路由分析"><a href="#路由分析" class="headerlink" title="路由分析"></a>路由分析</h3><p>有四个路由</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	admin := Account&#123;admin_id, admin_pw, <span class="literal">true</span>, secret_key&#125;</span><br><span class="line">	acc = <span class="built_in">append</span>(acc, admin)</span><br><span class="line"></span><br><span class="line">	http.HandleFunc(<span class="string">&quot;/&quot;</span>, root_handler)</span><br><span class="line">	http.HandleFunc(<span class="string">&quot;/auth&quot;</span>, auth_handler)</span><br><span class="line">	http.HandleFunc(<span class="string">&quot;/flag&quot;</span>, flag_handler)</span><br><span class="line">	http.HandleFunc(<span class="string">&quot;/regist&quot;</span>, regist_handler)</span><br><span class="line">	log.Fatal(http.ListenAndServe(<span class="string">&quot;0.0.0.0:11000&quot;</span>, <span class="literal">nil</span>))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>我们一个一个路由来审计</p>
+<h3 id="路由"><a href="#路由" class="headerlink" title="&#x2F;路由"></a>&#x2F;路由</h3><p>我们先来看”&#x2F;“路由</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">root_handler</span><span class="params">(w http.ResponseWriter, r *http.Request)</span></span> &#123;</span><br><span class="line">	token := r.Header.Get(<span class="string">&quot;X-Token&quot;</span>)</span><br><span class="line">	<span class="keyword">if</span> token != <span class="string">&quot;&quot;</span> &#123;</span><br><span class="line">		id, _ := jwt_decode(token)</span><br><span class="line">		acc := get_account(id)</span><br><span class="line">		tpl, err := template.New(<span class="string">&quot;&quot;</span>).Parse(<span class="string">&quot;Logged in as &quot;</span> + acc.id)</span><br><span class="line">		<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		&#125;</span><br><span class="line">		tpl.Execute(w, &amp;acc)</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>先获取Token,如果有Token则用jwt解密,如果解密成功则显示用户的id，如果没有token直接返回空白</p>
+<h3 id="auth路由"><a href="#auth路由" class="headerlink" title="&#x2F;auth路由"></a>&#x2F;auth路由</h3><p>然后审<code>/auth</code></p>
+<p>用户登录部分</p>
+<p>结构体部分  </p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> TokenResp <span class="keyword">struct</span> &#123;</span><br><span class="line">	Status <span class="type">bool</span>   <span class="string">`json:&quot;status&quot;`</span></span><br><span class="line">	Token  <span class="type">string</span> <span class="string">`json:&quot;token&quot;`</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">uid := r.FormValue(<span class="string">&quot;id&quot;</span>)</span><br><span class="line">	upw := r.FormValue(<span class="string">&quot;pw&quot;</span>)</span><br><span class="line">	<span class="keyword">if</span> uid == <span class="string">&quot;&quot;</span> || upw == <span class="string">&quot;&quot;</span> &#123;</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+
+<p>获取用户传入的id和pw</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">user_acc := get_account(uid)</span><br><span class="line">	<span class="keyword">if</span> user_acc.id != <span class="string">&quot;&quot;</span> &amp;&amp; user_acc.pw == upw &#123;</span><br><span class="line">		token, err := jwt_encode(user_acc.id, user_acc.is_admin)</span><br><span class="line">		<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">			<span class="keyword">return</span></span><br><span class="line">		&#125;</span><br><span class="line">		p := TokenResp&#123;<span class="literal">true</span>, token&#125;</span><br><span class="line">		res, err := json.Marshal(p)</span><br><span class="line">		<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		&#125;</span><br><span class="line">		w.Write(res)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+
+<p>理解并分析一下代码：</p>
+<p>如果我们输入了正确的id和pw(get_account有匹配uid的正确结果)，</p>
+<p>返回一个TokenResp的对象（json形式），里面存储了状态status,和jwt token，内容是id和是否为admin</p>
+<h3 id="flag路由"><a href="#flag路由" class="headerlink" title="&#x2F;flag路由"></a>&#x2F;flag路由</h3><p>然后我们审计“&#x2F;flag”路由</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">flag_handler</span><span class="params">(w http.ResponseWriter, r *http.Request)</span></span> &#123;</span><br><span class="line">	token := r.Header.Get(<span class="string">&quot;X-Token&quot;</span>)</span><br><span class="line">	<span class="keyword">if</span> token != <span class="string">&quot;&quot;</span> &#123;</span><br><span class="line">		id, is_admin := jwt_decode(token)</span><br><span class="line">		<span class="keyword">if</span> is_admin == <span class="literal">true</span> &#123;</span><br><span class="line">			p := Resp&#123;<span class="literal">true</span>, <span class="string">&quot;Hi &quot;</span> + id + <span class="string">&quot;, flag is &quot;</span> + flag&#125;</span><br><span class="line">			res, err := json.Marshal(p)</span><br><span class="line">			<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">			&#125;</span><br><span class="line">			w.Write(res)</span><br><span class="line">			<span class="keyword">return</span></span><br><span class="line">		&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">			w.WriteHeader(http.StatusForbidden)</span><br><span class="line">			<span class="keyword">return</span></span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>通过对传入的X-Token进行jwt解码，然后判断is_admin，如果为true就给flag</p>
+<h3 id="regist路由"><a href="#regist路由" class="headerlink" title="&#x2F;regist路由"></a>&#x2F;regist路由</h3><p>最后来看&#x2F;regist路由</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">regist_handler</span><span class="params">(w http.ResponseWriter, r *http.Request)</span></span> &#123;</span><br><span class="line">	uid := r.FormValue(<span class="string">&quot;id&quot;</span>)</span><br><span class="line">	upw := r.FormValue(<span class="string">&quot;pw&quot;</span>)</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> uid == <span class="string">&quot;&quot;</span> || upw == <span class="string">&quot;&quot;</span> &#123;</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> get_account(uid).id != <span class="string">&quot;&quot;</span> &#123;</span><br><span class="line">		w.WriteHeader(http.StatusForbidden)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> <span class="built_in">len</span>(acc) &gt; <span class="number">4</span> &#123;</span><br><span class="line">		clear_account()</span><br><span class="line">	&#125;</span><br><span class="line">	new_acc := Account&#123;uid, upw, <span class="literal">false</span>, secret_key&#125;</span><br><span class="line">	acc = <span class="built_in">append</span>(acc, new_acc)</span><br><span class="line"></span><br><span class="line">	p := Resp&#123;<span class="literal">true</span>, <span class="string">&quot;&quot;</span>&#125;</span><br><span class="line">	res, err := json.Marshal(p)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">	&#125;</span><br><span class="line">	w.Write(res)</span><br><span class="line">	<span class="keyword">return</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">由这条语句：Account&#123;uid, upw, <span class="literal">false</span>, secret_key&#125;</span><br></pre></td></tr></table></figure>
+
+<p>路由中默认给is_admin为false，所以我们要想办法给is_admin为true</p>
+<p>由于jwt编码过程中需要用到secret_key作签名密钥，secret_key是环境变量，就需要通过SSTI漏洞把secret_key</p>
+<p>代码审计分析到此结束</p>
+<h2 id="做题分析"><a href="#做题分析" class="headerlink" title="做题分析"></a>做题分析</h2><p>现在我们要利用go ssti注入获取key然后伪造jwt</p>
+<p>go  ssti 参考：<a target="_blank" rel="noopener" href="https://forum.butian.net/share/1286">https://forum.butian.net/share/1286</a></p>
+<figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">先说一下go的ssti，和jinja2的ssti类似，都是因为直接渲染拼接的字符导致插入了模板语言后执行</span><br><span class="line">Go 语言内置了 text/template 和 html/template 两个模板库。如果开发人员没有正确使用这些库，可能会导致 SSTI 注入。例如，如果使用 text/template 处理用户输入，并且未对输入进行转义，攻击者可以插入恶意模板代码。</span><br></pre></td></tr></table></figure>
+
+<p>这道题的ssti漏洞产生的位置在</p>
+<p>http.HandleFunc(“&#x2F;“, root_handler)</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">root_handler</span><span class="params">(w http.ResponseWriter, r *http.Request)</span></span> &#123;</span><br><span class="line">	token := r.Header.Get(<span class="string">&quot;X-Token&quot;</span>)</span><br><span class="line">	<span class="keyword">if</span> token != <span class="string">&quot;&quot;</span> &#123;</span><br><span class="line">		id, _ := jwt_decode(token)	#从jwt中解析出id属性</span><br><span class="line">		acc := get_account(id)	#根据id，查找账户</span><br><span class="line">		tpl, err := template.New(<span class="string">&quot;&quot;</span>).Parse(<span class="string">&quot;Logged in as &quot;</span> + acc.id) #acc.id存在SSTI</span><br><span class="line">		<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		&#125;</span><br><span class="line">		tpl.Execute(w, &amp;acc)</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>常规思路可以注入<code>&#123;&#123;.&#125;&#125;</code>或<code>&#123;&#123;.secret_key&#125;&#125;</code>来读secret_key属性，但此处由于<code>root_handler()</code>函数得到的acc是数组中的地址，也就是get_account函数通过在全局变量acc数组中查找我们的用户，这种情况下直接注入<code>&#123;&#123;.secret_key&#125;&#125;</code>会返回空，所以此处只能用<code>&#123;&#123;.&#125;&#125;</code>来返回全部属性</p>
+<p>所以我们现在要去注册界面</p>
+<p>访问我们在&#x2F;regist页面进行注册</p>
+<p>出现回显</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://9aa8cdd8-b760-441f-8860-f4275dc92ec0.node5.buuoj.cn:81/regist?id=&#123;&#123;.&#125;&#125;&amp;pw=pass</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/4cf5c853d5cc0dce.png" alt="4cf5c853d5cc0dce.png"></p>
+<p>注册完之后我们开始去登录</p>
+<p>然后我们访问&#x2F;auth进行登录，得到token</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://9aa8cdd8-b760-441f-8860-f4275dc92ec0.node5.buuoj.cn:81/auth?id=&#123;&#123;.&#125;&#125;&amp;pw=pass</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/025a0fb7a03f798b.png" alt="025a0fb7a03f798b.png"></p>
+<p>我们再回到最开始的页面，将token值传入X-Token头部，成功读到secret_key</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Int7Ln19IiwiaXNfYWRtaW4iOmZhbHNlfQ.0Lz_3fTyhGxWGwZnw3hM_5TzDfrk0oULzLWF4rRfMss</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://9aa8cdd8-b760-441f-8860-f4275dc92ec0.node5.buuoj.cn:81</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/40ac8922eddac677.png" alt="40ac8922eddac677.png"></p>
+<p>这样我们就得到了关键的<code>secret_key</code></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">this_is_f4Ke_key</span><br></pre></td></tr></table></figure>
+
+<h3 id="修改jwt"><a href="#修改jwt" class="headerlink" title="修改jwt"></a>修改jwt</h3><p>我们修改jwt，将is_admin修改为true. （jwt  加密解密网站<a target="_blank" rel="noopener" href="https://www.bejson.com/jwt/">jwt解密&#x2F;加密 - bejson在线工具</a>）</p>
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/4c995996369df7d5.png" alt="4c995996369df7d5.png"></p>
+<p>先把原来的jwt复制过来解码</p>
+<p>之后我们再放入密钥，改变值为true</p>
+<p>然后点击编码</p>
+<p>复制jwt</p>
+<p>再到&#x2F;flag页面，将修改后的jwt传入token中</p>
+<h3 id="得到flag"><a href="#得到flag" class="headerlink" title="得到flag"></a>得到flag</h3><p><img src="https://c.img.dasctf.com/LightPicture/2025/07/b30cfc98002f1d81.png" alt="b30cfc98002f1d81.png"></p>
+<p>总结：</p>
+<p>go 类型的题目需要代码审计来理解</p>
+<p>需要仔细分析每个路由的作用</p>
+<p>jwt 加密解密需掌握</p>
+<h1 id="2022DASCTF-MAY-出题人挑战赛-fxxkgo复现"><a href="#2022DASCTF-MAY-出题人挑战赛-fxxkgo复现" class="headerlink" title="[2022DASCTF MAY 出题人挑战赛]fxxkgo复现"></a>[2022DASCTF MAY 出题人挑战赛]fxxkgo复现</h1><p>开题前的概述： 前面已经复现了一道go（[LineCTF2022]gotm）题，看看这道题分析分析复现看看</p>
+<p>（go ssti + jwt伪造）</p>
+<p>复现平台：<a target="_blank" rel="noopener" href="https://buuoj.cn/challenges#[2022DASCTF%20MAY%20%E5%87%BA%E9%A2%98%E4%BA%BA%E6%8C%91%E6%88%98%E8%B5%9B]fxxkgo">BUUCTF</a></p>
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/6fd5dd7381fead04.png" alt="6fd5dd7381fead04.png"></p>
+<p>下载好附件后，我们开始代码审计</p>
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/2cba43e21a64b161.png" alt="2cba43e21a64b161.png"></p>
+<p>有这些文件 .idea 里面是一些配置文件，Dockerfile 是部署文件，go.mod 和go sum 是项目依赖文件 </p>
+<p>我们主要是看main.go</p>
+<h2 id="go代码审计-1"><a href="#go代码审计-1" class="headerlink" title="go代码审计"></a>go代码审计</h2><p>main.go内容</p>
+<h3 id="功能模块分析-1"><a href="#功能模块分析-1" class="headerlink" title="功能模块分析"></a>功能模块分析</h3><p>这段 Go 代码的作用是导入声明表明</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;encoding/json&quot;</span></span><br><span class="line">	<span class="string">&quot;fmt&quot;</span></span><br><span class="line">	<span class="string">&quot;github.com/gin-gonic/gin&quot;</span></span><br><span class="line">	<span class="string">&quot;github.com/golang-jwt/jwt&quot;</span></span><br><span class="line">	<span class="string">&quot;os&quot;</span></span><br><span class="line">	<span class="string">&quot;text/template&quot;</span></span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Account <span class="keyword">struct</span> &#123;</span><br><span class="line">	id         <span class="type">string</span></span><br><span class="line">	pw         <span class="type">string</span></span><br><span class="line">	is_admin   <span class="type">bool</span></span><br><span class="line">	secret_key <span class="type">string</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>定义了 Account 结构体，有四个属性</p>
+<h2 id="路由分析-1"><a href="#路由分析-1" class="headerlink" title="路由分析"></a>路由分析</h2><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>  &#123;</span><br><span class="line">	admin := Account&#123;admin_id, admin_pw, <span class="literal">true</span>, secret_key&#125;</span><br><span class="line">	acc = <span class="built_in">append</span>(acc, admin)</span><br><span class="line">	r := gin.Default()</span><br><span class="line">	r.GET(<span class="string">&quot;/&quot;</span>,index)</span><br><span class="line">	r.POST(<span class="string">&quot;/&quot;</span>, rootHandler)</span><br><span class="line">	r.POST(<span class="string">&quot;/flag&quot;</span>, flagHandler)</span><br><span class="line">	r.POST(<span class="string">&quot;/auth&quot;</span>, authHandler)</span><br><span class="line">	r.POST(<span class="string">&quot;/register&quot;</span>, Resist)</span><br><span class="line">	r.Run(<span class="string">&quot;:80&quot;</span>)</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>根据主函数我们可以得知它有<strong>5个路由</strong></p>
+<p>根目录的<code>GET</code>请求和<code>POST</code>请求进入的路由不相同，实现的功能也不同。这个题目其实就是按照路由走一遍然后就可以得到<code>lag</code>了，具体怎么走，看的懂<code>go语言</code>的兄弟可以思考一下，看不懂的我直接讲了，首先我们先去分析五个路由对应的函数实现了什么功能</p>
+<p>一个一个来分析</p>
+<h3 id="路由-GET"><a href="#路由-GET" class="headerlink" title="&#x2F;路由(GET)"></a>&#x2F;路由(GET)</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">index</span><span class="params">(c *gin.Context)</span></span> &#123;</span><br><span class="line">	c.JSON(<span class="number">200</span>,gin.H&#123;</span><br><span class="line">		<span class="string">&quot;msg&quot;</span>: <span class="string">&quot;Hello World&quot;</span>,</span><br><span class="line">	&#125;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>功能：进入之后输出json格式的信息</p>
+<h3 id="路由-POST"><a href="#路由-POST" class="headerlink" title="&#x2F;路由(POST)"></a>&#x2F;路由(POST)</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">rootHandler</span><span class="params">(c *gin.Context)</span></span> &#123;</span><br><span class="line">	token := c.GetHeader(<span class="string">&quot;X-Token&quot;</span>)</span><br><span class="line">	<span class="keyword">if</span> token != <span class="string">&quot;&quot;</span> &#123;</span><br><span class="line">		id, _ := jwt_decode(token)</span><br><span class="line">		acc := get_account(id)</span><br><span class="line">		tpl, err := template.New(<span class="string">&quot;&quot;</span>).Parse(<span class="string">&quot;Logged in as &quot;</span> + acc.id)</span><br><span class="line">		<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		&#125;</span><br><span class="line">		tpl.Execute(c.Writer, &amp;acc)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>先获取Token,如果有Token则用jwt解密,如果解密成功则显示用户的id，如果没有token直接返回空白</p>
+<h3 id="flag路由-1"><a href="#flag路由-1" class="headerlink" title="flag路由"></a>flag路由</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">unc flagHandler(c *gin.Context) &#123;</span><br><span class="line">	token := c.GetHeader(<span class="string">&quot;X-Token&quot;</span>)</span><br><span class="line">	<span class="keyword">if</span> token != <span class="string">&quot;&quot;</span> &#123;</span><br><span class="line">		id, is_admin := jwt_decode(token)</span><br><span class="line">		<span class="keyword">if</span> is_admin == <span class="literal">true</span> &#123;</span><br><span class="line">			p := Resp&#123;<span class="literal">true</span>, <span class="string">&quot;Hi &quot;</span> + id + <span class="string">&quot;, flag is &quot;</span> + flag&#125;</span><br><span class="line">			res, err := json.Marshal(p)</span><br><span class="line">			<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">			&#125;</span><br><span class="line">			c.JSON(<span class="number">200</span>, <span class="type">string</span>(res))</span><br><span class="line">			<span class="keyword">return</span></span><br><span class="line">		&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">			c.JSON(<span class="number">403</span>, gin.H&#123;</span><br><span class="line">				<span class="string">&quot;code&quot;</span>: <span class="number">403</span>,</span><br><span class="line">				<span class="string">&quot;status&quot;</span>: <span class="string">&quot;error&quot;</span>,</span><br><span class="line">			&#125;)</span><br><span class="line">			<span class="keyword">return</span></span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>通过对传入的X-Token进行jwt解码，然后判断is_admin，如果为true就给flag</p>
+<h3 id="auth路由-1"><a href="#auth路由-1" class="headerlink" title="auth路由"></a>auth路由</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">authHandler</span><span class="params">(c *gin.Context)</span></span> &#123;</span><br><span class="line">	uid := c.PostForm(<span class="string">&quot;id&quot;</span>)</span><br><span class="line">	upw := c.PostForm(<span class="string">&quot;pw&quot;</span>)</span><br><span class="line">	<span class="keyword">if</span> uid == <span class="string">&quot;&quot;</span> || upw == <span class="string">&quot;&quot;</span> &#123;</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> <span class="built_in">len</span>(acc) &gt; <span class="number">1024</span> &#123;</span><br><span class="line">		clear_account()</span><br><span class="line">	&#125;</span><br><span class="line">	user_acc := get_account(uid)</span><br><span class="line">	<span class="keyword">if</span> user_acc.id != <span class="string">&quot;&quot;</span> &amp;&amp; user_acc.pw == upw &#123;</span><br><span class="line">		token, err := jwt_encode(user_acc.id, user_acc.is_admin)</span><br><span class="line">		<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">			<span class="keyword">return</span></span><br><span class="line">		&#125;</span><br><span class="line">		p := TokenResp&#123;<span class="literal">true</span>, token&#125;</span><br><span class="line">		res, err := json.Marshal(p)</span><br><span class="line">		<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		&#125;</span><br><span class="line">		c.JSON(<span class="number">200</span>, <span class="type">string</span>(res))</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	c.JSON(<span class="number">403</span>, gin.H&#123;</span><br><span class="line">		<span class="string">&quot;code&quot;</span>: <span class="number">403</span>,</span><br><span class="line">		<span class="string">&quot;status&quot;</span>: <span class="string">&quot;error&quot;</span>,</span><br><span class="line">	&#125;)</span><br><span class="line">	<span class="keyword">return</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>获取用户传入的id和pw，</p>
+<p>理解并分析一下代码：</p>
+<p>如果我们输入了正确的id和pw(get_account有匹配uid的正确结果)，</p>
+<p>返回一个TokenResp的对象（json形式），里面存储了状态status,和jwt token，内容是id和是否为admin</p>
+<h3 id="register-路由"><a href="#register-路由" class="headerlink" title="register 路由"></a>register 路由</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Resist</span><span class="params">(c *gin.Context)</span></span>&#123;</span><br><span class="line">	uid := c.PostForm(<span class="string">&quot;id&quot;</span>)</span><br><span class="line">	upw := c.PostForm(<span class="string">&quot;pw&quot;</span>)</span><br><span class="line">	<span class="keyword">if</span> uid == <span class="string">&quot;&quot;</span> || upw == <span class="string">&quot;&quot;</span> &#123;</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> get_account(uid).id != <span class="string">&quot;&quot;</span> &#123;</span><br><span class="line">		c.JSON(<span class="number">403</span>, gin.H&#123;</span><br><span class="line">			<span class="string">&quot;code&quot;</span>: <span class="number">403</span>,</span><br><span class="line">			<span class="string">&quot;status&quot;</span>: <span class="string">&quot;error&quot;</span>,</span><br><span class="line">		&#125;)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> <span class="built_in">len</span>(acc) &gt; <span class="number">4</span> &#123;</span><br><span class="line">		clear_account()</span><br><span class="line">	&#125;</span><br><span class="line">	new_acc := Account&#123;uid, upw, <span class="literal">false</span>, secret_key&#125;</span><br><span class="line">	acc = <span class="built_in">append</span>(acc, new_acc)</span><br><span class="line"></span><br><span class="line">	p := Resp&#123;<span class="literal">true</span>, <span class="string">&quot;&quot;</span>&#125;</span><br><span class="line">	res, err := json.Marshal(p)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">	&#125;</span><br><span class="line">	c.JSON(<span class="number">200</span>, <span class="type">string</span>(res))</span><br><span class="line">	<span class="keyword">return</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">index</span><span class="params">(c *gin.Context)</span></span> &#123;</span><br><span class="line">	c.JSON(<span class="number">200</span>,gin.H&#123;</span><br><span class="line">		<span class="string">&quot;msg&quot;</span>: <span class="string">&quot;Hello World&quot;</span>,<span class="number">.0</span></span><br><span class="line">	&#125;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>Account&#123;uid, upw, false, secret_key&#125;</code></p>
+<p>路由中默认给is_admin为false，所以我们要想办法给is_admin为true</p>
+<p>由于jwt编码过程中需要用到secret_key作签名密钥，secret_key是环境变量，就需要通过SSTI漏洞把secret_key</p>
+<p>代码审计分析到此结束</p>
+<h2 id="做题分析-1"><a href="#做题分析-1" class="headerlink" title="做题分析"></a>做题分析</h2><p>现在我们要利用go ssti注入获取key然后伪造jwt</p>
+<p>go  ssti 参考：<a target="_blank" rel="noopener" href="https://forum.butian.net/share/1286">https://forum.butian.net/share/1286</a></p>
+<figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">先说一下go的ssti，和jinja2的ssti类似，都是因为直接渲染拼接的字符导致插入了模板语言后执行</span><br><span class="line">Go 语言内置了 text/template 和 html/template 两个模板库。如果开发人员没有正确使用这些库，可能会导致 SSTI 注入。例如，如果使用 text/template 处理用户输入，并且未对输入进行转义，攻击者可以插入恶意模板代码。</span><br></pre></td></tr></table></figure>
+
+<p>这道题的ssti漏洞产生的位置在</p>
+<p>r.POST(“&#x2F;“, rootHandler)</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">rootHandler</span><span class="params">(c *gin.Context)</span></span> &#123;</span><br><span class="line">	token := c.GetHeader(<span class="string">&quot;X-Token&quot;</span>)</span><br><span class="line">	<span class="keyword">if</span> token != <span class="string">&quot;&quot;</span> &#123;</span><br><span class="line">		id, _ := jwt_decode(token)</span><br><span class="line">		acc := get_account(id)</span><br><span class="line">		tpl, err := template.New(<span class="string">&quot;&quot;</span>).Parse(<span class="string">&quot;Logged in as &quot;</span> + acc.id)</span><br><span class="line">		<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		&#125;</span><br><span class="line">		tpl.Execute(c.Writer, &amp;acc)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>常规思路可以注入<code>&#123;&#123;.&#125;&#125;</code>或<code>&#123;&#123;.secret_key&#125;&#125;</code>来读secret_key属性，但此处由于<code>root_handler()</code>函数得到的acc是数组中的地址，也就是get_account函数通过在全局变量acc数组中查找我们的用户，这种情况下直接注入<code>&#123;&#123;.secret_key&#125;&#125;</code>会返回空，所以此处只能用<code>&#123;&#123;.&#125;&#125;</code>来返回全部属性</p>
+<p>所以我们现在要去注册界面</p>
+<p>访问我们在&#x2F;register页面进行注册</p>
+<p>出现回显</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">http://8d7710a9-008f-452c-80de-38d1aa7b90cb.node5.buuoj.cn:81/register</span><br><span class="line"><span class="attribute">POST</span>:</span><br><span class="line">id=&#123;&#123;.&#125;&#125;&amp;pw=pass</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/218ad358431fdef9.png" alt="218ad358431fdef9.png"></p>
+<p>注册完之后我们开始去登录</p>
+<p>然后我们访问&#x2F;auth进行登录，得到token</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">http://8d7710a9-008f-452c-80de-38d1aa7b90cb.node5.buuoj.cn:81/auth</span><br><span class="line"><span class="attribute">POST</span>:</span><br><span class="line">id=&#123;&#123;.&#125;&#125;&amp;pw=pass</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/95ffdfdef3087d4f.png" alt="95ffdfdef3087d4f.png"></p>
+<p>我们再回到最开始的页面，将token值传入X-Token头部，成功读到secret_key</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Int7Ln19IiwiaXNfYWRtaW4iOmZhbHNlfQ.1c8I_PzGiyonSZe3UPM2AB94x07g6DeyJW6uYA2C7eo</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/4b87271e7697c76e.png" alt="4b87271e7697c76e.png"></p>
+<p>这样我们就得到了关键的<code>secret_key</code></p>
+<figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">fasdf972u1041xu90zm10Av</span><br></pre></td></tr></table></figure>
+
+<h3 id="修改jwt-1"><a href="#修改jwt-1" class="headerlink" title="修改jwt"></a>修改jwt</h3><p>我们修改jwt，将is_admin修改为true. （jwt  加密解密网站<a target="_blank" rel="noopener" href="https://www.bejson.com/jwt/">jwt解密&#x2F;加密 - bejson在线工具</a>）</p>
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/7c621e59bf823cc1.png" alt="7c621e59bf823cc1.png"></p>
+<p>先把原来的jwt复制过来解码</p>
+<p>之后我们再放入密钥，改变值为true</p>
+<p>然后点击编码</p>
+<p>复制jwt</p>
+<p>再到&#x2F;flag路由页面，将修改后的jwt传入token中</p>
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/cc9c1867e9b422a3.png" alt="cc9c1867e9b422a3.png"></p>
+<p>总结：这道题和[LineCTF2022]gotm 高度相似，改了点代码（基本步骤都一样）</p>
+<p>go语言代码审计得加强</p>
+<p>jwt 加密解密基本掌握</p>
+
+        </div>
+
+        
+            <section class="post-copyright">
+                
+                    <p class="copyright-item">
+                        <span>Author:</span>
+                        <span>rowen</span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>Permalink:</span>
+                        <span><a href="http://example.com/2025/07/19/%E4%B8%A4%E9%81%93go-SSTI/">http://example.com/2025/07/19/%E4%B8%A4%E9%81%93go-SSTI/</a></span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>License:</span>
+                        <span>Copyright (c) 2019 <a target="_blank" rel="noopener" href="http://creativecommons.org/licenses/by-nc/4.0/">CC-BY-NC-4.0</a> LICENSE</span>
+                    </p>
+                
+                
+                     <p class="copyright-item">
+                         <span>Slogan:</span>
+                         <span>Do you believe in <strong>DESTINY</strong>?</span>
+                     </p>
+                
+
+            </section>
+        
+        <section class="post-tags">
+            <div>
+                <span>Tag(s):</span>
+                <span class="tag">
+                    
+                    
+                        <a href="/tags/%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8/"># 网络安全</a>
+                    
+                        <a href="/tags/go/"># go</a>
+                    
+                        <a href="/tags/ssti/"># ssti</a>
+                    
+                        <a href="/tags/%E5%A4%8D%E7%8E%B0/"># 复现</a>
+                    
+                        
+                </span>
+            </div>
+            <div>
+                <a href="javascript:window.history.back();">back</a>
+                <span>· </span>
+                <a href="/">home</a>
+            </div>
+        </section>
+        <section class="post-nav">
+            
+            
+            <a class="next" rel="next" href="/2025/07/17/Vulnhub-driftingblues-1/">【渗透测试】Vulnhub driftingblues 1</a>
+            
+        </section>
+<script src="https://giscus.app/client.js"
+        data-repo="forkmmat/forkmmat.github.io"
+        data-repo-id="R_kgDOO0OA0g"
+        data-category="General"
+        data-category-id="DIC_kwDOO0OA0s4CtD6Y"
+        data-mapping="title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="zh-CN"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+</script>
+
+    </article>
+</div>
+
+            </div>
+            <footer id="footer" class="footer">
+    <div class="copyright">
+        <span>© rowen | Powered by <a href="https://hexo.io" target="_blank">Hexo</a> & <a href="https://github.com/Siricee/hexo-theme-Chic" target="_blank">Chic</a></span>
+    </div>
+</footer>
+
+    </div>
+</body>
+
+</html>
