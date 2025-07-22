@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <meta name="author" content="rowen">
+
+
+
+
+
+<title>DownUnderCTF 2025  mini-me | Hexo</title>
+
+
+
+    <link rel="icon" href="/drink.ico">
+
+
+
+
+    <!-- stylesheets list from _config.yml -->
+    
+    <link rel="stylesheet" href="/css/style.css">
+    
+
+
+
+    <!-- scripts list from _config.yml -->
+    
+    <script src="/js/script.js"></script>
+    
+    <script src="/js/tocbot.min.js"></script>
+    
+
+
+
+    
+    
+        
+    
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+    <!-- 引入jQuery -->
+<script type="text/javascript" src="//libs.baidu.com/jquery/1.8.3/jquery.min.js"></script>
+<!-- 雪花特效2 -->
+ <script type="text/javascript" src="/js/snow2.js"></script>
+    <script>
+        // this function is used to check current theme before page loaded.
+        (() => {
+            const currentTheme = window.localStorage && window.localStorage.getItem('theme') || '';
+            const isDark = currentTheme === 'dark';
+            const pagebody = document.getElementsByTagName('body')[0]
+            if (isDark) {
+                pagebody.classList.add('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Dark"
+            } else {
+                pagebody.classList.remove('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Light"
+            }
+        })();
+    </script>
+<script>
+!
+function() {
+function n(n, e, t) {
+return n.getAttribute(e) || t
+}
+function e(n) {
+return document.getElementsByTagName(n)
+}
+function t() {
+var t = e("script"),
+o = t.length,
+i = t[o - 1];
+return {
+l: o,
+z: n(i, "zIndex", -1), //置于主页面背后
+o: n(i, "opacity", .5), //线条透明度
+c: n(i, "color", "0,0,0"), //线条颜色
+n: n(i, "count", 100) //线条数量
+}
+}
+function o() {
+a = m.width = window.innerWidth ||
+document.documentElement.clientWidth || document.body.clientWidth,
+c = m.height = window.innerHeight ||
+document.documentElement.clientHeight || document.body.clientHeight
+}
+function i() {
+r.clearRect(0, 0, a, c);
+var n, e, t, o, m, l;
+s.forEach(function(i, x) {
+for (i.x += i.xa, i.y += i.ya, i.xa *= i.x > a || i.x < 0 ? -1 :
+1, i.ya *= i.y > c || i.y < 0 ? -1 : 1, r.fillRect(i.x - .5, i.y - .5, 1,
+1), e = x + 1; e < u.length; e++) n = u[e],
+null !== n.x && null !== n.y && (o = i.x - n.x, m = i.y - n.y, l
+= o * o + m * m, l < n.max && (n === y && l >= n.max / 2 && (i.x -= .03 * o,
+i.y -= .03 * m), t = (n.max - l) / n.max, r.beginPath(), r.lineWidth = t /
+2, r.strokeStyle = "rgba(" + d.c + "," + (t + .2) + ")", r.moveTo(i.x, i.y),
+r.lineTo(n.x, n.y), r.stroke()))
+}),
+x(i)
+}
+var a, c, u, m = document.createElement("canvas"),
+d = t(),
+l = "c_n" + d.l,
+r = m.getContext("2d"),
+x = window.requestAnimationFrame || window.webkitRequestAnimationFrame
+|| window.mozRequestAnimationFrame || window.oRequestAnimationFrame ||
+window.msRequestAnimationFrame ||
+function(n) {
+window.setTimeout(n, 1e3 / 45)
+},
+w = Math.random,
+y = {
+x: null,
+y: null,
+max: 2e4
+};
+m.id = l,
+m.style.cssText = "position:fixed;top:0;left:0;z-index:" + d.z +
+";opacity:" + d.o,
+e("body")[0].appendChild(m),
+o(),
+window.onresize = o,
+window.onmousemove = function(n) {
+n = n || window.event,
+y.x = n.clientX,
+y.y = n.clientY
+},
+window.onmouseout = function() {
+y.x = null,
+y.y = null
+};
+for (var s = [], f = 0; d.n > f; f++) {
+var h = w() * a,
+g = w() * c,
+v = 2 * w() - 1,
+p = 2 * w() - 1;
+s.push({
+x: h,
+y: g,
+xa: v,
+ya: p,
+max: 6e3
+})
+}
+u = s.concat([y]),
+setTimeout(function() {
+i()
+},
+100)
+} ();
+</script>
+    <div class="wrapper">
+        <header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-header header-logo"><a href="/">bobo&#39;s Blog</a></div>
+            <div class="menu navbar-right">
+                
+                    <a class="menu-item" href="/archives">📖博文</a>
+                
+                    <a class="menu-item" href="/category">📚类别</a>
+                
+                    <a class="menu-item" href="/tag">🏷️标签</a>
+                
+                    <a class="menu-item" href="/about">💡关于</a>
+                
+                    <a class="menu-item" href="/links">🔗友链</a>
+                
+                <input id="switch_default" type="checkbox" class="switch_default">
+                <label for="switch_default" class="toggleBtn"></label>
+            </div>
+        </div>
+    </nav>
+
+    
+    <nav class="navbar-mobile" id="nav-mobile">
+        <div class="container">
+            <div class="navbar-header">
+                <div>
+                    <a href="/">bobo&#39;s Blog</a><a id="mobile-toggle-theme">·&nbsp;Light</a>
+                </div>
+                <div class="menu-toggle" onclick="mobileBtn()">&#9776; Menu</div>
+            </div>
+            <div class="menu" id="mobile-menu">
+                
+                    <a class="menu-item" href="/archives">📖博文</a>
+                
+                    <a class="menu-item" href="/category">📚类别</a>
+                
+                    <a class="menu-item" href="/tag">🏷️标签</a>
+                
+                    <a class="menu-item" href="/about">💡关于</a>
+                
+                    <a class="menu-item" href="/links">🔗友链</a>
+                
+            </div>
+        </div>
+    </nav>
+
+</header>
+<script>
+    var mobileBtn = function f() {
+        var toggleMenu = document.getElementsByClassName("menu-toggle")[0];
+        var mobileMenu = document.getElementById("mobile-menu");
+        if(toggleMenu.classList.contains("active")){
+           toggleMenu.classList.remove("active")
+            mobileMenu.classList.remove("active")
+        }else{
+            toggleMenu.classList.add("active")
+            mobileMenu.classList.add("active")
+        }
+    }
+</script>
+            <div class="main">
+                <div class="container">
+    
+    
+        <div class="post-toc">
+    <div class="tocbot-list">
+    </div>
+    <div class="tocbot-list-menu">
+        <a class="tocbot-toc-expand" onclick="expand_toc()">Expand all</a>
+        <a onclick="go_top()">Back to top</a>
+        <a onclick="go_bottom()">Go to bottom</a>
+    </div>
+</div>
+
+<script>
+    document.ready(
+        function () {
+            tocbot.init({
+                tocSelector: '.tocbot-list',
+                contentSelector: '.post-content',
+                headingSelector: 'h1, h2, h3, h4, h5',
+                collapseDepth: 1,
+                orderedList: false,
+                scrollSmooth: true,
+            })
+        }
+    )
+
+    function expand_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 6,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "collapse_toc()");
+        b.innerHTML = "Collapse all"
+    }
+
+    function collapse_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 1,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "expand_toc()");
+        b.innerHTML = "Expand all"
+    }
+
+    function go_top() {
+        window.scrollTo(0, 0);
+    }
+
+    function go_bottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+</script>
+    
+
+    
+    <article class="post-wrap">
+        <header class="post-header">
+            <h1 class="post-title">DownUnderCTF 2025  mini-me</h1>
+            
+                <div class="post-meta">
+                    
+                        Author: <a itemprop="author" rel="author" href="/">rowen</a>
+                    
+
+                    
+                        <span class="post-time">
+                        Date: <a href="#">July 22, 2025&nbsp;&nbsp;20:22:57</a>
+                        </span>
+                    
+                    
+                        <span class="post-category">
+                    Category:
+                            
+                                <a href="/categories/%E6%AF%94%E8%B5%9B%E5%A4%8D%E7%8E%B0/">比赛复现</a>
+                            
+                        </span>
+                    
+                </div>
+            
+        </header>
+
+        <div class="post-content">
+            <h1 id="DownUnderCTF-2025-mini-me"><a href="#DownUnderCTF-2025-mini-me" class="headerlink" title="DownUnderCTF 2025  mini-me"></a>DownUnderCTF 2025  mini-me</h1><p>国外的CTF -web题</p>
+<p>比赛平台：<a target="_blank" rel="noopener" href="https://2025.duc.tf/challenges">DownUnderCTF</a></p>
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/097d1dc5feceab4a.png" alt="097d1dc5feceab4a.png"></p>
+<p>打开题目后下载附件</p>
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/be5b0fd8be291948.png" alt="be5b0fd8be291948.png"></p>
+<p>里面包括这些文件</p>
+<h2 id="代码审计"><a href="#代码审计" class="headerlink" title="代码审计"></a>代码审计</h2><h3 id="templates分析"><a href="#templates分析" class="headerlink" title="templates分析"></a>templates分析</h3><p>templates 里面包含 index.html和confidential.html</p>
+<p>这两文件中有一段代码比较重要（共同的）</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;script src=<span class="string">&quot;/static/js/main.min.js&quot;</span>&gt;&lt;/script&gt;</span><br></pre></td></tr></table></figure>
+
+<h3 id="app-py-分析"><a href="#app-py-分析" class="headerlink" title="app.py 分析"></a>app.py 分析</h3><p>然后我们分析app.py</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> flask <span class="keyword">import</span> Flask, render_template, send_from_directory, request, redirect, make_response</span><br><span class="line"><span class="keyword">from</span> dotenv <span class="keyword">import</span> load_dotenv</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> os</span><br><span class="line">load_dotenv()</span><br><span class="line">API_SECRET_KEY = os.getenv(<span class="string">&quot;API_SECRET_KEY&quot;</span>)</span><br><span class="line">FLAG = os.getenv(<span class="string">&quot;FLAG&quot;</span>)</span><br><span class="line"></span><br><span class="line">app = Flask(__name__, static_folder=<span class="string">&quot;static&quot;</span>, template_folder=<span class="string">&quot;templates&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="meta">@app.after_request</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">add_header</span>(<span class="params">response</span>):</span><br><span class="line">    response.cache_control.no_store = <span class="literal">True</span></span><br><span class="line">    response.cache_control.must_revalidate = <span class="literal">True</span></span><br><span class="line">    <span class="keyword">return</span> response</span><br><span class="line"></span><br><span class="line"><span class="meta">@app.route(<span class="params"><span class="string">&quot;/&quot;</span></span>)</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">index</span>():</span><br><span class="line">    <span class="keyword">return</span> render_template(<span class="string">&quot;index.html&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="meta">@app.route(<span class="params"><span class="string">&quot;/login&quot;</span>, methods=[<span class="string">&quot;POST&quot;</span>]</span>)</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">login</span>():</span><br><span class="line">    <span class="keyword">return</span> redirect(<span class="string">&quot;/confidential.html&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="meta">@app.route(<span class="params"><span class="string">&quot;/confidential.html&quot;</span></span>)</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">confidential</span>():</span><br><span class="line">    <span class="keyword">return</span> render_template(<span class="string">&quot;confidential.html&quot;</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="meta">@app.route(<span class="params"><span class="string">&quot;/admin/flag&quot;</span>, methods=[<span class="string">&quot;POST&quot;</span>]</span>)</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">flag</span>():</span><br><span class="line">    key = request.headers.get(<span class="string">&quot;X-API-Key&quot;</span>)</span><br><span class="line">    <span class="keyword">if</span> key == API_SECRET_KEY:</span><br><span class="line">        <span class="keyword">return</span> FLAG</span><br><span class="line">    <span class="keyword">return</span> <span class="string">&quot;Unauthorized&quot;</span>, <span class="number">403</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>由上到下来分析吧</p>
+<p>首先</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> flask <span class="keyword">import</span> Flask, render_template, send_from_directory, request, redirect, make_response</span><br><span class="line"><span class="keyword">from</span> dotenv <span class="keyword">import</span> load_dotenv</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> os</span><br><span class="line">load_dotenv()</span><br><span class="line">API_SECRET_KEY = os.getenv(<span class="string">&quot;API_SECRET_KEY&quot;</span>)</span><br><span class="line">FLAG = os.getenv(<span class="string">&quot;FLAG&quot;</span>)</span><br><span class="line"></span><br><span class="line">app = Flask(__name__, static_folder=<span class="string">&quot;static&quot;</span>, template_folder=<span class="string">&quot;templates&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="meta">@app.after_request</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">add_header</span>(<span class="params">response</span>):</span><br><span class="line">    response.cache_control.no_store = <span class="literal">True</span></span><br><span class="line">    response.cache_control.must_revalidate = <span class="literal">True</span></span><br><span class="line">    <span class="keyword">return</span> response</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>一些配置文件，初始化 api 密钥 和flag</p>
+<p>接着我们分析路由</p>
+<h3 id="路由"><a href="#路由" class="headerlink" title="&#x2F;路由"></a>&#x2F;路由</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@app.route(<span class="params"><span class="string">&quot;/&quot;</span></span>)</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">index</span>():</span><br><span class="line">    <span class="keyword">return</span> render_template(<span class="string">&quot;index.html&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+<p>打开题目后载入到index.html页面</p>
+<h3 id="login和confidential-html路由"><a href="#login和confidential-html路由" class="headerlink" title="login和confidential.html路由"></a>login和confidential.html路由</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@app.route(<span class="params"><span class="string">&quot;/login&quot;</span>, methods=[<span class="string">&quot;POST&quot;</span>]</span>)</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">login</span>():</span><br><span class="line">    <span class="keyword">return</span> redirect(<span class="string">&quot;/confidential.html&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="meta">@app.route(<span class="params"><span class="string">&quot;/confidential.html&quot;</span></span>)</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">confidential</span>():</span><br><span class="line">    <span class="keyword">return</span> render_template(<span class="string">&quot;confidential.html&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+<p>login 路由登录完成后载入confidential.html</p>
+<p>confidential.html路由同理</p>
+<h3 id="admin-flag路由"><a href="#admin-flag路由" class="headerlink" title="&#x2F;admin&#x2F;flag路由"></a>&#x2F;admin&#x2F;flag路由</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@app.route(<span class="params"><span class="string">&quot;/admin/flag&quot;</span>, methods=[<span class="string">&quot;POST&quot;</span>]</span>)</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">flag</span>():</span><br><span class="line">    key = request.headers.get(<span class="string">&quot;X-API-Key&quot;</span>)</span><br><span class="line">    <span class="keyword">if</span> key == API_SECRET_KEY:</span><br><span class="line">        <span class="keyword">return</span> FLAG</span><br><span class="line">    <span class="keyword">return</span> <span class="string">&quot;Unauthorized&quot;</span>, <span class="number">403</span></span><br></pre></td></tr></table></figure>
+
+<p>在&#x2F;admin&#x2F;flag路由中 我们给X-API-Key 传入 经过判断得到flag</p>
+<p>分析完之后我们开始做题</p>
+<p>打开题目</p>
+<h2 id="做题分析"><a href="#做题分析" class="headerlink" title="做题分析"></a>做题分析</h2><h3 id="登录部分"><a href="#登录部分" class="headerlink" title="登录部分"></a>登录部分</h3><p>一个登录界面</p>
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/2886570599ff18a9.png" alt="2886570599ff18a9.png"></p>
+<p>访问static&#x2F;js&#x2F;main.min.js（前面有提到过的）</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">https://web-mini-me-ab6d19a7ea6e.2025.ductf.net/static/js/main.min.js</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/e1df66e32a96bbf6.png" alt="e1df66e32a96bbf6.png"></p>
+<p>注意这里</p>
+<figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">//test map file -&gt; test-main.min.js.map, remove in prod </span><br></pre></td></tr></table></figure>
+
+<p><code>.map</code> 文件（源映射文件）是 JavaScript 开发中用于<strong>调试压缩&#x2F;混淆代码</strong>的重要工具</p>
+<p>我们访问看看</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">https://web-mini-me-ab6d19a7ea6e.2025.ductf.net/static/js/test-main.min.js.map</span><br></pre></td></tr></table></figure>
+
+<p>下载到文件</p>
+<p><img src="C:/Users/32176/AppData/Roaming/Typora/typora-user-images/image-20250719115019659.png" alt="image-20250719115019659"></p>
+<h3 id="解密部分"><a href="#解密部分" class="headerlink" title="解密部分"></a>解密部分</h3><p>打开后我们我们丢给ai分析并让他给我们解密脚本（由于里面内容太乱这里只展示部分重要的代码）</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#!/usr/bin/env python3</span></span><br><span class="line"><span class="comment"># decrypt_key.py</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">decrypt</span>():</span><br><span class="line">    <span class="comment"># 原始数据</span></span><br><span class="line">    dhgyvu = [</span><br><span class="line">        <span class="string">&quot;85&quot;</span>, <span class="string">&quot;87&quot;</span>, <span class="string">&quot;77&quot;</span>, <span class="string">&quot;67&quot;</span>, <span class="string">&quot;40&quot;</span>, <span class="string">&quot;82&quot;</span>,</span><br><span class="line">        <span class="string">&quot;82&quot;</span>, <span class="string">&quot;70&quot;</span>, <span class="string">&quot;78&quot;</span>, <span class="string">&quot;39&quot;</span>, <span class="string">&quot;95&quot;</span>, <span class="string">&quot;89&quot;</span>,</span><br><span class="line">        <span class="string">&quot;67&quot;</span>, <span class="string">&quot;73&quot;</span>, <span class="string">&quot;34&quot;</span>, <span class="string">&quot;68&quot;</span>, <span class="string">&quot;68&quot;</span>, <span class="string">&quot;92&quot;</span>,</span><br><span class="line">        <span class="string">&quot;84&quot;</span>, <span class="string">&quot;57&quot;</span>, <span class="string">&quot;70&quot;</span>, <span class="string">&quot;87&quot;</span>, <span class="string">&quot;95&quot;</span>, <span class="string">&quot;77&quot;</span>, <span class="string">&quot;75&quot;</span></span><br><span class="line">    ]</span><br><span class="line">    <span class="comment"># 解密并拼接</span></span><br><span class="line">    <span class="keyword">return</span> <span class="string">&quot;&quot;</span>.join(</span><br><span class="line">        <span class="built_in">chr</span>(<span class="built_in">int</span>(val) ^ (idx + <span class="number">1</span>))</span><br><span class="line">        <span class="keyword">for</span> idx, val <span class="keyword">in</span> <span class="built_in">enumerate</span>(dhgyvu)</span><br><span class="line">    )</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&quot;__main__&quot;</span>:</span><br><span class="line">    key = decrypt()</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;解密结果：&quot;</span>, key)</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/a812d475f5e12403.png" alt="a812d475f5e12403.png"></p>
+<p>我们把</p>
+<figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">TUNG-TUNG-TUNG-TUNG-SAHUR</span><br></pre></td></tr></table></figure>
+
+<p>作为</p>
+<p>X-API-Key （HTTTP 头）传入 &#x2F;admin&#x2F;flag路由得到flag</p>
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/cb0d341467b67262.png" alt="cb0d341467b67262.png"></p>
+<figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">flag:DUCTF&#123;Cl13nt-S1d3-H4ck1nG-1s-FuN&#125;</span><br></pre></td></tr></table></figure>
+
+
+        </div>
+
+        
+            <section class="post-copyright">
+                
+                    <p class="copyright-item">
+                        <span>Author:</span>
+                        <span>rowen</span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>Permalink:</span>
+                        <span><a href="http://example.com/2025/07/22/DownUnderCTF%202025%20%20mini-me/">http://example.com/2025/07/22/DownUnderCTF%202025%20%20mini-me/</a></span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>License:</span>
+                        <span>Copyright (c) 2019 <a target="_blank" rel="noopener" href="http://creativecommons.org/licenses/by-nc/4.0/">CC-BY-NC-4.0</a> LICENSE</span>
+                    </p>
+                
+                
+                     <p class="copyright-item">
+                         <span>Slogan:</span>
+                         <span>Do you believe in <strong>DESTINY</strong>?</span>
+                     </p>
+                
+
+            </section>
+        
+        <section class="post-tags">
+            <div>
+                <span>Tag(s):</span>
+                <span class="tag">
+                    
+                    
+                        <a href="/tags/%E5%A4%8D%E7%8E%B0/"># 复现</a>
+                    
+                        <a href="/tags/DownUnderCTF/"># DownUnderCTF</a>
+                    
+                        <a href="/tags/2025/"># 2025</a>
+                    
+                        <a href="/tags/TUNG-TUNG-TUNG-TUNG-SAHUR/"># TUNG-TUNG-TUNG-TUNG-SAHUR</a>
+                    
+                        
+                </span>
+            </div>
+            <div>
+                <a href="javascript:window.history.back();">back</a>
+                <span>· </span>
+                <a href="/">home</a>
+            </div>
+        </section>
+        <section class="post-nav">
+            
+            
+            <a class="next" rel="next" href="/2025/07/19/%E4%B8%A4%E9%81%93go-SSTI/">两道go SSTI</a>
+            
+        </section>
+<script src="https://giscus.app/client.js"
+        data-repo="forkmmat/forkmmat.github.io"
+        data-repo-id="R_kgDOO0OA0g"
+        data-category="General"
+        data-category-id="DIC_kwDOO0OA0s4CtD6Y"
+        data-mapping="title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="zh-CN"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+</script>
+
+    </article>
+</div>
+
+            </div>
+            <footer id="footer" class="footer">
+    <div class="copyright">
+        <span>© rowen | Powered by <a href="https://hexo.io" target="_blank">Hexo</a> & <a href="https://github.com/Siricee/hexo-theme-Chic" target="_blank">Chic</a></span>
+    </div>
+</footer>
+
+    </div>
+</body>
+
+</html>
