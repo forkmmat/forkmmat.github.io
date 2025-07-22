@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <meta name="author" content="rowen">
+
+
+
+
+
+<title>第一章 应急响应-webshell查杀 | Hexo</title>
+
+
+
+    <link rel="icon" href="/drink.ico">
+
+
+
+
+    <!-- stylesheets list from _config.yml -->
+    
+    <link rel="stylesheet" href="/css/style.css">
+    
+
+
+
+    <!-- scripts list from _config.yml -->
+    
+    <script src="/js/script.js"></script>
+    
+    <script src="/js/tocbot.min.js"></script>
+    
+
+
+
+    
+    
+        
+    
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+    <!-- 引入jQuery -->
+<script type="text/javascript" src="//libs.baidu.com/jquery/1.8.3/jquery.min.js"></script>
+<!-- 雪花特效2 -->
+ <script type="text/javascript" src="/js/snow2.js"></script>
+    <script>
+        // this function is used to check current theme before page loaded.
+        (() => {
+            const currentTheme = window.localStorage && window.localStorage.getItem('theme') || '';
+            const isDark = currentTheme === 'dark';
+            const pagebody = document.getElementsByTagName('body')[0]
+            if (isDark) {
+                pagebody.classList.add('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Dark"
+            } else {
+                pagebody.classList.remove('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Light"
+            }
+        })();
+    </script>
+<script>
+!
+function() {
+function n(n, e, t) {
+return n.getAttribute(e) || t
+}
+function e(n) {
+return document.getElementsByTagName(n)
+}
+function t() {
+var t = e("script"),
+o = t.length,
+i = t[o - 1];
+return {
+l: o,
+z: n(i, "zIndex", -1), //置于主页面背后
+o: n(i, "opacity", .5), //线条透明度
+c: n(i, "color", "0,0,0"), //线条颜色
+n: n(i, "count", 100) //线条数量
+}
+}
+function o() {
+a = m.width = window.innerWidth ||
+document.documentElement.clientWidth || document.body.clientWidth,
+c = m.height = window.innerHeight ||
+document.documentElement.clientHeight || document.body.clientHeight
+}
+function i() {
+r.clearRect(0, 0, a, c);
+var n, e, t, o, m, l;
+s.forEach(function(i, x) {
+for (i.x += i.xa, i.y += i.ya, i.xa *= i.x > a || i.x < 0 ? -1 :
+1, i.ya *= i.y > c || i.y < 0 ? -1 : 1, r.fillRect(i.x - .5, i.y - .5, 1,
+1), e = x + 1; e < u.length; e++) n = u[e],
+null !== n.x && null !== n.y && (o = i.x - n.x, m = i.y - n.y, l
+= o * o + m * m, l < n.max && (n === y && l >= n.max / 2 && (i.x -= .03 * o,
+i.y -= .03 * m), t = (n.max - l) / n.max, r.beginPath(), r.lineWidth = t /
+2, r.strokeStyle = "rgba(" + d.c + "," + (t + .2) + ")", r.moveTo(i.x, i.y),
+r.lineTo(n.x, n.y), r.stroke()))
+}),
+x(i)
+}
+var a, c, u, m = document.createElement("canvas"),
+d = t(),
+l = "c_n" + d.l,
+r = m.getContext("2d"),
+x = window.requestAnimationFrame || window.webkitRequestAnimationFrame
+|| window.mozRequestAnimationFrame || window.oRequestAnimationFrame ||
+window.msRequestAnimationFrame ||
+function(n) {
+window.setTimeout(n, 1e3 / 45)
+},
+w = Math.random,
+y = {
+x: null,
+y: null,
+max: 2e4
+};
+m.id = l,
+m.style.cssText = "position:fixed;top:0;left:0;z-index:" + d.z +
+";opacity:" + d.o,
+e("body")[0].appendChild(m),
+o(),
+window.onresize = o,
+window.onmousemove = function(n) {
+n = n || window.event,
+y.x = n.clientX,
+y.y = n.clientY
+},
+window.onmouseout = function() {
+y.x = null,
+y.y = null
+};
+for (var s = [], f = 0; d.n > f; f++) {
+var h = w() * a,
+g = w() * c,
+v = 2 * w() - 1,
+p = 2 * w() - 1;
+s.push({
+x: h,
+y: g,
+xa: v,
+ya: p,
+max: 6e3
+})
+}
+u = s.concat([y]),
+setTimeout(function() {
+i()
+},
+100)
+} ();
+</script>
+    <div class="wrapper">
+        <header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-header header-logo"><a href="/">bobo&#39;s Blog</a></div>
+            <div class="menu navbar-right">
+                
+                    <a class="menu-item" href="/archives">📖博文</a>
+                
+                    <a class="menu-item" href="/category">📚类别</a>
+                
+                    <a class="menu-item" href="/tag">🏷️标签</a>
+                
+                    <a class="menu-item" href="/about">💡关于</a>
+                
+                    <a class="menu-item" href="/links">🔗友链</a>
+                
+                <input id="switch_default" type="checkbox" class="switch_default">
+                <label for="switch_default" class="toggleBtn"></label>
+            </div>
+        </div>
+    </nav>
+
+    
+    <nav class="navbar-mobile" id="nav-mobile">
+        <div class="container">
+            <div class="navbar-header">
+                <div>
+                    <a href="/">bobo&#39;s Blog</a><a id="mobile-toggle-theme">·&nbsp;Light</a>
+                </div>
+                <div class="menu-toggle" onclick="mobileBtn()">&#9776; Menu</div>
+            </div>
+            <div class="menu" id="mobile-menu">
+                
+                    <a class="menu-item" href="/archives">📖博文</a>
+                
+                    <a class="menu-item" href="/category">📚类别</a>
+                
+                    <a class="menu-item" href="/tag">🏷️标签</a>
+                
+                    <a class="menu-item" href="/about">💡关于</a>
+                
+                    <a class="menu-item" href="/links">🔗友链</a>
+                
+            </div>
+        </div>
+    </nav>
+
+</header>
+<script>
+    var mobileBtn = function f() {
+        var toggleMenu = document.getElementsByClassName("menu-toggle")[0];
+        var mobileMenu = document.getElementById("mobile-menu");
+        if(toggleMenu.classList.contains("active")){
+           toggleMenu.classList.remove("active")
+            mobileMenu.classList.remove("active")
+        }else{
+            toggleMenu.classList.add("active")
+            mobileMenu.classList.add("active")
+        }
+    }
+</script>
+            <div class="main">
+                <div class="container">
+    
+    
+        <div class="post-toc">
+    <div class="tocbot-list">
+    </div>
+    <div class="tocbot-list-menu">
+        <a class="tocbot-toc-expand" onclick="expand_toc()">Expand all</a>
+        <a onclick="go_top()">Back to top</a>
+        <a onclick="go_bottom()">Go to bottom</a>
+    </div>
+</div>
+
+<script>
+    document.ready(
+        function () {
+            tocbot.init({
+                tocSelector: '.tocbot-list',
+                contentSelector: '.post-content',
+                headingSelector: 'h1, h2, h3, h4, h5',
+                collapseDepth: 1,
+                orderedList: false,
+                scrollSmooth: true,
+            })
+        }
+    )
+
+    function expand_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 6,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "collapse_toc()");
+        b.innerHTML = "Collapse all"
+    }
+
+    function collapse_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 1,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "expand_toc()");
+        b.innerHTML = "Expand all"
+    }
+
+    function go_top() {
+        window.scrollTo(0, 0);
+    }
+
+    function go_bottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+</script>
+    
+
+    
+    <article class="post-wrap">
+        <header class="post-header">
+            <h1 class="post-title">第一章 应急响应-webshell查杀</h1>
+            
+                <div class="post-meta">
+                    
+                        Author: <a itemprop="author" rel="author" href="/">rowen</a>
+                    
+
+                    
+                        <span class="post-time">
+                        Date: <a href="#">July 22, 2025&nbsp;&nbsp;20:42:50</a>
+                        </span>
+                    
+                    
+                        <span class="post-category">
+                    Category:
+                            
+                                <a href="/categories/%E7%8E%84%E6%9C%BA%E5%88%B7%E9%A2%98/">玄机刷题</a>
+                            
+                        </span>
+                    
+                </div>
+            
+        </header>
+
+        <div class="post-content">
+            <h1 id="第一章-应急响应-webshell查杀"><a href="#第一章-应急响应-webshell查杀" class="headerlink" title="第一章 应急响应-webshell查杀"></a>第一章 应急响应-webshell查杀</h1><h2 id="步骤1"><a href="#步骤1" class="headerlink" title="步骤1"></a>步骤1</h2><h3 id="webshell里面的flag-flag-xxxxx-xxxx-xxxx-xxxx-xxxx"><a href="#webshell里面的flag-flag-xxxxx-xxxx-xxxx-xxxx-xxxx" class="headerlink" title="webshell里面的flag flag{xxxxx-xxxx-xxxx-xxxx-xxxx}"></a>webshell里面的flag flag{xxxxx-xxxx-xxxx-xxxx-xxxx}</h3><p>首先代码特征</p>
+<p>可疑函数调用</p>
+<p>WebShell通常会使用一些危险的函数来执行系统命令或代码，如：<br>PHP: eval(), system(), exec(), shell_exec(), passthru(), assert(), base64_decode()<br>ASP: Execute(), Eval(), CreateObject()<br>JSP: Runtime.getRuntime().exec()</p>
+<ol>
+<li><strong>编码和解码</strong><ul>
+<li>WebShell经常使用编码和解码技术来隐藏其真实意图，如Base64编码：</li>
+</ul>
+</li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">eval</span>(base64_decode(<span class="string">&#x27;encoded_string&#x27;</span>));</span><br></pre></td></tr></table></figure>
+
+<p>文件操作</p>
+<p>WebShell可能会包含文件操作函数，用于读取、写入或修改文件：<br>PHP: fopen(), fwrite(), file_get_contents(), file_put_contents()<br>ASP: FileSystemObject<br>网络操作</p>
+<p>WebShell可能会包含网络操作函数，用于与远程服务器通信：<br>PHP: fsockopen(), curl_exec(), file_get_contents(‘http:&#x2F;&#x2F;…’)<br>ASP: WinHttp.WinHttpRequest<br>上面刚刚也说了我们可以尝试定位一些特殊的后缀文件，例如：.asp、.php、.jsp、.aspx。</p>
+<p>命令：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">//搜索目录下适配当前应用的网页文件，查看内容是否有Webshell特征</span><br><span class="line">find ./ type f -name &quot;*.jsp&quot; | xargs grep &quot;exec(&quot; </span><br><span class="line">find ./ type f -name &quot;*.php&quot; | xargs grep &quot;eval(&quot; </span><br><span class="line">find ./ type f -name &quot;*.asp&quot; | xargs grep &quot;execute(&quot; </span><br><span class="line">find ./ type f -name &quot;*.aspx&quot; | xargs grep &quot;eval(&quot; </span><br><span class="line"> </span><br><span class="line">//对于免杀Webshell，可以查看是否使用编码</span><br><span class="line">find ./ type f -name &quot;*.php&quot; | xargs grep &quot;base64_decode&quot; </span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>一个一个进行尝试即可；</p>
+<p>首先定位Web服务器，查看网络发现开放了80端口</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">netstat -ano</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/c37432d570dbdf7c.png" alt="c37432d570dbdf7c.png"></p>
+<p>查看端口对应应用知道了使用的web服务器为apache</p>
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/263850631a7b9025.png" alt="263850631a7b9025.png"></p>
+<p>所以我们去到apach目录</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cd /var/www/html</span><br></pre></td></tr></table></figure>
+
+<p>在这里搜索web目录下的php文件，看是否包含恶意函数，发现有三个文件中包含了恶意函数</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">find ./ -type f -name &quot;.php&quot; | xargs grep &quot;eval(&quot;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>在这里发现flag</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cat include/gz.php</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/512b776bb3d9dced.png" alt="512b776bb3d9dced.png"></p>
+<p>即flag为</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">flag&#123;027ccd04-5065-48b6-a32d-77c704a5e26d&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="步骤2"><a href="#步骤2" class="headerlink" title="步骤2"></a>步骤2</h2><h3 id="黑客使用的什么工具的shell-github地址的md5-flag-md5"><a href="#黑客使用的什么工具的shell-github地址的md5-flag-md5" class="headerlink" title="黑客使用的什么工具的shell github地址的md5 flag{md5}"></a>黑客使用的什么工具的shell github地址的md5 flag{md5}</h3><h5 id="知识点：哥斯拉病毒"><a href="#知识点：哥斯拉病毒" class="headerlink" title="知识点：哥斯拉病毒"></a>知识点：哥斯拉病毒</h5><p>哥斯拉病毒是一种Java后门木马，通常用于攻击并控制<a target="_blank" rel="noopener" href="https://so.csdn.net/so/search?q=Web%E6%9C%8D%E5%8A%A1%E5%99%A8&spm=1001.2101.3001.7020">Web服务器</a>。特征就包括：</p>
+<blockquote>
+<ol>
+<li><strong>@session_start();</strong> - 开启一个会话。</li>
+<li><strong>@set_time_limit(0);</strong> - 设置脚本执行时间为无限。</li>
+<li><strong>@error_reporting(0);</strong> - 关闭所有错误报告。</li>
+</ol>
+</blockquote>
+<p>这些代码行主要用于隐藏病毒活动并确保其能够长时间运行而不被发现。哥斯拉病毒通常会通过Webshell或其他漏洞注入到服务器中，然后使用这些命令来掩盖其存在并执行进一步的恶意操作。</p>
+<p>所以我们只需要找到它的github地址并且进行MD5加密即可；</p>
+<p>Godzilla地址：<a target="_blank" rel="noopener" href="https://github.com/BeichenDream/Godzilla">https://github.com/BeichenDream/Godzilla</a></p>
+<p>常用的Webshell连接工具主要就下面几款：</p>
+<p>caidao，中国菜刀 AntSword，蚁剑 Behinder，冰蝎 Godzilla，哥斯拉</p>
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/b5c629ccdedf0181.png" alt="b5c629ccdedf0181.png"></p>
+<p>即flag为</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">flag&#123;39392DE3218C333F794BEFEF07AC9257&#125;</span><br></pre></td></tr></table></figure>
+
+<p>后面的问题我们可以使用河马查杀</p>
+<h2 id="河马查杀webshell"><a href="#河马查杀webshell" class="headerlink" title="河马查杀webshell"></a>河马查杀webshell</h2><h2 id="步骤3"><a href="#步骤3" class="headerlink" title="步骤3"></a>步骤3</h2><h3 id="黑客隐藏shell的完整路径的md5-flag-md5-注-xxx-xxx-xxx-xxx-xxx-xxx"><a href="#黑客隐藏shell的完整路径的md5-flag-md5-注-xxx-xxx-xxx-xxx-xxx-xxx" class="headerlink" title="黑客隐藏shell的完整路径的md5 flag{md5} 注 : &#x2F;xxx&#x2F;xxx&#x2F;xxx&#x2F;xxx&#x2F;xxx.xxx"></a>黑客隐藏shell的完整路径的md5 flag{md5} 注 : &#x2F;xxx&#x2F;xxx&#x2F;xxx&#x2F;xxx&#x2F;xxx.xxx</h3><p>之前查恶意代码发现有一个文件是.Mysqli.php，用.作为开头的文件不会直接显示出来，可以确定这个是隐藏文件</p>
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/0a78b9f08e92ae48.png" alt="0a78b9f08e92ae48.png"></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">对文件路径进行md5加密得到flag</span><br><span class="line"></span><br><span class="line">flag&#123;aebac0e58cd6c5fad1695ee4d1ac1919&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="步骤4"><a href="#步骤4" class="headerlink" title="步骤4"></a>步骤4</h2><h4 id="黑客免杀马完整路径-md5-flag-md5"><a href="#黑客免杀马完整路径-md5-flag-md5" class="headerlink" title="黑客免杀马完整路径 md5 flag{md5}"></a>黑客免杀马完整路径 md5 flag{md5}</h4><p><img src="https://c.img.dasctf.com/LightPicture/2025/07/1845e02d5c7dd3b0.png" alt="1845e02d5c7dd3b0.png"><img src="https://c.img.dasctf.com/LightPicture/2025/07/dc5d045df048c48f.png" alt="dc5d045df048c48f.png"></p>
+
+        </div>
+
+        
+            <section class="post-copyright">
+                
+                    <p class="copyright-item">
+                        <span>Author:</span>
+                        <span>rowen</span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>Permalink:</span>
+                        <span><a href="http://example.com/2025/07/22/%E7%AC%AC%E4%B8%80%E7%AB%A0-%E5%BA%94%E6%80%A5%E5%93%8D%E5%BA%94-webshell%E6%9F%A5%E6%9D%80/">http://example.com/2025/07/22/%E7%AC%AC%E4%B8%80%E7%AB%A0-%E5%BA%94%E6%80%A5%E5%93%8D%E5%BA%94-webshell%E6%9F%A5%E6%9D%80/</a></span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>License:</span>
+                        <span>Copyright (c) 2019 <a target="_blank" rel="noopener" href="http://creativecommons.org/licenses/by-nc/4.0/">CC-BY-NC-4.0</a> LICENSE</span>
+                    </p>
+                
+                
+                     <p class="copyright-item">
+                         <span>Slogan:</span>
+                         <span>Do you believe in <strong>DESTINY</strong>?</span>
+                     </p>
+                
+
+            </section>
+        
+        <section class="post-tags">
+            <div>
+                <span>Tag(s):</span>
+                <span class="tag">
+                    
+                    
+                        <a href="/tags/%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8/"># 网络安全</a>
+                    
+                        <a href="/tags/%E6%9F%A5%E6%9D%80/"># 查杀</a>
+                    
+                        <a href="/tags/webshell/"># webshell</a>
+                    
+                        
+                </span>
+            </div>
+            <div>
+                <a href="javascript:window.history.back();">back</a>
+                <span>· </span>
+                <a href="/">home</a>
+            </div>
+        </section>
+        <section class="post-nav">
+            
+            
+            <a class="next" rel="next" href="/2025/07/22/DownUnderCTF%202025%20%20mini-me/">DownUnderCTF 2025  mini-me</a>
+            
+        </section>
+<script src="https://giscus.app/client.js"
+        data-repo="forkmmat/forkmmat.github.io"
+        data-repo-id="R_kgDOO0OA0g"
+        data-category="General"
+        data-category-id="DIC_kwDOO0OA0s4CtD6Y"
+        data-mapping="title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="zh-CN"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+</script>
+
+    </article>
+</div>
+
+            </div>
+            <footer id="footer" class="footer">
+    <div class="copyright">
+        <span>© rowen | Powered by <a href="https://hexo.io" target="_blank">Hexo</a> & <a href="https://github.com/Siricee/hexo-theme-Chic" target="_blank">Chic</a></span>
+    </div>
+</footer>
+
+    </div>
+</body>
+
+</html>
