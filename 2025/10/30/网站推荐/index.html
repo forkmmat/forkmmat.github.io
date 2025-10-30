@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <meta name="author" content="rowen">
+
+
+
+
+
+<title>网站推荐 | Hexo</title>
+
+
+
+    <link rel="icon" href="/drink.ico">
+
+
+
+
+    <!-- stylesheets list from _config.yml -->
+    
+    <link rel="stylesheet" href="/css/style.css">
+    
+
+
+
+    <!-- scripts list from _config.yml -->
+    
+    <script src="/js/script.js"></script>
+    
+    <script src="/js/tocbot.min.js"></script>
+    
+
+
+
+    
+    
+        
+    
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+    <!-- 引入jQuery -->
+<script type="text/javascript" src="//libs.baidu.com/jquery/1.8.3/jquery.min.js"></script>
+<!-- 雪花特效2 -->
+ <script type="text/javascript" src="/js/snow2.js"></script>
+    <script>
+        // this function is used to check current theme before page loaded.
+        (() => {
+            const currentTheme = window.localStorage && window.localStorage.getItem('theme') || '';
+            const isDark = currentTheme === 'dark';
+            const pagebody = document.getElementsByTagName('body')[0]
+            if (isDark) {
+                pagebody.classList.add('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Dark"
+            } else {
+                pagebody.classList.remove('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Light"
+            }
+        })();
+    </script>
+<script>
+!
+function() {
+function n(n, e, t) {
+return n.getAttribute(e) || t
+}
+function e(n) {
+return document.getElementsByTagName(n)
+}
+function t() {
+var t = e("script"),
+o = t.length,
+i = t[o - 1];
+return {
+l: o,
+z: n(i, "zIndex", -1), //置于主页面背后
+o: n(i, "opacity", .5), //线条透明度
+c: n(i, "color", "0,0,0"), //线条颜色
+n: n(i, "count", 100) //线条数量
+}
+}
+function o() {
+a = m.width = window.innerWidth ||
+document.documentElement.clientWidth || document.body.clientWidth,
+c = m.height = window.innerHeight ||
+document.documentElement.clientHeight || document.body.clientHeight
+}
+function i() {
+r.clearRect(0, 0, a, c);
+var n, e, t, o, m, l;
+s.forEach(function(i, x) {
+for (i.x += i.xa, i.y += i.ya, i.xa *= i.x > a || i.x < 0 ? -1 :
+1, i.ya *= i.y > c || i.y < 0 ? -1 : 1, r.fillRect(i.x - .5, i.y - .5, 1,
+1), e = x + 1; e < u.length; e++) n = u[e],
+null !== n.x && null !== n.y && (o = i.x - n.x, m = i.y - n.y, l
+= o * o + m * m, l < n.max && (n === y && l >= n.max / 2 && (i.x -= .03 * o,
+i.y -= .03 * m), t = (n.max - l) / n.max, r.beginPath(), r.lineWidth = t /
+2, r.strokeStyle = "rgba(" + d.c + "," + (t + .2) + ")", r.moveTo(i.x, i.y),
+r.lineTo(n.x, n.y), r.stroke()))
+}),
+x(i)
+}
+var a, c, u, m = document.createElement("canvas"),
+d = t(),
+l = "c_n" + d.l,
+r = m.getContext("2d"),
+x = window.requestAnimationFrame || window.webkitRequestAnimationFrame
+|| window.mozRequestAnimationFrame || window.oRequestAnimationFrame ||
+window.msRequestAnimationFrame ||
+function(n) {
+window.setTimeout(n, 1e3 / 45)
+},
+w = Math.random,
+y = {
+x: null,
+y: null,
+max: 2e4
+};
+m.id = l,
+m.style.cssText = "position:fixed;top:0;left:0;z-index:" + d.z +
+";opacity:" + d.o,
+e("body")[0].appendChild(m),
+o(),
+window.onresize = o,
+window.onmousemove = function(n) {
+n = n || window.event,
+y.x = n.clientX,
+y.y = n.clientY
+},
+window.onmouseout = function() {
+y.x = null,
+y.y = null
+};
+for (var s = [], f = 0; d.n > f; f++) {
+var h = w() * a,
+g = w() * c,
+v = 2 * w() - 1,
+p = 2 * w() - 1;
+s.push({
+x: h,
+y: g,
+xa: v,
+ya: p,
+max: 6e3
+})
+}
+u = s.concat([y]),
+setTimeout(function() {
+i()
+},
+100)
+} ();
+</script>
+    <div class="wrapper">
+        <header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-header header-logo"><a href="/">bobo&#39;s Blog</a></div>
+            <div class="menu navbar-right">
+                
+                    <a class="menu-item" href="/archives">📖博文</a>
+                
+                    <a class="menu-item" href="/category">📚类别</a>
+                
+                    <a class="menu-item" href="/tag">🏷️标签</a>
+                
+                    <a class="menu-item" href="/about">💡关于</a>
+                
+                    <a class="menu-item" href="/links">🔗友链</a>
+                
+                <input id="switch_default" type="checkbox" class="switch_default">
+                <label for="switch_default" class="toggleBtn"></label>
+            </div>
+        </div>
+    </nav>
+
+    
+    <nav class="navbar-mobile" id="nav-mobile">
+        <div class="container">
+            <div class="navbar-header">
+                <div>
+                    <a href="/">bobo&#39;s Blog</a><a id="mobile-toggle-theme">·&nbsp;Light</a>
+                </div>
+                <div class="menu-toggle" onclick="mobileBtn()">&#9776; Menu</div>
+            </div>
+            <div class="menu" id="mobile-menu">
+                
+                    <a class="menu-item" href="/archives">📖博文</a>
+                
+                    <a class="menu-item" href="/category">📚类别</a>
+                
+                    <a class="menu-item" href="/tag">🏷️标签</a>
+                
+                    <a class="menu-item" href="/about">💡关于</a>
+                
+                    <a class="menu-item" href="/links">🔗友链</a>
+                
+            </div>
+        </div>
+    </nav>
+
+</header>
+<script>
+    var mobileBtn = function f() {
+        var toggleMenu = document.getElementsByClassName("menu-toggle")[0];
+        var mobileMenu = document.getElementById("mobile-menu");
+        if(toggleMenu.classList.contains("active")){
+           toggleMenu.classList.remove("active")
+            mobileMenu.classList.remove("active")
+        }else{
+            toggleMenu.classList.add("active")
+            mobileMenu.classList.add("active")
+        }
+    }
+</script>
+            <div class="main">
+                <div class="container">
+    
+    
+        <div class="post-toc">
+    <div class="tocbot-list">
+    </div>
+    <div class="tocbot-list-menu">
+        <a class="tocbot-toc-expand" onclick="expand_toc()">Expand all</a>
+        <a onclick="go_top()">Back to top</a>
+        <a onclick="go_bottom()">Go to bottom</a>
+    </div>
+</div>
+
+<script>
+    document.ready(
+        function () {
+            tocbot.init({
+                tocSelector: '.tocbot-list',
+                contentSelector: '.post-content',
+                headingSelector: 'h1, h2, h3, h4, h5',
+                collapseDepth: 1,
+                orderedList: false,
+                scrollSmooth: true,
+            })
+        }
+    )
+
+    function expand_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 6,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "collapse_toc()");
+        b.innerHTML = "Collapse all"
+    }
+
+    function collapse_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 1,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "expand_toc()");
+        b.innerHTML = "Expand all"
+    }
+
+    function go_top() {
+        window.scrollTo(0, 0);
+    }
+
+    function go_bottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+</script>
+    
+
+    
+    <article class="post-wrap">
+        <header class="post-header">
+            <h1 class="post-title">网站推荐</h1>
+            
+                <div class="post-meta">
+                    
+                        Author: <a itemprop="author" rel="author" href="/">rowen</a>
+                    
+
+                    
+                        <span class="post-time">
+                        Date: <a href="#">October 30, 2025&nbsp;&nbsp;21:12:48</a>
+                        </span>
+                    
+                    
+                        <span class="post-category">
+                    Category:
+                            
+                                <a href="/categories/%E5%AD%A6%E4%B9%A0/">学习</a>
+                            
+                        </span>
+                    
+                </div>
+            
+        </header>
+
+        <div class="post-content">
+            <h1 id="网站推荐"><a href="#网站推荐" class="headerlink" title="网站推荐"></a>网站推荐</h1><p>以下均是我个人推荐 有漏的网站或知识点欢迎指正补充</p>
+<h2 id="网安-常用刷题网站："><a href="#网安-常用刷题网站：" class="headerlink" title="网安 常用刷题网站："></a>网安 常用刷题网站：</h2><p><strong>协会平台：</strong></p>
+<p><a target="_blank" rel="noopener" href="https://ctf.huhstsec.top/">https://ctf.huhstsec.top/</a> （ 我们湖南人文科技学院 网络空间安全协会的 CTF 平台）</p>
+<p><strong>NSSCTF:</strong></p>
+<p><a target="_blank" rel="noopener" href="https://www.nssctf.cn/%EF%BC%88%E9%A2%98%E7%9B%AE%E6%AF%94%E8%BE%83%E5%A4%9A%EF%BC%89">https://www.nssctf.cn/（题目比较多）</a></p>
+<p><strong>bugku</strong>：</p>
+<p><a target="_blank" rel="noopener" href="https://ctf.bugku.com/">https://ctf.bugku.com/</a>  ( 里面可以有 AWD 自定义比赛，可以和朋友组织打打，不过要攒金币)</p>
+<p><strong>BUUCTF:</strong></p>
+<p><a target="_blank" rel="noopener" href="https://buuoj.cn/">https://buuoj.cn/</a> （题目比较经典）</p>
+<p><strong>攻防世界：</strong></p>
+<p><a target="_blank" rel="noopener" href="https://adworld.xctf.org.cn/">https://adworld.xctf.org.cn/</a> （入门简单题，或者有一些比较大型比赛报名）</p>
+<p><strong>青少年CTF:</strong></p>
+<p><a target="_blank" rel="noopener" href="https://www.qsnctf.com/">https://www.qsnctf.com/</a>   (还行吧，用的不多)</p>
+<p><strong>Review::CTF</strong>：</p>
+<p><a target="_blank" rel="noopener" href="https://gz.imxbt.cn/games">https://gz.imxbt.cn/games</a>  （复习以前的比赛 ，挺好的网站）</p>
+<p><strong>春秋云镜：</strong></p>
+<p><a target="_blank" rel="noopener" href="https://yunjing.ichunqiu.com/">https://yunjing.ichunqiu.com/</a>  （进阶刷题网站）</p>
+<p><strong>PolarD&amp;N CTF:</strong></p>
+<p><a target="_blank" rel="noopener" href="https://www.polarctf.com/">https://www.polarctf.com/</a>  （题目挺好的）</p>
+<p><strong>玄机平台：</strong></p>
+<p><a target="_blank" rel="noopener" href="https://xj.edisec.net/">https://xj.edisec.net/</a>  （应急响应这一块  建议去咸鱼上买金币 ）</p>
+<h2 id="工具网站："><a href="#工具网站：" class="headerlink" title="工具网站："></a>工具网站：</h2><p><strong>锤子解码加密网站：</strong></p>
+<p><a target="_blank" rel="noopener" href="https://www.toolhelper.cn/EncodeDecode/Base64">https://www.toolhelper.cn/EncodeDecode/Base64</a>  （Base64 编码&#x2F;解码 - 锤子在线工具)</p>
+<p><strong>z-library：</strong></p>
+<p><a target="_blank" rel="noopener" href="https://zh.z-library.sk/">https://zh.z-library.sk/</a>  （应该算世界最大的电子书网站吧）</p>
+<p><strong>CleverPDF</strong>:</p>
+<p><a target="_blank" rel="noopener" href="https://www.cleverpdf.com/cn">https://www.cleverpdf.com/cn</a>  (几十个强大的word 或者是PDF在线 转换工具，无需注册会员，永久免费！)</p>
+<p><strong>JDecode 反编译向导</strong>：</p>
+<p><a target="_blank" rel="noopener" href="http://jdecode.net/">http://jdecode.net/</a> （可以将 .class 文件反编译 ）</p>
+<p><strong>科学上网</strong> ：</p>
+<p>(tizi 购买)</p>
+<p><a target="_blank" rel="noopener" href="https://mojie.co/">https://mojie.co/</a>   (魔戒 ，性价比这一块)</p>
+<p><a target="_blank" rel="noopener" href="https://ikuuu.de/">https://ikuuu.de/</a>  （ikuuu, 登录后每个月可以免费有50G用，不过不太稳定）</p>
+<p><strong>本地部署ai</strong>：</p>
+<p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/qubernet/p/18702147">https://www.cnblogs.com/qubernet/p/18702147</a>  (利用Ollama 来弄 本地ai ，比较详细)</p>
+<p><strong>吾爱破解</strong>：</p>
+<p><a target="_blank" rel="noopener" href="https://www.52pojie.cn/">https://www.52pojie.cn/</a> （很多好用的软件，在这个论坛里，搜索某个软件 可以在 搜索后加 “吾爱破解”这几个字）</p>
+<p><strong>图片提取文字：</strong></p>
+<p><a target="_blank" rel="noopener" href="https://web.baimiaoapp.com/">https://web.baimiaoapp.com/</a> （还行吧）</p>
+<p><strong>机核工具</strong>：</p>
+<p><a target="_blank" rel="noopener" href="https://get-shell.com/%E6%9E%81%E6%A0%B8%E6%94%B6%E5%BD%95/%E5%AE%9E%E7%94%A8%E5%B7%A5%E5%85%B7">https://get-shell.com/极核收录/实用工具</a> （工具库吧，挺多的 ctf 相关的软件）</p>
+<p><strong>图片查看器</strong>：</p>
+<p><a target="_blank" rel="noopener" href="https://lsb.daidr.me/">https://lsb.daidr.me/</a> （图片LSB查看器）</p>
+<p><strong>弹shell命令网站：</strong></p>
+<p><a target="_blank" rel="noopener" href="https://www.revshells.com/">https://www.revshells.com/</a> （弹shell命令网站）</p>
+<p><strong>kali镜像下载：</strong></p>
+<p><a target="_blank" rel="noopener" href="https://old.kali.org/kali-images/">https://old.kali.org/kali-images/</a> （包含许多版本的kali下载）</p>
+<p><strong>Window镜像下载：</strong></p>
+<p><a target="_blank" rel="noopener" href="https://msdn.itellyou.cn/">https://msdn.itellyou.cn/</a>  (挺多的好用)</p>
+<p>以上大概是我总结好用的网站，有时间可能会再添加的，欢迎补充。</p>
+
+        </div>
+
+        
+            <section class="post-copyright">
+                
+                    <p class="copyright-item">
+                        <span>Author:</span>
+                        <span>rowen</span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>Permalink:</span>
+                        <span><a href="http://example.com/2025/10/30/%E7%BD%91%E7%AB%99%E6%8E%A8%E8%8D%90/">http://example.com/2025/10/30/%E7%BD%91%E7%AB%99%E6%8E%A8%E8%8D%90/</a></span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>License:</span>
+                        <span>Copyright (c) 2019 <a target="_blank" rel="noopener" href="http://creativecommons.org/licenses/by-nc/4.0/">CC-BY-NC-4.0</a> LICENSE</span>
+                    </p>
+                
+                
+                     <p class="copyright-item">
+                         <span>Slogan:</span>
+                         <span>Do you believe in <strong>DESTINY</strong>?</span>
+                     </p>
+                
+
+            </section>
+        
+        <section class="post-tags">
+            <div>
+                <span>Tag(s):</span>
+                <span class="tag">
+                    
+                    
+                        <a href="/tags/%E6%96%B0%E6%89%8B/"># 新手</a>
+                    
+                        <a href="/tags/%E7%BD%91%E7%AB%99/"># 网站</a>
+                    
+                        <a href="/tags/%E5%B7%A5%E5%85%B7/"># 工具</a>
+                    
+                        <a href="/tags/%E5%B8%B8%E7%94%A8/"># 常用</a>
+                    
+                        
+                </span>
+            </div>
+            <div>
+                <a href="javascript:window.history.back();">back</a>
+                <span>· </span>
+                <a href="/">home</a>
+            </div>
+        </section>
+        <section class="post-nav">
+            
+            
+            <a class="next" rel="next" href="/2025/10/30/%F0%9F%8C%88%E7%94%A8Python%E5%86%99%E4%B8%80%E4%B8%AA%E4%BC%9A%E2%80%9C%E5%85%B3%E5%BF%83%E4%BD%A0%E2%80%9D%E7%9A%84%E5%BC%B9%E7%AA%97%E7%A8%8B%E5%BA%8F/">🌈《用Python写一个会“关心你”的弹窗程序》</a>
+            
+        </section>
+<script src="https://giscus.app/client.js"
+        data-repo="forkmmat/forkmmat.github.io"
+        data-repo-id="R_kgDOO0OA0g"
+        data-category="General"
+        data-category-id="DIC_kwDOO0OA0s4CtD6Y"
+        data-mapping="title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="zh-CN"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+</script>
+
+    </article>
+</div>
+
+            </div>
+            <footer id="footer" class="footer">
+    <div class="copyright">
+        <span>© rowen | Powered by <a href="https://hexo.io" target="_blank">Hexo</a> & <a href="https://github.com/Siricee/hexo-theme-Chic" target="_blank">Chic</a></span>
+    </div>
+</footer>
+
+    </div>
+</body>
+
+</html>
