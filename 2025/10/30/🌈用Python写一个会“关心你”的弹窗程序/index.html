@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <meta name="author" content="rowen">
+
+
+
+
+
+<title>🌈《用Python写一个会“关心你”的弹窗程序》 | Hexo</title>
+
+
+
+    <link rel="icon" href="/drink.ico">
+
+
+
+
+    <!-- stylesheets list from _config.yml -->
+    
+    <link rel="stylesheet" href="/css/style.css">
+    
+
+
+
+    <!-- scripts list from _config.yml -->
+    
+    <script src="/js/script.js"></script>
+    
+    <script src="/js/tocbot.min.js"></script>
+    
+
+
+
+    
+    
+        
+    
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+    <!-- 引入jQuery -->
+<script type="text/javascript" src="//libs.baidu.com/jquery/1.8.3/jquery.min.js"></script>
+<!-- 雪花特效2 -->
+ <script type="text/javascript" src="/js/snow2.js"></script>
+    <script>
+        // this function is used to check current theme before page loaded.
+        (() => {
+            const currentTheme = window.localStorage && window.localStorage.getItem('theme') || '';
+            const isDark = currentTheme === 'dark';
+            const pagebody = document.getElementsByTagName('body')[0]
+            if (isDark) {
+                pagebody.classList.add('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Dark"
+            } else {
+                pagebody.classList.remove('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Light"
+            }
+        })();
+    </script>
+<script>
+!
+function() {
+function n(n, e, t) {
+return n.getAttribute(e) || t
+}
+function e(n) {
+return document.getElementsByTagName(n)
+}
+function t() {
+var t = e("script"),
+o = t.length,
+i = t[o - 1];
+return {
+l: o,
+z: n(i, "zIndex", -1), //置于主页面背后
+o: n(i, "opacity", .5), //线条透明度
+c: n(i, "color", "0,0,0"), //线条颜色
+n: n(i, "count", 100) //线条数量
+}
+}
+function o() {
+a = m.width = window.innerWidth ||
+document.documentElement.clientWidth || document.body.clientWidth,
+c = m.height = window.innerHeight ||
+document.documentElement.clientHeight || document.body.clientHeight
+}
+function i() {
+r.clearRect(0, 0, a, c);
+var n, e, t, o, m, l;
+s.forEach(function(i, x) {
+for (i.x += i.xa, i.y += i.ya, i.xa *= i.x > a || i.x < 0 ? -1 :
+1, i.ya *= i.y > c || i.y < 0 ? -1 : 1, r.fillRect(i.x - .5, i.y - .5, 1,
+1), e = x + 1; e < u.length; e++) n = u[e],
+null !== n.x && null !== n.y && (o = i.x - n.x, m = i.y - n.y, l
+= o * o + m * m, l < n.max && (n === y && l >= n.max / 2 && (i.x -= .03 * o,
+i.y -= .03 * m), t = (n.max - l) / n.max, r.beginPath(), r.lineWidth = t /
+2, r.strokeStyle = "rgba(" + d.c + "," + (t + .2) + ")", r.moveTo(i.x, i.y),
+r.lineTo(n.x, n.y), r.stroke()))
+}),
+x(i)
+}
+var a, c, u, m = document.createElement("canvas"),
+d = t(),
+l = "c_n" + d.l,
+r = m.getContext("2d"),
+x = window.requestAnimationFrame || window.webkitRequestAnimationFrame
+|| window.mozRequestAnimationFrame || window.oRequestAnimationFrame ||
+window.msRequestAnimationFrame ||
+function(n) {
+window.setTimeout(n, 1e3 / 45)
+},
+w = Math.random,
+y = {
+x: null,
+y: null,
+max: 2e4
+};
+m.id = l,
+m.style.cssText = "position:fixed;top:0;left:0;z-index:" + d.z +
+";opacity:" + d.o,
+e("body")[0].appendChild(m),
+o(),
+window.onresize = o,
+window.onmousemove = function(n) {
+n = n || window.event,
+y.x = n.clientX,
+y.y = n.clientY
+},
+window.onmouseout = function() {
+y.x = null,
+y.y = null
+};
+for (var s = [], f = 0; d.n > f; f++) {
+var h = w() * a,
+g = w() * c,
+v = 2 * w() - 1,
+p = 2 * w() - 1;
+s.push({
+x: h,
+y: g,
+xa: v,
+ya: p,
+max: 6e3
+})
+}
+u = s.concat([y]),
+setTimeout(function() {
+i()
+},
+100)
+} ();
+</script>
+    <div class="wrapper">
+        <header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-header header-logo"><a href="/">bobo&#39;s Blog</a></div>
+            <div class="menu navbar-right">
+                
+                    <a class="menu-item" href="/archives">📖博文</a>
+                
+                    <a class="menu-item" href="/category">📚类别</a>
+                
+                    <a class="menu-item" href="/tag">🏷️标签</a>
+                
+                    <a class="menu-item" href="/about">💡关于</a>
+                
+                    <a class="menu-item" href="/links">🔗友链</a>
+                
+                <input id="switch_default" type="checkbox" class="switch_default">
+                <label for="switch_default" class="toggleBtn"></label>
+            </div>
+        </div>
+    </nav>
+
+    
+    <nav class="navbar-mobile" id="nav-mobile">
+        <div class="container">
+            <div class="navbar-header">
+                <div>
+                    <a href="/">bobo&#39;s Blog</a><a id="mobile-toggle-theme">·&nbsp;Light</a>
+                </div>
+                <div class="menu-toggle" onclick="mobileBtn()">&#9776; Menu</div>
+            </div>
+            <div class="menu" id="mobile-menu">
+                
+                    <a class="menu-item" href="/archives">📖博文</a>
+                
+                    <a class="menu-item" href="/category">📚类别</a>
+                
+                    <a class="menu-item" href="/tag">🏷️标签</a>
+                
+                    <a class="menu-item" href="/about">💡关于</a>
+                
+                    <a class="menu-item" href="/links">🔗友链</a>
+                
+            </div>
+        </div>
+    </nav>
+
+</header>
+<script>
+    var mobileBtn = function f() {
+        var toggleMenu = document.getElementsByClassName("menu-toggle")[0];
+        var mobileMenu = document.getElementById("mobile-menu");
+        if(toggleMenu.classList.contains("active")){
+           toggleMenu.classList.remove("active")
+            mobileMenu.classList.remove("active")
+        }else{
+            toggleMenu.classList.add("active")
+            mobileMenu.classList.add("active")
+        }
+    }
+</script>
+            <div class="main">
+                <div class="container">
+    
+    
+        <div class="post-toc">
+    <div class="tocbot-list">
+    </div>
+    <div class="tocbot-list-menu">
+        <a class="tocbot-toc-expand" onclick="expand_toc()">Expand all</a>
+        <a onclick="go_top()">Back to top</a>
+        <a onclick="go_bottom()">Go to bottom</a>
+    </div>
+</div>
+
+<script>
+    document.ready(
+        function () {
+            tocbot.init({
+                tocSelector: '.tocbot-list',
+                contentSelector: '.post-content',
+                headingSelector: 'h1, h2, h3, h4, h5',
+                collapseDepth: 1,
+                orderedList: false,
+                scrollSmooth: true,
+            })
+        }
+    )
+
+    function expand_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 6,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "collapse_toc()");
+        b.innerHTML = "Collapse all"
+    }
+
+    function collapse_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 1,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "expand_toc()");
+        b.innerHTML = "Expand all"
+    }
+
+    function go_top() {
+        window.scrollTo(0, 0);
+    }
+
+    function go_bottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+</script>
+    
+
+    
+    <article class="post-wrap">
+        <header class="post-header">
+            <h1 class="post-title">🌈《用Python写一个会“关心你”的弹窗程序》</h1>
+            
+                <div class="post-meta">
+                    
+                        Author: <a itemprop="author" rel="author" href="/">rowen</a>
+                    
+
+                    
+                        <span class="post-time">
+                        Date: <a href="#">October 30, 2025&nbsp;&nbsp;15:30:08</a>
+                        </span>
+                    
+                    
+                        <span class="post-category">
+                    Category:
+                            
+                                <a href="/categories/Python%E5%AD%A6%E4%B9%A0/">Python学习</a>
+                            
+                        </span>
+                    
+                </div>
+            
+        </header>
+
+        <div class="post-content">
+            <h1 id="🌈-用-Python-写一个会“关心你”的弹窗程序"><a href="#🌈-用-Python-写一个会“关心你”的弹窗程序" class="headerlink" title="🌈 用 Python 写一个会“关心你”的弹窗程序"></a>🌈 用 Python 写一个会“关心你”的弹窗程序</h1><h2 id="🧠-一、前言"><a href="#🧠-一、前言" class="headerlink" title="🧠 一、前言"></a>🧠 一、前言</h2><p>有时候写代码写累了，总想整点“没啥用但很开心”的小东西。<br> 于是我写了这段 Python 小脚本——<br> 一个会<strong>随机在屏幕上弹出小窗提醒你关心自己的程序</strong>。</p>
+<p>它可能会说：</p>
+<blockquote>
+<p>“多喝水呀<del>”<br>“天冷了要加衣服</del>”<br>“早点休息吧，别熬夜~”</p>
+</blockquote>
+<p>看似温馨，其实是——<strong>精神攻击（×）</strong><br> 但从技术角度看，它是一个不错的练手项目：</p>
+<ul>
+<li>GUI 库：<code>tkinter</code></li>
+<li>随机控制：<code>random</code></li>
+<li>递归与定时调用：<code>after()</code></li>
+<li>窗口管理与约束：顶层窗口 <code>Toplevel()</code></li>
+</ul>
+<h2 id="💬-二、运行效果"><a href="#💬-二、运行效果" class="headerlink" title="💬 二、运行效果"></a>💬 二、运行效果</h2><p>💻 <strong>运行后会发生什么？</strong></p>
+<ul>
+<li>屏幕上会不断随机弹出小窗口</li>
+<li>每个窗口显示一句随机的温馨提示</li>
+<li>每个窗口颜色也随机变化</li>
+<li>默认最多弹出 300 个</li>
+</ul>
+<p>🎨 <strong>效果图（示意）</strong>：</p>
+<p><img src="https://c.img.dasctf.com/LightPicture/2025/10/8387209a10c0a489.png" alt="8387209a10c0a489.png"></p>
+<h2 id="🧩-三、完整代码展示"><a href="#🧩-三、完整代码展示" class="headerlink" title="🧩 三、完整代码展示"></a>🧩 三、完整代码展示</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> tkinter <span class="keyword">as</span> tk</span><br><span class="line"><span class="keyword">import</span> random</span><br><span class="line"></span><br><span class="line"><span class="comment"># 全局计数器与配置</span></span><br><span class="line">window_count = <span class="number">0</span>           <span class="comment"># 当前已打开的弹窗数量</span></span><br><span class="line">MAX_WINDOWS = <span class="number">300</span>          <span class="comment"># 最大允许同时存在的弹窗数（保护）</span></span><br><span class="line">POP_INTERVAL_MS = <span class="number">300</span>      <span class="comment"># 弹窗生成间隔（毫秒）</span></span><br><span class="line">AUTO_CLOSE_MIN = <span class="number">3000</span>      <span class="comment"># 自动关闭最短时间（毫秒） = 3 秒</span></span><br><span class="line">AUTO_CLOSE_MAX = <span class="number">5000</span>      <span class="comment"># 自动关闭最长时间（毫秒） = 5 秒</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 提示语集合（温馨 + 励志 + 趣味）</span></span><br><span class="line">TIPS = [</span><br><span class="line">    <span class="comment"># 日常温馨</span></span><br><span class="line">    <span class="string">&#x27;多喝热水哦~&#x27;</span>, <span class="string">&#x27;保持微笑呀&#x27;</span>, <span class="string">&#x27;好好休息一下吧&#x27;</span>, <span class="string">&#x27;今天也要元气满满~&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;吃点水果补补维C&#x27;</span>, <span class="string">&#x27;天冷了，别忘了加衣服！&#x27;</span>, <span class="string">&#x27;喝杯热奶茶放松一下~&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;再坚持一下，马上就放假啦！&#x27;</span>, <span class="string">&#x27;午休时间到，眯一会儿吧&#x27;</span>, <span class="string">&#x27;有点困就去洗个脸，提提神~&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;别忘了多喝水！&#x27;</span>, <span class="string">&#x27;晚安，做个好梦&#x27;</span>, <span class="string">&#x27;出门记得带伞☂️&#x27;</span>, <span class="string">&#x27;别总对自己太苛刻啦&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;看看窗外，阳光真好呀 ☀️&#x27;</span>,</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 学习励志</span></span><br><span class="line">    <span class="string">&#x27;再难也要坚持，未来会感谢现在的你&#x27;</span>, <span class="string">&#x27;考研加油！&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;代码敲不动了？先喝口水再继续！&#x27;</span>, <span class="string">&#x27;写完这一页就去休息吧~&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;出错了没关系，Debug 也是成长的一部分&#x27;</span>, <span class="string">&#x27;你已经比昨天更厉害啦！&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;慢慢来，别急，稳一点就好&#x27;</span>, <span class="string">&#x27;成功不是偶然，而是坚持的结果&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;天道酬勤！继续努力！&#x27;</span>, <span class="string">&#x27;别怕考不完，还有我陪你~&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;自律给你自由 💪&#x27;</span>, <span class="string">&#x27;程序员也需要睡眠~&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;保持热爱，奔赴山海&#x27;</span>, <span class="string">&#x27;先搞懂这一行代码，你就赢了&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;思考中… 这也是进步的一种~&#x27;</span>,</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 趣味可爱</span></span><br><span class="line">    <span class="string">&#x27;嘿嘿，我又来啦~&#x27;</span>, <span class="string">&#x27;再看我一眼嘛 🥺&#x27;</span>, <span class="string">&#x27;我可是在后台默默守护你哦~&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;摸摸头，不许不开心！&#x27;</span>, <span class="string">&#x27;神秘力量正在给你好运 ✨&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;窗口太多啦？这是幸福的暴击！&#x27;</span>, <span class="string">&#x27;点我也没用，我只是个提示窗 😆&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;今天吃了什么好吃的？&#x27;</span>, <span class="string">&#x27;发呆也是一种小确幸~&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;给你一份虚拟拥抱 🤗&#x27;</span>, <span class="string">&#x27;努力的人运气都不会太差&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;加载好运中… 💫&#x27;</span>, <span class="string">&#x27;你笑起来真好看~&#x27;</span>, <span class="string">&#x27;摸鱼要适度哦~&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;心情不好就去听首歌吧~&#x27;</span></span><br><span class="line">]</span><br><span class="line"></span><br><span class="line"><span class="comment"># 背景色集合</span></span><br><span class="line">BG_COLORS = [</span><br><span class="line">    <span class="string">&#x27;lightpink&#x27;</span>, <span class="string">&#x27;skyblue&#x27;</span>, <span class="string">&#x27;lightgreen&#x27;</span>, <span class="string">&#x27;lavender&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;lightyellow&#x27;</span>, <span class="string">&#x27;plum&#x27;</span>, <span class="string">&#x27;coral&#x27;</span>, <span class="string">&#x27;bisque&#x27;</span>, <span class="string">&#x27;aquamarine&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;mistyrose&#x27;</span>, <span class="string">&#x27;honeydew&#x27;</span>, <span class="string">&#x27;lavenderblush&#x27;</span>, <span class="string">&#x27;oldlace&#x27;</span></span><br><span class="line">]</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">create_warm_tip</span>():</span><br><span class="line">    <span class="string">&quot;&quot;&quot;</span></span><br><span class="line"><span class="string">    创建一个随机位置、随机颜色、随机提示语的弹窗。</span></span><br><span class="line"><span class="string">    弹窗会在 AUTO_CLOSE_MIN..AUTO_CLOSE_MAX 毫秒后自动关闭。</span></span><br><span class="line"><span class="string">    &quot;&quot;&quot;</span></span><br><span class="line">    <span class="keyword">global</span> window_count</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 若已达到最大同时存在数量，则不再创建（防护）</span></span><br><span class="line">    <span class="keyword">if</span> window_count &gt;= MAX_WINDOWS:</span><br><span class="line">        <span class="keyword">return</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># 创建顶层窗口（依赖 root）</span></span><br><span class="line">    window = tk.Toplevel(root)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 标记窗口未关闭（防止重复减计数）</span></span><br><span class="line">    window._closed_flag = <span class="literal">False</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># 获取屏幕大小，用于随机定位（确保窗口完全显示）</span></span><br><span class="line">    screen_width = root.winfo_screenwidth()</span><br><span class="line">    screen_height = root.winfo_screenheight()</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 固定弹窗尺寸（你可以修改）</span></span><br><span class="line">    window_width = <span class="number">250</span></span><br><span class="line">    window_height = <span class="number">60</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># 随机位置（保证不会超出屏幕）</span></span><br><span class="line">    x = random.randrange(<span class="number">0</span>, <span class="built_in">max</span>(<span class="number">1</span>, screen_width - window_width))</span><br><span class="line">    y = random.randrange(<span class="number">0</span>, <span class="built_in">max</span>(<span class="number">1</span>, screen_height - window_height))</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 标题与位置</span></span><br><span class="line">    window.title(<span class="string">&#x27;温馨提示&#x27;</span>)</span><br><span class="line">    window.geometry(<span class="string">f&quot;<span class="subst">&#123;window_width&#125;</span>x<span class="subst">&#123;window_height&#125;</span>+<span class="subst">&#123;x&#125;</span>+<span class="subst">&#123;y&#125;</span>&quot;</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 随机提示与背景</span></span><br><span class="line">    tip = random.choice(TIPS)</span><br><span class="line">    bg = random.choice(BG_COLORS)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 标签显示文本</span></span><br><span class="line">    label = tk.Label(</span><br><span class="line">        window,</span><br><span class="line">        text=tip,</span><br><span class="line">        bg=bg,</span><br><span class="line">        font=(<span class="string">&#x27;微软雅黑&#x27;</span>, <span class="number">12</span>),</span><br><span class="line">        width=<span class="number">30</span>,</span><br><span class="line">        height=<span class="number">3</span>,</span><br><span class="line">        wraplength=<span class="number">230</span>,  <span class="comment"># 如果文字太长，自动换行</span></span><br><span class="line">        justify=<span class="string">&#x27;center&#x27;</span></span><br><span class="line">    )</span><br><span class="line">    label.pack(expand=<span class="literal">True</span>, fill=<span class="string">&#x27;both&#x27;</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 窗口置顶</span></span><br><span class="line">    window.attributes(<span class="string">&#x27;-topmost&#x27;</span>, <span class="literal">True</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 调整计数器（打开一个新窗口）</span></span><br><span class="line">    window_count += <span class="number">1</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># 定义关闭函数（保证计数器只被减一次）</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">safe_close</span>():</span><br><span class="line">        <span class="keyword">nonlocal</span> window</span><br><span class="line">        <span class="keyword">global</span> window_count</span><br><span class="line">        <span class="comment"># 若已经标记为 closed，则直接返回</span></span><br><span class="line">        <span class="keyword">if</span> <span class="built_in">getattr</span>(window, <span class="string">&#x27;_closed_flag&#x27;</span>, <span class="literal">False</span>):</span><br><span class="line">            <span class="keyword">return</span></span><br><span class="line">        <span class="comment"># 标记已关闭，防止重复执行</span></span><br><span class="line">        window._closed_flag = <span class="literal">True</span></span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            window.destroy()</span><br><span class="line">        <span class="keyword">except</span> Exception:</span><br><span class="line">            <span class="comment"># 若 destroy 失败，也要确保计数器更新（避免卡死）</span></span><br><span class="line">            <span class="keyword">pass</span></span><br><span class="line">        <span class="comment"># 减少计数器（下限为0）</span></span><br><span class="line">        window_count = <span class="built_in">max</span>(<span class="number">0</span>, window_count - <span class="number">1</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 如果用户手动点击窗口右上角的关闭按钮，也走 safe_close</span></span><br><span class="line">    window.protocol(<span class="string">&quot;WM_DELETE_WINDOW&quot;</span>, safe_close)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 随机一个自动关闭时间（毫秒）</span></span><br><span class="line">    auto_close_ms = random.randint(AUTO_CLOSE_MIN, AUTO_CLOSE_MAX)</span><br><span class="line">    <span class="comment"># 调度自动关闭</span></span><br><span class="line">    window.after(auto_close_ms, safe_close)</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">auto_pop_tips</span>(<span class="params">interval=POP_INTERVAL_MS</span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;</span></span><br><span class="line"><span class="string">    循环调度创建弹窗（使用 root.after 实现定时递归调用）。</span></span><br><span class="line"><span class="string">    当 window_count 达到 MAX_WINDOWS 时会暂停创建。</span></span><br><span class="line"><span class="string">    &quot;&quot;&quot;</span></span><br><span class="line">    <span class="comment"># 只有在未达到限制时，才继续创建</span></span><br><span class="line">    <span class="keyword">if</span> window_count &lt; MAX_WINDOWS:</span><br><span class="line">        create_warm_tip()</span><br><span class="line">        <span class="comment"># 继续下一次调度</span></span><br><span class="line">        root.after(interval, auto_pop_tips, interval)</span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">f&quot;已达到最大弹窗数量（<span class="subst">&#123;MAX_WINDOWS&#125;</span> 个），自动暂停弹窗创建&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 主窗口（隐藏）</span></span><br><span class="line">root = tk.Tk()</span><br><span class="line">root.withdraw()</span><br><span class="line"></span><br><span class="line"><span class="comment"># 启动弹窗循环（间隔 300 ms）</span></span><br><span class="line">auto_pop_tips(POP_INTERVAL_MS)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 运行主循环</span></span><br><span class="line">root.mainloop()</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="🧠-四、代码亮点讲解"><a href="#🧠-四、代码亮点讲解" class="headerlink" title="🧠 四、代码亮点讲解"></a>🧠 四、代码亮点讲解</h2><table>
+<thead>
+<tr>
+<th>功能</th>
+<th>技术实现</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>随机出现位置</td>
+<td><code>random.randrange()</code></td>
+</tr>
+<tr>
+<td>多窗口创建</td>
+<td><code>tk.Toplevel()</code></td>
+</tr>
+<tr>
+<td>自动循环弹出</td>
+<td><code>root.after()</code> 定时调用</td>
+</tr>
+<tr>
+<td>隐藏主窗口</td>
+<td><code>root.withdraw()</code></td>
+</tr>
+<tr>
+<td>窗口置顶显示</td>
+<td><code>window.attributes(&#39;-topmost&#39;, True)</code></td>
+</tr>
+<tr>
+<td>限制最大弹窗数量</td>
+<td>全局计数器 <code>window_count</code></td>
+</tr>
+</tbody></table>
+<p>这段代码没啥商业价值，<br> 但它能在无聊的夜里，提醒你：</p>
+<blockquote>
+<p>“去喝水吧<del>”<br>“早点睡，不然明天又困啦</del>”</p>
+</blockquote>
+<p>代码不止能改变世界，<br>也能让生活可爱一点。🌸</p>
+
+        </div>
+
+        
+            <section class="post-copyright">
+                
+                    <p class="copyright-item">
+                        <span>Author:</span>
+                        <span>rowen</span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>Permalink:</span>
+                        <span><a href="http://example.com/2025/10/30/%F0%9F%8C%88%E7%94%A8Python%E5%86%99%E4%B8%80%E4%B8%AA%E4%BC%9A%E2%80%9C%E5%85%B3%E5%BF%83%E4%BD%A0%E2%80%9D%E7%9A%84%E5%BC%B9%E7%AA%97%E7%A8%8B%E5%BA%8F/">http://example.com/2025/10/30/%F0%9F%8C%88%E7%94%A8Python%E5%86%99%E4%B8%80%E4%B8%AA%E4%BC%9A%E2%80%9C%E5%85%B3%E5%BF%83%E4%BD%A0%E2%80%9D%E7%9A%84%E5%BC%B9%E7%AA%97%E7%A8%8B%E5%BA%8F/</a></span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>License:</span>
+                        <span>Copyright (c) 2019 <a target="_blank" rel="noopener" href="http://creativecommons.org/licenses/by-nc/4.0/">CC-BY-NC-4.0</a> LICENSE</span>
+                    </p>
+                
+                
+                     <p class="copyright-item">
+                         <span>Slogan:</span>
+                         <span>Do you believe in <strong>DESTINY</strong>?</span>
+                     </p>
+                
+
+            </section>
+        
+        <section class="post-tags">
+            <div>
+                <span>Tag(s):</span>
+                <span class="tag">
+                    
+                    
+                        <a href="/tags/%E6%96%B0%E6%89%8B/"># 新手</a>
+                    
+                        <a href="/tags/python/"># python</a>
+                    
+                        <a href="/tags/%E5%AD%A6%E4%B9%A0/"># 学习</a>
+                    
+                        <a href="/tags/%E5%B0%8F%E9%A1%B9%E7%9B%AE/"># 小项目</a>
+                    
+                        <a href="/tags/%E5%B0%8F%E6%8A%80%E5%B7%A7/"># 小技巧</a>
+                    
+                        
+                </span>
+            </div>
+            <div>
+                <a href="javascript:window.history.back();">back</a>
+                <span>· </span>
+                <a href="/">home</a>
+            </div>
+        </section>
+        <section class="post-nav">
+            
+            
+            <a class="next" rel="next" href="/2025/07/24/%E6%B4%BB%E5%8A%A8Activity%E4%B9%8B%E5%90%AF%E5%81%9C%E6%B4%BB%E5%8A%A8%E9%A1%B5%E9%9D%A2/">活动Activity之启停活动页面</a>
+            
+        </section>
+<script src="https://giscus.app/client.js"
+        data-repo="forkmmat/forkmmat.github.io"
+        data-repo-id="R_kgDOO0OA0g"
+        data-category="General"
+        data-category-id="DIC_kwDOO0OA0s4CtD6Y"
+        data-mapping="title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="zh-CN"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+</script>
+
+    </article>
+</div>
+
+            </div>
+            <footer id="footer" class="footer">
+    <div class="copyright">
+        <span>© rowen | Powered by <a href="https://hexo.io" target="_blank">Hexo</a> & <a href="https://github.com/Siricee/hexo-theme-Chic" target="_blank">Chic</a></span>
+    </div>
+</footer>
+
+    </div>
+</body>
+
+</html>
