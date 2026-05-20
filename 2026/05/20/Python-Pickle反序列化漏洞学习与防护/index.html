@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <meta name="author" content="rowen">
+
+
+
+
+
+<title>Python Pickle 反序列化漏洞学习与防护 | Hexo</title>
+
+
+
+    <link rel="icon" href="/drink.ico">
+
+
+
+
+    <!-- stylesheets list from _config.yml -->
+    
+    <link rel="stylesheet" href="/css/style.css">
+    
+
+
+
+    <!-- scripts list from _config.yml -->
+    
+    <script src="/js/script.js"></script>
+    
+    <script src="/js/tocbot.min.js"></script>
+    
+
+
+
+    
+    
+        
+    
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+    <!-- 引入jQuery -->
+<script type="text/javascript" src="//libs.baidu.com/jquery/1.8.3/jquery.min.js"></script>
+<!-- 雪花特效2 -->
+ <script type="text/javascript" src="/js/snow2.js"></script>
+    <script>
+        // this function is used to check current theme before page loaded.
+        (() => {
+            const currentTheme = window.localStorage && window.localStorage.getItem('theme') || '';
+            const isDark = currentTheme === 'dark';
+            const pagebody = document.getElementsByTagName('body')[0]
+            if (isDark) {
+                pagebody.classList.add('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Dark"
+            } else {
+                pagebody.classList.remove('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Light"
+            }
+        })();
+    </script>
+<script>
+!
+function() {
+function n(n, e, t) {
+return n.getAttribute(e) || t
+}
+function e(n) {
+return document.getElementsByTagName(n)
+}
+function t() {
+var t = e("script"),
+o = t.length,
+i = t[o - 1];
+return {
+l: o,
+z: n(i, "zIndex", -1), //置于主页面背后
+o: n(i, "opacity", .5), //线条透明度
+c: n(i, "color", "0,0,0"), //线条颜色
+n: n(i, "count", 100) //线条数量
+}
+}
+function o() {
+a = m.width = window.innerWidth ||
+document.documentElement.clientWidth || document.body.clientWidth,
+c = m.height = window.innerHeight ||
+document.documentElement.clientHeight || document.body.clientHeight
+}
+function i() {
+r.clearRect(0, 0, a, c);
+var n, e, t, o, m, l;
+s.forEach(function(i, x) {
+for (i.x += i.xa, i.y += i.ya, i.xa *= i.x > a || i.x < 0 ? -1 :
+1, i.ya *= i.y > c || i.y < 0 ? -1 : 1, r.fillRect(i.x - .5, i.y - .5, 1,
+1), e = x + 1; e < u.length; e++) n = u[e],
+null !== n.x && null !== n.y && (o = i.x - n.x, m = i.y - n.y, l
+= o * o + m * m, l < n.max && (n === y && l >= n.max / 2 && (i.x -= .03 * o,
+i.y -= .03 * m), t = (n.max - l) / n.max, r.beginPath(), r.lineWidth = t /
+2, r.strokeStyle = "rgba(" + d.c + "," + (t + .2) + ")", r.moveTo(i.x, i.y),
+r.lineTo(n.x, n.y), r.stroke()))
+}),
+x(i)
+}
+var a, c, u, m = document.createElement("canvas"),
+d = t(),
+l = "c_n" + d.l,
+r = m.getContext("2d"),
+x = window.requestAnimationFrame || window.webkitRequestAnimationFrame
+|| window.mozRequestAnimationFrame || window.oRequestAnimationFrame ||
+window.msRequestAnimationFrame ||
+function(n) {
+window.setTimeout(n, 1e3 / 45)
+},
+w = Math.random,
+y = {
+x: null,
+y: null,
+max: 2e4
+};
+m.id = l,
+m.style.cssText = "position:fixed;top:0;left:0;z-index:" + d.z +
+";opacity:" + d.o,
+e("body")[0].appendChild(m),
+o(),
+window.onresize = o,
+window.onmousemove = function(n) {
+n = n || window.event,
+y.x = n.clientX,
+y.y = n.clientY
+},
+window.onmouseout = function() {
+y.x = null,
+y.y = null
+};
+for (var s = [], f = 0; d.n > f; f++) {
+var h = w() * a,
+g = w() * c,
+v = 2 * w() - 1,
+p = 2 * w() - 1;
+s.push({
+x: h,
+y: g,
+xa: v,
+ya: p,
+max: 6e3
+})
+}
+u = s.concat([y]),
+setTimeout(function() {
+i()
+},
+100)
+} ();
+</script>
+    <div class="wrapper">
+        <header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-header header-logo"><a href="/">bobo&#39;s Blog</a></div>
+            <div class="menu navbar-right">
+                
+                    <a class="menu-item" href="/archives">📖博文</a>
+                
+                    <a class="menu-item" href="/category">📚类别</a>
+                
+                    <a class="menu-item" href="/tag">🏷️标签</a>
+                
+                    <a class="menu-item" href="/about">💡关于</a>
+                
+                    <a class="menu-item" href="/links">🔗友链</a>
+                
+                <input id="switch_default" type="checkbox" class="switch_default">
+                <label for="switch_default" class="toggleBtn"></label>
+            </div>
+        </div>
+    </nav>
+
+    
+    <nav class="navbar-mobile" id="nav-mobile">
+        <div class="container">
+            <div class="navbar-header">
+                <div>
+                    <a href="/">bobo&#39;s Blog</a><a id="mobile-toggle-theme">·&nbsp;Light</a>
+                </div>
+                <div class="menu-toggle" onclick="mobileBtn()">&#9776; Menu</div>
+            </div>
+            <div class="menu" id="mobile-menu">
+                
+                    <a class="menu-item" href="/archives">📖博文</a>
+                
+                    <a class="menu-item" href="/category">📚类别</a>
+                
+                    <a class="menu-item" href="/tag">🏷️标签</a>
+                
+                    <a class="menu-item" href="/about">💡关于</a>
+                
+                    <a class="menu-item" href="/links">🔗友链</a>
+                
+            </div>
+        </div>
+    </nav>
+
+</header>
+<script>
+    var mobileBtn = function f() {
+        var toggleMenu = document.getElementsByClassName("menu-toggle")[0];
+        var mobileMenu = document.getElementById("mobile-menu");
+        if(toggleMenu.classList.contains("active")){
+           toggleMenu.classList.remove("active")
+            mobileMenu.classList.remove("active")
+        }else{
+            toggleMenu.classList.add("active")
+            mobileMenu.classList.add("active")
+        }
+    }
+</script>
+            <div class="main">
+                <div class="container">
+    
+    
+        <div class="post-toc">
+    <div class="tocbot-list">
+    </div>
+    <div class="tocbot-list-menu">
+        <a class="tocbot-toc-expand" onclick="expand_toc()">Expand all</a>
+        <a onclick="go_top()">Back to top</a>
+        <a onclick="go_bottom()">Go to bottom</a>
+    </div>
+</div>
+
+<script>
+    document.ready(
+        function () {
+            tocbot.init({
+                tocSelector: '.tocbot-list',
+                contentSelector: '.post-content',
+                headingSelector: 'h1, h2, h3, h4, h5',
+                collapseDepth: 1,
+                orderedList: false,
+                scrollSmooth: true,
+            })
+        }
+    )
+
+    function expand_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 6,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "collapse_toc()");
+        b.innerHTML = "Collapse all"
+    }
+
+    function collapse_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 1,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "expand_toc()");
+        b.innerHTML = "Expand all"
+    }
+
+    function go_top() {
+        window.scrollTo(0, 0);
+    }
+
+    function go_bottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+</script>
+    
+
+    
+    <article class="post-wrap">
+        <header class="post-header">
+            <h1 class="post-title">Python Pickle 反序列化漏洞学习与防护</h1>
+            
+                <div class="post-meta">
+                    
+                        Author: <a itemprop="author" rel="author" href="/">rowen</a>
+                    
+
+                    
+                        <span class="post-time">
+                        Date: <a href="#">May 20, 2026&nbsp;&nbsp;22:55:00</a>
+                        </span>
+                    
+                    
+                        <span class="post-category">
+                    Category:
+                            
+                                <a href="/categories/Web%E5%AE%89%E5%85%A8/">Web安全</a>
+                            
+                        </span>
+                    
+                </div>
+            
+        </header>
+
+        <div class="post-content">
+            <h1 id="Python-Pickle-反序列化漏洞学习与防护"><a href="#Python-Pickle-反序列化漏洞学习与防护" class="headerlink" title="Python Pickle 反序列化漏洞学习与防护"></a>Python Pickle 反序列化漏洞学习与防护</h1><h2 id="一、漏洞背景"><a href="#一、漏洞背景" class="headerlink" title="一、漏洞背景"></a>一、漏洞背景</h2><p>在 Python 中，<code>pickle</code> 是一个常见的序列化模块，可以把 Python 对象转换成字节流，也可以把字节流还原成对象。</p>
+<p>序列化常用于：</p>
+<ul>
+<li>本地缓存对象</li>
+<li>保存程序运行状态</li>
+<li>进程间传递对象</li>
+<li>简单的数据持久化</li>
+</ul>
+<p>但如果程序对不可信数据执行 <code>pickle.loads()</code> 或 <code>pickle.load()</code>，就可能触发反序列化漏洞。攻击者可以构造特殊对象，让程序在反序列化过程中执行预设函数，从而造成命令执行风险。</p>
+<p>本文只在本地靶场和授权环境中演示，用于理解漏洞原理和防护思路。</p>
+<h2 id="二、Pickle-基础用法"><a href="#二、Pickle-基础用法" class="headerlink" title="二、Pickle 基础用法"></a>二、Pickle 基础用法</h2><h3 id="1-序列化"><a href="#1-序列化" class="headerlink" title="1. 序列化"></a>1. 序列化</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> pickle</span><br><span class="line"></span><br><span class="line">data = &#123;</span><br><span class="line">    <span class="string">&quot;name&quot;</span>: <span class="string">&quot;Alice&quot;</span>,</span><br><span class="line">    <span class="string">&quot;age&quot;</span>: <span class="number">25</span>,</span><br><span class="line">    <span class="string">&quot;city&quot;</span>: <span class="string">&quot;New York&quot;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">data_bytes = pickle.dumps(data)</span><br><span class="line"><span class="built_in">print</span>(data_bytes)</span><br></pre></td></tr></table></figure>
+
+<p><code>pickle.dumps()</code> 会将对象转换成字节流。</p>
+<h3 id="2-反序列化"><a href="#2-反序列化" class="headerlink" title="2. 反序列化"></a>2. 反序列化</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> pickle</span><br><span class="line"></span><br><span class="line">data = pickle.loads(data_bytes)</span><br><span class="line"><span class="built_in">print</span>(data)</span><br></pre></td></tr></table></figure>
+
+<p><code>pickle.loads()</code> 会把字节流恢复成原来的 Python 对象。</p>
+<p>如果数据来源可信，这个过程通常没有问题。但如果 <code>data_bytes</code> 来自用户输入、Cookie、请求参数、上传文件或外部接口，就需要非常谨慎。</p>
+<h2 id="三、漏洞原理"><a href="#三、漏洞原理" class="headerlink" title="三、漏洞原理"></a>三、漏洞原理</h2><p>Pickle 反序列化风险的核心在于：对象可以通过特殊方法控制反序列化时的还原逻辑。</p>
+<p>其中最常见的是 <code>__reduce__()</code> 方法。</p>
+<p>当对象被 pickle 反序列化时，<code>__reduce__()</code> 可以返回一个可调用对象和参数。反序列化时 Python 会调用该对象，并传入参数。</p>
+<p>简单理解：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">攻击者构造对象 -&gt; 序列化成字节流 -&gt; 服务端 loads -&gt; 自动调用指定函数</span><br></pre></td></tr></table></figure>
+
+<p>这也是为什么不应该对不可信数据使用 Pickle。</p>
+<h2 id="四、本地演示"><a href="#四、本地演示" class="headerlink" title="四、本地演示"></a>四、本地演示</h2><p>下面用一个无害命令演示触发过程。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> pickle</span><br><span class="line"><span class="keyword">import</span> os</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Demo</span>:</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__reduce__</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="keyword">return</span> (os.system, (<span class="string">&quot;echo pickle_demo&quot;</span>,))</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">payload = pickle.dumps(Demo())</span><br><span class="line">pickle.loads(payload)</span><br></pre></td></tr></table></figure>
+
+<p>运行结果会执行：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">echo</span> pickle_demo</span><br></pre></td></tr></table></figure>
+
+<p>这个例子说明：反序列化过程并不只是“恢复数据”，它可能执行函数调用。</p>
+<h2 id="五、Base64-传输场景"><a href="#五、Base64-传输场景" class="headerlink" title="五、Base64 传输场景"></a>五、Base64 传输场景</h2><p>在 Web 题目或接口中，Pickle 数据经常会被 Base64 编码后传输。</p>
+<p>生成 payload：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> base64</span><br><span class="line"><span class="keyword">import</span> pickle</span><br><span class="line"><span class="keyword">import</span> os</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Demo</span>:</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__reduce__</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="keyword">return</span> (os.system, (<span class="string">&quot;echo pickle_demo&quot;</span>,))</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">payload = pickle.dumps(Demo())</span><br><span class="line"><span class="built_in">print</span>(base64.b64encode(payload).decode())</span><br></pre></td></tr></table></figure>
+
+<p>服务端如果这样处理用户输入，就存在风险：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> base64</span><br><span class="line"><span class="keyword">import</span> pickle</span><br><span class="line"></span><br><span class="line">raw = request.args.get(<span class="string">&quot;data&quot;</span>)</span><br><span class="line">obj = pickle.loads(base64.b64decode(raw))</span><br></pre></td></tr></table></figure>
+
+<p>问题不在 Base64，而在于服务端对用户可控内容执行了 <code>pickle.loads()</code>。</p>
+<h2 id="六、常见危险代码特征"><a href="#六、常见危险代码特征" class="headerlink" title="六、常见危险代码特征"></a>六、常见危险代码特征</h2><p>审计 Python Web 项目时，可以重点搜索以下代码：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">pickle.load</span><br><span class="line">pickle.loads</span><br><span class="line">cPickle.load</span><br><span class="line">cPickle.loads</span><br><span class="line">base64.b64decode</span><br><span class="line">session</span><br><span class="line">cookie</span><br></pre></td></tr></table></figure>
+
+<p>高风险组合：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">pickle.loads(request.data)</span><br><span class="line">pickle.loads(request.form[<span class="string">&quot;data&quot;</span>])</span><br><span class="line">pickle.loads(base64.b64decode(request.cookies[<span class="string">&quot;user&quot;</span>]))</span><br><span class="line">pickle.load(<span class="built_in">open</span>(user_upload_file, <span class="string">&quot;rb&quot;</span>))</span><br></pre></td></tr></table></figure>
+
+<p>如果反序列化对象来自用户输入或上传文件，就需要重点关注。</p>
+<h2 id="七、CTF-中的常见思路"><a href="#七、CTF-中的常见思路" class="headerlink" title="七、CTF 中的常见思路"></a>七、CTF 中的常见思路</h2><p>CTF 中常见的 Pickle 题会把序列化数据放在：</p>
+<ul>
+<li>Cookie</li>
+<li>Flask session</li>
+<li>POST 参数</li>
+<li>Base64 字符串</li>
+<li>上传文件</li>
+</ul>
+<p>解题思路一般是：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">找到反序列化入口 -&gt; 判断数据编码方式 -&gt; 构造 __reduce__ -&gt; 编码 payload -&gt; 触发 loads</span><br></pre></td></tr></table></figure>
+
+<p>如果题目过滤了关键字，可以尝试：</p>
+<ul>
+<li>使用 <code>__import__</code> 动态导入模块</li>
+<li>换用不同可调用对象</li>
+<li>分析过滤逻辑是否只过滤字符串明文</li>
+<li>结合源码寻找可利用函数</li>
+</ul>
+<p>但在真实业务中，不应该依赖过滤关键字来防护 Pickle 反序列化。</p>
+<h2 id="八、防护建议"><a href="#八、防护建议" class="headerlink" title="八、防护建议"></a>八、防护建议</h2><h3 id="1-不反序列化不可信数据"><a href="#1-不反序列化不可信数据" class="headerlink" title="1. 不反序列化不可信数据"></a>1. 不反序列化不可信数据</h3><p>最重要的原则：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">不要对用户可控数据使用 pickle.loads()</span><br></pre></td></tr></table></figure>
+
+<p>如果只是传递普通数据，优先使用 JSON：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> json</span><br><span class="line"></span><br><span class="line">data = json.loads(user_input)</span><br></pre></td></tr></table></figure>
+
+<p>JSON 只表示数据结构，不会像 Pickle 一样恢复任意 Python 对象。</p>
+<h3 id="2-做数据签名"><a href="#2-做数据签名" class="headerlink" title="2. 做数据签名"></a>2. 做数据签名</h3><p>如果业务必须存储序列化数据，应至少做完整性校验，例如 HMAC 签名：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> hmac</span><br><span class="line"><span class="keyword">import</span> hashlib</span><br><span class="line"></span><br><span class="line">signature = hmac.new(secret_key, data, hashlib.sha256).hexdigest()</span><br></pre></td></tr></table></figure>
+
+<p>服务端校验签名通过后再处理数据，避免用户篡改内容。</p>
+<p>不过签名只能防篡改，不能改变 Pickle 本身的危险特性。</p>
+<h3 id="3-限制反序列化类型"><a href="#3-限制反序列化类型" class="headerlink" title="3. 限制反序列化类型"></a>3. 限制反序列化类型</h3><p>可以自定义 <code>Unpickler</code> 限制允许加载的类，但实现复杂，容易漏掉风险。真实业务中更推荐从设计上避免使用 Pickle 处理外部输入。</p>
+<h3 id="4-最小权限运行服务"><a href="#4-最小权限运行服务" class="headerlink" title="4. 最小权限运行服务"></a>4. 最小权限运行服务</h3><p>即使发生漏洞，也应降低影响：</p>
+<ul>
+<li>Web 服务使用低权限用户运行。</li>
+<li>容器或沙箱隔离。</li>
+<li>限制文件读写权限。</li>
+<li>限制外连能力。</li>
+<li>记录异常请求日志。</li>
+</ul>
+<h2 id="九、排查思路"><a href="#九、排查思路" class="headerlink" title="九、排查思路"></a>九、排查思路</h2><p>如果怀疑系统存在 Pickle 反序列化风险，可以按以下流程排查：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">搜索 pickle.loads -&gt; 确认数据来源 -&gt; 判断是否用户可控 -&gt; 检查是否签名校验 -&gt; 复现验证 -&gt; 替换为安全格式</span><br></pre></td></tr></table></figure>
+
+<p>日志上可以关注：</p>
+<ul>
+<li>参数中出现长 Base64 字符串。</li>
+<li>Cookie 体积异常变大。</li>
+<li>服务端出现系统命令执行痕迹。</li>
+<li>Web 进程产生异常子进程。</li>
+<li>反序列化报错堆栈。</li>
+</ul>
+<h2 id="十、总结"><a href="#十、总结" class="headerlink" title="十、总结"></a>十、总结</h2><p>Pickle 反序列化漏洞的本质是：程序把不可信输入当成可信对象恢复，并在恢复过程中执行了对象指定的逻辑。</p>
+<p>学习这类漏洞时，重点不是背 payload，而是理解：</p>
+<ul>
+<li><code>pickle.loads()</code> 为什么危险。</li>
+<li><code>__reduce__()</code> 如何影响反序列化流程。</li>
+<li>Web 场景中用户输入如何进入反序列化入口。</li>
+<li>真实业务中应如何替换和加固。</li>
+</ul>
+<p>在生产环境中，最稳妥的做法是：外部输入使用 JSON 等安全数据格式，避免使用 Pickle 处理用户可控内容。</p>
+
+        </div>
+
+        
+            <section class="post-copyright">
+                
+                    <p class="copyright-item">
+                        <span>Author:</span>
+                        <span>rowen</span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>Permalink:</span>
+                        <span><a href="https://forkmmat.github.io/2026/05/20/Python-Pickle%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%AD%A6%E4%B9%A0%E4%B8%8E%E9%98%B2%E6%8A%A4/">https://forkmmat.github.io/2026/05/20/Python-Pickle%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%AD%A6%E4%B9%A0%E4%B8%8E%E9%98%B2%E6%8A%A4/</a></span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>License:</span>
+                        <span>Copyright (c) 2019 <a target="_blank" rel="noopener" href="http://creativecommons.org/licenses/by-nc/4.0/">CC-BY-NC-4.0</a> LICENSE</span>
+                    </p>
+                
+                
+                     <p class="copyright-item">
+                         <span>Slogan:</span>
+                         <span>Do you believe in <strong>DESTINY</strong>?</span>
+                     </p>
+                
+
+            </section>
+        
+        <section class="post-tags">
+            <div>
+                <span>Tag(s):</span>
+                <span class="tag">
+                    
+                    
+                        <a href="/tags/Python/"># Python</a>
+                    
+                        <a href="/tags/Web%E5%AE%89%E5%85%A8/"># Web安全</a>
+                    
+                        <a href="/tags/%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/"># 反序列化</a>
+                    
+                        <a href="/tags/Pickle/"># Pickle</a>
+                    
+                        <a href="/tags/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0/"># 漏洞复现</a>
+                    
+                        
+                </span>
+            </div>
+            <div>
+                <a href="javascript:window.history.back();">back</a>
+                <span>· </span>
+                <a href="/">home</a>
+            </div>
+        </section>
+        <section class="post-nav">
+            
+            
+            <a class="next" rel="next" href="/2026/05/20/CISCN2019%E5%8D%8E%E4%B8%9C%E5%8D%97%E8%B5%9B%E5%8C%BA-Web11-Smarty-SSTI%E9%A2%98%E8%A7%A3/">CISCN2019 华东南赛区 Web11：Smarty SSTI 题解</a>
+            
+        </section>
+<script src="https://giscus.app/client.js"
+        data-repo="forkmmat/forkmmat.github.io"
+        data-repo-id="R_kgDOO0OA0g"
+        data-category="General"
+        data-category-id="DIC_kwDOO0OA0s4CtD6Y"
+        data-mapping="title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="zh-CN"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+</script>
+
+    </article>
+</div>
+
+            </div>
+            <footer id="footer" class="footer">
+    <div class="copyright">
+        <span>© rowen | Powered by <a href="https://hexo.io" target="_blank">Hexo</a> & <a href="https://github.com/Siricee/hexo-theme-Chic" target="_blank">Chic</a></span>
+    </div>
+</footer>
+
+    </div>
+</body>
+
+</html>
