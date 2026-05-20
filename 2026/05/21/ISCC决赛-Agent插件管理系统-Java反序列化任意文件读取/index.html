@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <meta name="author" content="rowen">
+
+
+
+
+
+<title>ISCC 决赛 Agent 插件管理系统：Java 反序列化任意文件读取 | Hexo</title>
+
+
+
+    <link rel="icon" href="/drink.ico">
+
+
+
+
+    <!-- stylesheets list from _config.yml -->
+    
+    <link rel="stylesheet" href="/css/style.css">
+    
+
+
+
+    <!-- scripts list from _config.yml -->
+    
+    <script src="/js/script.js"></script>
+    
+    <script src="/js/tocbot.min.js"></script>
+    
+
+
+
+    
+    
+        
+    
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+    <!-- 引入jQuery -->
+<script type="text/javascript" src="//libs.baidu.com/jquery/1.8.3/jquery.min.js"></script>
+<!-- 雪花特效2 -->
+ <script type="text/javascript" src="/js/snow2.js"></script>
+    <script>
+        // this function is used to check current theme before page loaded.
+        (() => {
+            const currentTheme = window.localStorage && window.localStorage.getItem('theme') || '';
+            const isDark = currentTheme === 'dark';
+            const pagebody = document.getElementsByTagName('body')[0]
+            if (isDark) {
+                pagebody.classList.add('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Dark"
+            } else {
+                pagebody.classList.remove('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Light"
+            }
+        })();
+    </script>
+<script>
+!
+function() {
+function n(n, e, t) {
+return n.getAttribute(e) || t
+}
+function e(n) {
+return document.getElementsByTagName(n)
+}
+function t() {
+var t = e("script"),
+o = t.length,
+i = t[o - 1];
+return {
+l: o,
+z: n(i, "zIndex", -1), //置于主页面背后
+o: n(i, "opacity", .5), //线条透明度
+c: n(i, "color", "0,0,0"), //线条颜色
+n: n(i, "count", 100) //线条数量
+}
+}
+function o() {
+a = m.width = window.innerWidth ||
+document.documentElement.clientWidth || document.body.clientWidth,
+c = m.height = window.innerHeight ||
+document.documentElement.clientHeight || document.body.clientHeight
+}
+function i() {
+r.clearRect(0, 0, a, c);
+var n, e, t, o, m, l;
+s.forEach(function(i, x) {
+for (i.x += i.xa, i.y += i.ya, i.xa *= i.x > a || i.x < 0 ? -1 :
+1, i.ya *= i.y > c || i.y < 0 ? -1 : 1, r.fillRect(i.x - .5, i.y - .5, 1,
+1), e = x + 1; e < u.length; e++) n = u[e],
+null !== n.x && null !== n.y && (o = i.x - n.x, m = i.y - n.y, l
+= o * o + m * m, l < n.max && (n === y && l >= n.max / 2 && (i.x -= .03 * o,
+i.y -= .03 * m), t = (n.max - l) / n.max, r.beginPath(), r.lineWidth = t /
+2, r.strokeStyle = "rgba(" + d.c + "," + (t + .2) + ")", r.moveTo(i.x, i.y),
+r.lineTo(n.x, n.y), r.stroke()))
+}),
+x(i)
+}
+var a, c, u, m = document.createElement("canvas"),
+d = t(),
+l = "c_n" + d.l,
+r = m.getContext("2d"),
+x = window.requestAnimationFrame || window.webkitRequestAnimationFrame
+|| window.mozRequestAnimationFrame || window.oRequestAnimationFrame ||
+window.msRequestAnimationFrame ||
+function(n) {
+window.setTimeout(n, 1e3 / 45)
+},
+w = Math.random,
+y = {
+x: null,
+y: null,
+max: 2e4
+};
+m.id = l,
+m.style.cssText = "position:fixed;top:0;left:0;z-index:" + d.z +
+";opacity:" + d.o,
+e("body")[0].appendChild(m),
+o(),
+window.onresize = o,
+window.onmousemove = function(n) {
+n = n || window.event,
+y.x = n.clientX,
+y.y = n.clientY
+},
+window.onmouseout = function() {
+y.x = null,
+y.y = null
+};
+for (var s = [], f = 0; d.n > f; f++) {
+var h = w() * a,
+g = w() * c,
+v = 2 * w() - 1,
+p = 2 * w() - 1;
+s.push({
+x: h,
+y: g,
+xa: v,
+ya: p,
+max: 6e3
+})
+}
+u = s.concat([y]),
+setTimeout(function() {
+i()
+},
+100)
+} ();
+</script>
+    <div class="wrapper">
+        <header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-header header-logo"><a href="/">bobo&#39;s Blog</a></div>
+            <div class="menu navbar-right">
+                
+                    <a class="menu-item" href="/archives">📖博文</a>
+                
+                    <a class="menu-item" href="/category">📚类别</a>
+                
+                    <a class="menu-item" href="/tag">🏷️标签</a>
+                
+                    <a class="menu-item" href="/about">💡关于</a>
+                
+                    <a class="menu-item" href="/links">🔗友链</a>
+                
+                <input id="switch_default" type="checkbox" class="switch_default">
+                <label for="switch_default" class="toggleBtn"></label>
+            </div>
+        </div>
+    </nav>
+
+    
+    <nav class="navbar-mobile" id="nav-mobile">
+        <div class="container">
+            <div class="navbar-header">
+                <div>
+                    <a href="/">bobo&#39;s Blog</a><a id="mobile-toggle-theme">·&nbsp;Light</a>
+                </div>
+                <div class="menu-toggle" onclick="mobileBtn()">&#9776; Menu</div>
+            </div>
+            <div class="menu" id="mobile-menu">
+                
+                    <a class="menu-item" href="/archives">📖博文</a>
+                
+                    <a class="menu-item" href="/category">📚类别</a>
+                
+                    <a class="menu-item" href="/tag">🏷️标签</a>
+                
+                    <a class="menu-item" href="/about">💡关于</a>
+                
+                    <a class="menu-item" href="/links">🔗友链</a>
+                
+            </div>
+        </div>
+    </nav>
+
+</header>
+<script>
+    var mobileBtn = function f() {
+        var toggleMenu = document.getElementsByClassName("menu-toggle")[0];
+        var mobileMenu = document.getElementById("mobile-menu");
+        if(toggleMenu.classList.contains("active")){
+           toggleMenu.classList.remove("active")
+            mobileMenu.classList.remove("active")
+        }else{
+            toggleMenu.classList.add("active")
+            mobileMenu.classList.add("active")
+        }
+    }
+</script>
+            <div class="main">
+                <div class="container">
+    
+    
+        <div class="post-toc">
+    <div class="tocbot-list">
+    </div>
+    <div class="tocbot-list-menu">
+        <a class="tocbot-toc-expand" onclick="expand_toc()">Expand all</a>
+        <a onclick="go_top()">Back to top</a>
+        <a onclick="go_bottom()">Go to bottom</a>
+    </div>
+</div>
+
+<script>
+    document.ready(
+        function () {
+            tocbot.init({
+                tocSelector: '.tocbot-list',
+                contentSelector: '.post-content',
+                headingSelector: 'h1, h2, h3, h4, h5',
+                collapseDepth: 1,
+                orderedList: false,
+                scrollSmooth: true,
+            })
+        }
+    )
+
+    function expand_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 6,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "collapse_toc()");
+        b.innerHTML = "Collapse all"
+    }
+
+    function collapse_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 1,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "expand_toc()");
+        b.innerHTML = "Expand all"
+    }
+
+    function go_top() {
+        window.scrollTo(0, 0);
+    }
+
+    function go_bottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+</script>
+    
+
+    
+    <article class="post-wrap">
+        <header class="post-header">
+            <h1 class="post-title">ISCC 决赛 Agent 插件管理系统：Java 反序列化任意文件读取</h1>
+            
+                <div class="post-meta">
+                    
+                        Author: <a itemprop="author" rel="author" href="/">rowen</a>
+                    
+
+                    
+                        <span class="post-time">
+                        Date: <a href="#">May 21, 2026&nbsp;&nbsp;0:25:00</a>
+                        </span>
+                    
+                    
+                        <span class="post-category">
+                    Category:
+                            
+                                <a href="/categories/%E6%AF%94%E8%B5%9B%E5%A4%8D%E7%8E%B0/">比赛复现</a>
+                            
+                        </span>
+                    
+                </div>
+            
+        </header>
+
+        <div class="post-content">
+            <h1 id="ISCC-决赛-Agent-插件管理系统：Java-反序列化任意文件读取"><a href="#ISCC-决赛-Agent-插件管理系统：Java-反序列化任意文件读取" class="headerlink" title="ISCC 决赛 Agent 插件管理系统：Java 反序列化任意文件读取"></a>ISCC 决赛 Agent 插件管理系统：Java 反序列化任意文件读取</h1><h2 id="一、题目背景"><a href="#一、题目背景" class="headerlink" title="一、题目背景"></a>一、题目背景</h2><p>题目是一个 Agent 插件管理系统，提供插件上传和日志查看功能。附件为 Spring Boot 应用，解包后可以进行源码和配置分析。</p>
+<p>整体利用链：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">解包 jar -&gt; 获取 HMAC 密钥 -&gt; 构造合法插件包 -&gt; metadata.ser 触发反序列化 -&gt; 读取目标文件 -&gt; 从日志接口取回内容</span><br></pre></td></tr></table></figure>
+
+<h2 id="二、信息收集"><a href="#二、信息收集" class="headerlink" title="二、信息收集"></a>二、信息收集</h2><p>解包 <code>agent-core.jar</code> 后重点关注：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">BOOT-INF/classes/application.yml</span><br><span class="line">com.agent.update.controller.UploadController</span><br><span class="line">com.agent.update.service.PluginService</span><br><span class="line">com.agent.update.deserialization.*</span><br></pre></td></tr></table></figure>
+
+<p>配置文件中泄露了上传目录和 HMAC 密钥：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">app:</span></span><br><span class="line">  <span class="attr">upload-dir:</span> <span class="string">/app/uploads/</span></span><br><span class="line">  <span class="attr">hmac-key:</span> <span class="string">k3y_5A62_X86</span></span><br></pre></td></tr></table></figure>
+
+<p>接口：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">POST /api/upload</span><br><span class="line">GET  /api/logs?team_id=xxx</span><br></pre></td></tr></table></figure>
+
+<p>上传接口参数：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">file</span><br><span class="line">team_id</span><br></pre></td></tr></table></figure>
+
+<h2 id="三、插件校验逻辑"><a href="#三、插件校验逻辑" class="headerlink" title="三、插件校验逻辑"></a>三、插件校验逻辑</h2><p>插件包需要是：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">zip</span><br><span class="line">jar</span><br><span class="line">plugin</span><br></pre></td></tr></table></figure>
+
+<p>解压后至少包含：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">manifest.json</span><br><span class="line">metadata.ser</span><br></pre></td></tr></table></figure>
+
+<p>服务端流程：</p>
+<ol>
+<li>上传插件压缩包。</li>
+<li>解压到 <code>/app/uploads/&#123;team_id&#125;/extracted</code>。</li>
+<li>读取 <code>manifest.json</code>。</li>
+<li>使用 <code>manifest.json</code> 中的 <code>hmacSignature</code> 校验 <code>metadata.ser</code>。</li>
+<li>校验通过后反序列化 <code>metadata.ser</code>。</li>
+</ol>
+<p>由于 HMAC 密钥已经从配置文件泄露，因此可以伪造合法签名，让服务端接受我们构造的 <code>metadata.ser</code>。</p>
+<h2 id="四、反序列化调用链"><a href="#四、反序列化调用链" class="headerlink" title="四、反序列化调用链"></a>四、反序列化调用链</h2><p>反编译关键类后，可以得到调用链：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">ResourceRefresher.readObject()</span><br><span class="line">  -&gt; ResourceRefresher.refresh()</span><br><span class="line">  -&gt; DataStream.process(targetPath)</span><br><span class="line">  -&gt; FileExporter.export(targetPath)</span><br><span class="line">  -&gt; Files.readAllBytes(targetPath)</span><br><span class="line">  -&gt; LogService.log(teamId, &quot;FILE_EXPORT&quot;, 文件内容)</span><br></pre></td></tr></table></figure>
+
+<p>关键点：</p>
+<ul>
+<li><code>ResourceRefresher</code> 是反序列化入口对象。</li>
+<li><code>targetPath</code> 控制读取路径。</li>
+<li><code>FileExporter</code> 内部有 <code>teamId</code> 字段。</li>
+<li>文件内容会写入对应 <code>teamId</code> 的日志。</li>
+</ul>
+<p>因此只要构造对象关系：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">ResourceRefresher</span><br><span class="line">  targetPath = /opt/app/.env 或 /flag</span><br><span class="line">  dataStream.exporter.teamId = 自己的 team_id</span><br></pre></td></tr></table></figure>
+
+<p>上传后访问：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/api/logs?team_id=自己的 team_id</span><br></pre></td></tr></table></figure>
+
+<p>即可取回文件内容。</p>
+<h2 id="五、插件包结构"><a href="#五、插件包结构" class="headerlink" title="五、插件包结构"></a>五、插件包结构</h2><p>构造后的插件包结构：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">exploit_generated.zip</span><br><span class="line">├── manifest.json</span><br><span class="line">└── metadata.ser</span><br></pre></td></tr></table></figure>
+
+<p><code>manifest.json</code> 中需要包含对 <code>metadata.ser</code> 的合法 HMAC 签名。</p>
+<p>伪造签名的思路：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">hmacSignature = HMAC_SHA256(hmac-key, metadata.ser bytes)</span><br></pre></td></tr></table></figure>
+
+<p>由于密钥已知，签名校验无法阻止攻击。</p>
+<h2 id="六、利用流程"><a href="#六、利用流程" class="headerlink" title="六、利用流程"></a>六、利用流程</h2><p>完整流程：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">1. 编译 ExploitBuilder.java</span><br><span class="line">2. 构造 ResourceRefresher 对象</span><br><span class="line">3. 序列化生成 metadata.ser</span><br><span class="line">4. 使用泄露密钥生成 HMAC</span><br><span class="line">5. 写入 manifest.json</span><br><span class="line">6. 打包 zip</span><br><span class="line">7. 上传 /api/upload</span><br><span class="line">8. 请求 /api/logs?team_id=xxx</span><br><span class="line">9. 从日志中提取 flag</span><br></pre></td></tr></table></figure>
+
+<p>自动化脚本需要完成两件事：</p>
+<ul>
+<li>本地构造合法插件包。</li>
+<li>上传插件并轮询日志接口。</li>
+</ul>
+<h2 id="七、简化脚本逻辑"><a href="#七、简化脚本逻辑" class="headerlink" title="七、简化脚本逻辑"></a>七、简化脚本逻辑</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> hmac</span><br><span class="line"><span class="keyword">import</span> hashlib</span><br><span class="line"><span class="keyword">import</span> json</span><br><span class="line"><span class="keyword">import</span> zipfile</span><br><span class="line"><span class="keyword">from</span> pathlib <span class="keyword">import</span> Path</span><br><span class="line"></span><br><span class="line">HMAC_KEY = <span class="string">b&quot;k3y_5A62_X86&quot;</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">sign_metadata</span>(<span class="params">metadata_path</span>):</span><br><span class="line">    data = Path(metadata_path).read_bytes()</span><br><span class="line">    <span class="keyword">return</span> hmac.new(HMAC_KEY, data, hashlib.sha256).hexdigest()</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">build_manifest</span>(<span class="params">metadata_path</span>):</span><br><span class="line">    <span class="keyword">return</span> &#123;</span><br><span class="line">        <span class="string">&quot;name&quot;</span>: <span class="string">&quot;agent-helper&quot;</span>,</span><br><span class="line">        <span class="string">&quot;version&quot;</span>: <span class="string">&quot;1.0.0&quot;</span>,</span><br><span class="line">        <span class="string">&quot;hmacSignature&quot;</span>: sign_metadata(metadata_path)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">pack_plugin</span>(<span class="params">metadata_path, output_zip</span>):</span><br><span class="line">    manifest = build_manifest(metadata_path)</span><br><span class="line">    manifest_path = Path(<span class="string">&quot;manifest.json&quot;</span>)</span><br><span class="line">    manifest_path.write_text(json.dumps(manifest), encoding=<span class="string">&quot;utf-8&quot;</span>)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">with</span> zipfile.ZipFile(output_zip, <span class="string">&quot;w&quot;</span>, zipfile.ZIP_DEFLATED) <span class="keyword">as</span> zf:</span><br><span class="line">        zf.write(manifest_path, <span class="string">&quot;manifest.json&quot;</span>)</span><br><span class="line">        zf.write(metadata_path, <span class="string">&quot;metadata.ser&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+<p>真实解题脚本还需要调用 Java 构造 <code>metadata.ser</code>，并通过 HTTP 上传插件。</p>
+<h2 id="八、漏洞总结"><a href="#八、漏洞总结" class="headerlink" title="八、漏洞总结"></a>八、漏洞总结</h2><p>本题是典型的“可信校验被密钥泄露绕过 + Java 反序列化”的组合题。</p>
+<table>
+<thead>
+<tr>
+<th>环节</th>
+<th>问题</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>配置文件</td>
+<td>HMAC 密钥泄露</td>
+</tr>
+<tr>
+<td>插件校验</td>
+<td>签名只保证来源可信，但密钥已暴露</td>
+</tr>
+<tr>
+<td>反序列化</td>
+<td>对上传包中的 <code>metadata.ser</code> 执行反序列化</td>
+</tr>
+<tr>
+<td>业务逻辑</td>
+<td>可控路径被用于 <code>Files.readAllBytes()</code></td>
+</tr>
+<tr>
+<td>回显方式</td>
+<td>文件内容写入日志接口</td>
+</tr>
+</tbody></table>
+<h2 id="九、防护建议"><a href="#九、防护建议" class="headerlink" title="九、防护建议"></a>九、防护建议</h2><ul>
+<li>密钥不应硬编码在应用包中。</li>
+<li>插件校验密钥应使用环境变量或密钥管理系统。</li>
+<li>不要反序列化用户上传内容。</li>
+<li>如果必须反序列化，使用白名单类和安全序列化格式。</li>
+<li>文件读取路径必须做白名单限制。</li>
+<li>日志中不要写入敏感文件内容。</li>
+<li>上传插件应在沙箱环境中解析和执行。</li>
+</ul>
+<h2 id="十、复盘"><a href="#十、复盘" class="headerlink" title="十、复盘"></a>十、复盘</h2><p>这题的关键在于把多个小点串起来：配置泄露本身可能只是信息泄露，但它让插件签名机制失效；反序列化本身也不一定直接命令执行，但结合业务类中的文件读取和日志回显，就形成了完整任意文件读取链。</p>
+<p>分析这类 Java 题时，建议先从配置、Controller、Service、反序列化类、日志输出五个方向入手，很容易把攻击路径串出来。</p>
+
+        </div>
+
+        
+            <section class="post-copyright">
+                
+                    <p class="copyright-item">
+                        <span>Author:</span>
+                        <span>rowen</span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>Permalink:</span>
+                        <span><a href="https://forkmmat.github.io/2026/05/21/ISCC%E5%86%B3%E8%B5%9B-Agent%E6%8F%92%E4%BB%B6%E7%AE%A1%E7%90%86%E7%B3%BB%E7%BB%9F-Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E4%BB%BB%E6%84%8F%E6%96%87%E4%BB%B6%E8%AF%BB%E5%8F%96/">https://forkmmat.github.io/2026/05/21/ISCC%E5%86%B3%E8%B5%9B-Agent%E6%8F%92%E4%BB%B6%E7%AE%A1%E7%90%86%E7%B3%BB%E7%BB%9F-Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E4%BB%BB%E6%84%8F%E6%96%87%E4%BB%B6%E8%AF%BB%E5%8F%96/</a></span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>License:</span>
+                        <span>Copyright (c) 2019 <a target="_blank" rel="noopener" href="http://creativecommons.org/licenses/by-nc/4.0/">CC-BY-NC-4.0</a> LICENSE</span>
+                    </p>
+                
+                
+                     <p class="copyright-item">
+                         <span>Slogan:</span>
+                         <span>Do you believe in <strong>DESTINY</strong>?</span>
+                     </p>
+                
+
+            </section>
+        
+        <section class="post-tags">
+            <div>
+                <span>Tag(s):</span>
+                <span class="tag">
+                    
+                    
+                        <a href="/tags/ISCC/"># ISCC</a>
+                    
+                        <a href="/tags/%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/"># 反序列化</a>
+                    
+                        <a href="/tags/Java/"># Java</a>
+                    
+                        <a href="/tags/%E6%96%87%E4%BB%B6%E8%AF%BB%E5%8F%96/"># 文件读取</a>
+                    
+                        <a href="/tags/SpringBoot/"># SpringBoot</a>
+                    
+                        
+                </span>
+            </div>
+            <div>
+                <a href="javascript:window.history.back();">back</a>
+                <span>· </span>
+                <a href="/">home</a>
+            </div>
+        </section>
+        <section class="post-nav">
+            
+            
+            <a class="next" rel="next" href="/2026/05/21/ISCC%E5%86%B3%E8%B5%9B-%E7%BC%96%E7%A0%81%E8%BF%B7%E5%AE%AB-SpEL%E5%8F%8D%E5%B0%84%E9%93%BE%E8%AF%BB%E5%8F%96%E6%96%87%E4%BB%B6/">ISCC 决赛编码迷宫：SpEL 反射链读取文件</a>
+            
+        </section>
+<script src="https://giscus.app/client.js"
+        data-repo="forkmmat/forkmmat.github.io"
+        data-repo-id="R_kgDOO0OA0g"
+        data-category="General"
+        data-category-id="DIC_kwDOO0OA0s4CtD6Y"
+        data-mapping="title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="zh-CN"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+</script>
+
+    </article>
+</div>
+
+            </div>
+            <footer id="footer" class="footer">
+    <div class="copyright">
+        <span>© rowen | Powered by <a href="https://hexo.io" target="_blank">Hexo</a> & <a href="https://github.com/Siricee/hexo-theme-Chic" target="_blank">Chic</a></span>
+    </div>
+</footer>
+
+    </div>
+</body>
+
+</html>

