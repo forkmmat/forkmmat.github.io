@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <meta name="author" content="rowen">
+
+
+
+
+
+<title>基于 Python 的 Web 日志攻击特征提取工具 | Hexo</title>
+
+
+
+    <link rel="icon" href="/drink.ico">
+
+
+
+
+    <!-- stylesheets list from _config.yml -->
+    
+    <link rel="stylesheet" href="/css/style.css">
+    
+
+
+
+    <!-- scripts list from _config.yml -->
+    
+    <script src="/js/script.js"></script>
+    
+    <script src="/js/tocbot.min.js"></script>
+    
+
+
+
+    
+    
+        
+    
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+    <!-- 引入jQuery -->
+<script type="text/javascript" src="//libs.baidu.com/jquery/1.8.3/jquery.min.js"></script>
+<!-- 雪花特效2 -->
+ <script type="text/javascript" src="/js/snow2.js"></script>
+    <script>
+        // this function is used to check current theme before page loaded.
+        (() => {
+            const currentTheme = window.localStorage && window.localStorage.getItem('theme') || '';
+            const isDark = currentTheme === 'dark';
+            const pagebody = document.getElementsByTagName('body')[0]
+            if (isDark) {
+                pagebody.classList.add('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Dark"
+            } else {
+                pagebody.classList.remove('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Light"
+            }
+        })();
+    </script>
+<script>
+!
+function() {
+function n(n, e, t) {
+return n.getAttribute(e) || t
+}
+function e(n) {
+return document.getElementsByTagName(n)
+}
+function t() {
+var t = e("script"),
+o = t.length,
+i = t[o - 1];
+return {
+l: o,
+z: n(i, "zIndex", -1), //置于主页面背后
+o: n(i, "opacity", .5), //线条透明度
+c: n(i, "color", "0,0,0"), //线条颜色
+n: n(i, "count", 100) //线条数量
+}
+}
+function o() {
+a = m.width = window.innerWidth ||
+document.documentElement.clientWidth || document.body.clientWidth,
+c = m.height = window.innerHeight ||
+document.documentElement.clientHeight || document.body.clientHeight
+}
+function i() {
+r.clearRect(0, 0, a, c);
+var n, e, t, o, m, l;
+s.forEach(function(i, x) {
+for (i.x += i.xa, i.y += i.ya, i.xa *= i.x > a || i.x < 0 ? -1 :
+1, i.ya *= i.y > c || i.y < 0 ? -1 : 1, r.fillRect(i.x - .5, i.y - .5, 1,
+1), e = x + 1; e < u.length; e++) n = u[e],
+null !== n.x && null !== n.y && (o = i.x - n.x, m = i.y - n.y, l
+= o * o + m * m, l < n.max && (n === y && l >= n.max / 2 && (i.x -= .03 * o,
+i.y -= .03 * m), t = (n.max - l) / n.max, r.beginPath(), r.lineWidth = t /
+2, r.strokeStyle = "rgba(" + d.c + "," + (t + .2) + ")", r.moveTo(i.x, i.y),
+r.lineTo(n.x, n.y), r.stroke()))
+}),
+x(i)
+}
+var a, c, u, m = document.createElement("canvas"),
+d = t(),
+l = "c_n" + d.l,
+r = m.getContext("2d"),
+x = window.requestAnimationFrame || window.webkitRequestAnimationFrame
+|| window.mozRequestAnimationFrame || window.oRequestAnimationFrame ||
+window.msRequestAnimationFrame ||
+function(n) {
+window.setTimeout(n, 1e3 / 45)
+},
+w = Math.random,
+y = {
+x: null,
+y: null,
+max: 2e4
+};
+m.id = l,
+m.style.cssText = "position:fixed;top:0;left:0;z-index:" + d.z +
+";opacity:" + d.o,
+e("body")[0].appendChild(m),
+o(),
+window.onresize = o,
+window.onmousemove = function(n) {
+n = n || window.event,
+y.x = n.clientX,
+y.y = n.clientY
+},
+window.onmouseout = function() {
+y.x = null,
+y.y = null
+};
+for (var s = [], f = 0; d.n > f; f++) {
+var h = w() * a,
+g = w() * c,
+v = 2 * w() - 1,
+p = 2 * w() - 1;
+s.push({
+x: h,
+y: g,
+xa: v,
+ya: p,
+max: 6e3
+})
+}
+u = s.concat([y]),
+setTimeout(function() {
+i()
+},
+100)
+} ();
+</script>
+    <div class="wrapper">
+        <header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-header header-logo"><a href="/">bobo&#39;s Blog</a></div>
+            <div class="menu navbar-right">
+                
+                    <a class="menu-item" href="/archives">📖博文</a>
+                
+                    <a class="menu-item" href="/category">📚类别</a>
+                
+                    <a class="menu-item" href="/tag">🏷️标签</a>
+                
+                    <a class="menu-item" href="/about">💡关于</a>
+                
+                    <a class="menu-item" href="/links">🔗友链</a>
+                
+                <input id="switch_default" type="checkbox" class="switch_default">
+                <label for="switch_default" class="toggleBtn"></label>
+            </div>
+        </div>
+    </nav>
+
+    
+    <nav class="navbar-mobile" id="nav-mobile">
+        <div class="container">
+            <div class="navbar-header">
+                <div>
+                    <a href="/">bobo&#39;s Blog</a><a id="mobile-toggle-theme">·&nbsp;Light</a>
+                </div>
+                <div class="menu-toggle" onclick="mobileBtn()">&#9776; Menu</div>
+            </div>
+            <div class="menu" id="mobile-menu">
+                
+                    <a class="menu-item" href="/archives">📖博文</a>
+                
+                    <a class="menu-item" href="/category">📚类别</a>
+                
+                    <a class="menu-item" href="/tag">🏷️标签</a>
+                
+                    <a class="menu-item" href="/about">💡关于</a>
+                
+                    <a class="menu-item" href="/links">🔗友链</a>
+                
+            </div>
+        </div>
+    </nav>
+
+</header>
+<script>
+    var mobileBtn = function f() {
+        var toggleMenu = document.getElementsByClassName("menu-toggle")[0];
+        var mobileMenu = document.getElementById("mobile-menu");
+        if(toggleMenu.classList.contains("active")){
+           toggleMenu.classList.remove("active")
+            mobileMenu.classList.remove("active")
+        }else{
+            toggleMenu.classList.add("active")
+            mobileMenu.classList.add("active")
+        }
+    }
+</script>
+            <div class="main">
+                <div class="container">
+    
+    
+        <div class="post-toc">
+    <div class="tocbot-list">
+    </div>
+    <div class="tocbot-list-menu">
+        <a class="tocbot-toc-expand" onclick="expand_toc()">Expand all</a>
+        <a onclick="go_top()">Back to top</a>
+        <a onclick="go_bottom()">Go to bottom</a>
+    </div>
+</div>
+
+<script>
+    document.ready(
+        function () {
+            tocbot.init({
+                tocSelector: '.tocbot-list',
+                contentSelector: '.post-content',
+                headingSelector: 'h1, h2, h3, h4, h5',
+                collapseDepth: 1,
+                orderedList: false,
+                scrollSmooth: true,
+            })
+        }
+    )
+
+    function expand_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 6,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "collapse_toc()");
+        b.innerHTML = "Collapse all"
+    }
+
+    function collapse_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 1,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "expand_toc()");
+        b.innerHTML = "Expand all"
+    }
+
+    function go_top() {
+        window.scrollTo(0, 0);
+    }
+
+    function go_bottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+</script>
+    
+
+    
+    <article class="post-wrap">
+        <header class="post-header">
+            <h1 class="post-title">基于 Python 的 Web 日志攻击特征提取工具</h1>
+            
+                <div class="post-meta">
+                    
+                        Author: <a itemprop="author" rel="author" href="/">rowen</a>
+                    
+
+                    
+                        <span class="post-time">
+                        Date: <a href="#">May 20, 2026&nbsp;&nbsp;21:55:00</a>
+                        </span>
+                    
+                    
+                        <span class="post-category">
+                    Category:
+                            
+                                <a href="/categories/Python%E5%AE%89%E5%85%A8%E5%B7%A5%E5%85%B7/">Python安全工具</a>
+                            
+                        </span>
+                    
+                </div>
+            
+        </header>
+
+        <div class="post-content">
+            <h1 id="基于-Python-的-Web-日志攻击特征提取工具"><a href="#基于-Python-的-Web-日志攻击特征提取工具" class="headerlink" title="基于 Python 的 Web 日志攻击特征提取工具"></a>基于 Python 的 Web 日志攻击特征提取工具</h1><h2 id="一、项目背景"><a href="#一、项目背景" class="headerlink" title="一、项目背景"></a>一、项目背景</h2><p>在安全运营和应急响应中，Web 访问日志通常数量很大。如果完全手工分析，很容易漏掉异常请求。因此可以编写一个轻量级 Python 工具，对 Nginx&#x2F;Apache 访问日志进行自动化提取，快速发现 SQL 注入、XSS、目录扫描、敏感文件访问和爆破行为。</p>
+<p>本文实现一个本地日志分析脚本，适用于授权环境、靶场环境和自己的服务器日志分析，不用于未授权扫描或攻击。</p>
+<h2 id="二、工具目标"><a href="#二、工具目标" class="headerlink" title="二、工具目标"></a>二、工具目标</h2><p>工具需要完成以下功能：</p>
+<ul>
+<li>读取 Web access.log。</li>
+<li>解析 IP、时间、请求方法、URL、状态码、User-Agent。</li>
+<li>根据规则匹配常见攻击特征。</li>
+<li>统计异常 IP、攻击类型和高频路径。</li>
+<li>输出攻击时间线。</li>
+<li>导出 CSV，方便后续整理报告。</li>
+</ul>
+<h2 id="三、日志格式"><a href="#三、日志格式" class="headerlink" title="三、日志格式"></a>三、日志格式</h2><p>常见 Nginx access.log 格式如下：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">192.168.56.101 - - [20/May/2026:10:12:33 +0800] &quot;GET /index.php?id=1 HTTP/1.1&quot; 200 1024 &quot;-&quot; &quot;Mozilla/5.0&quot;</span><br></pre></td></tr></table></figure>
+
+<p>本文脚本主要提取字段：</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>ip</td>
+<td>访问来源 IP</td>
+</tr>
+<tr>
+<td>time</td>
+<td>请求时间</td>
+</tr>
+<tr>
+<td>method</td>
+<td>请求方法</td>
+</tr>
+<tr>
+<td>url</td>
+<td>请求路径和参数</td>
+</tr>
+<tr>
+<td>status</td>
+<td>HTTP 状态码</td>
+</tr>
+<tr>
+<td>user_agent</td>
+<td>浏览器或工具标识</td>
+</tr>
+</tbody></table>
+<h2 id="四、检测规则设计"><a href="#四、检测规则设计" class="headerlink" title="四、检测规则设计"></a>四、检测规则设计</h2><h3 id="1-SQL-注入"><a href="#1-SQL-注入" class="headerlink" title="1. SQL 注入"></a>1. SQL 注入</h3><p>特征关键字：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">union select</span><br><span class="line">or 1=1</span><br><span class="line">and 1=1</span><br><span class="line">sleep(</span><br><span class="line">benchmark(</span><br><span class="line">information_schema</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-XSS"><a href="#2-XSS" class="headerlink" title="2. XSS"></a>2. XSS</h3><p>特征关键字：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&lt;script</span><br><span class="line">onerror</span><br><span class="line">onload</span><br><span class="line">javascript:</span><br><span class="line">alert(</span><br></pre></td></tr></table></figure>
+
+<h3 id="3-敏感路径"><a href="#3-敏感路径" class="headerlink" title="3. 敏感路径"></a>3. 敏感路径</h3><p>特征路径：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">/.git/config</span><br><span class="line">/admin</span><br><span class="line">/phpinfo.php</span><br><span class="line">/backup.zip</span><br><span class="line">/config.php</span><br><span class="line">/.env</span><br></pre></td></tr></table></figure>
+
+<h3 id="4-命令执行"><a href="#4-命令执行" class="headerlink" title="4. 命令执行"></a>4. 命令执行</h3><p>特征关键字：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">cmd=</span><br><span class="line">whoami</span><br><span class="line">id</span><br><span class="line">uname</span><br><span class="line">/bin/bash</span><br><span class="line">curl</span><br><span class="line">wget</span><br></pre></td></tr></table></figure>
+
+<h3 id="5-弱口令爆破"><a href="#5-弱口令爆破" class="headerlink" title="5. 弱口令爆破"></a>5. 弱口令爆破</h3><p>判断思路：</p>
+<ul>
+<li>同一 IP 多次访问登录接口。</li>
+<li>请求方法多为 POST。</li>
+<li>短时间内出现大量 200、302、401、403。</li>
+<li>路径包含 login、admin、user 等关键词。</li>
+</ul>
+<h2 id="五、核心代码"><a href="#五、核心代码" class="headerlink" title="五、核心代码"></a>五、核心代码</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> argparse</span><br><span class="line"><span class="keyword">import</span> csv</span><br><span class="line"><span class="keyword">import</span> re</span><br><span class="line"><span class="keyword">from</span> collections <span class="keyword">import</span> Counter, defaultdict</span><br><span class="line"><span class="keyword">from</span> urllib.parse <span class="keyword">import</span> unquote</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">RULES = &#123;</span><br><span class="line">    <span class="string">&quot;SQL注入&quot;</span>: [</span><br><span class="line">        <span class="string">r&quot;union\s+select&quot;</span>,</span><br><span class="line">        <span class="string">r&quot;\bor\s+1=1\b&quot;</span>,</span><br><span class="line">        <span class="string">r&quot;\band\s+1=1\b&quot;</span>,</span><br><span class="line">        <span class="string">r&quot;sleep\s*\(&quot;</span>,</span><br><span class="line">        <span class="string">r&quot;benchmark\s*\(&quot;</span>,</span><br><span class="line">        <span class="string">r&quot;information_schema&quot;</span>,</span><br><span class="line">        <span class="string">r&quot;(--|%2d%2d|#|%23)&quot;</span></span><br><span class="line">    ],</span><br><span class="line">    <span class="string">&quot;XSS探测&quot;</span>: [</span><br><span class="line">        <span class="string">r&quot;&lt;script&quot;</span>,</span><br><span class="line">        <span class="string">r&quot;%3cscript&quot;</span>,</span><br><span class="line">        <span class="string">r&quot;onerror&quot;</span>,</span><br><span class="line">        <span class="string">r&quot;onload&quot;</span>,</span><br><span class="line">        <span class="string">r&quot;javascript:&quot;</span>,</span><br><span class="line">        <span class="string">r&quot;alert\s*\(&quot;</span></span><br><span class="line">    ],</span><br><span class="line">    <span class="string">&quot;敏感路径访问&quot;</span>: [</span><br><span class="line">        <span class="string">r&quot;/\.git/config&quot;</span>,</span><br><span class="line">        <span class="string">r&quot;/\.env&quot;</span>,</span><br><span class="line">        <span class="string">r&quot;/admin&quot;</span>,</span><br><span class="line">        <span class="string">r&quot;/phpinfo\.php&quot;</span>,</span><br><span class="line">        <span class="string">r&quot;/backup&quot;</span>,</span><br><span class="line">        <span class="string">r&quot;/config\.php&quot;</span></span><br><span class="line">    ],</span><br><span class="line">    <span class="string">&quot;命令执行探测&quot;</span>: [</span><br><span class="line">        <span class="string">r&quot;cmd=&quot;</span>,</span><br><span class="line">        <span class="string">r&quot;whoami&quot;</span>,</span><br><span class="line">        <span class="string">r&quot;\bid\b&quot;</span>,</span><br><span class="line">        <span class="string">r&quot;uname&quot;</span>,</span><br><span class="line">        <span class="string">r&quot;/bin/bash&quot;</span>,</span><br><span class="line">        <span class="string">r&quot;curl\s+&quot;</span>,</span><br><span class="line">        <span class="string">r&quot;wget\s+&quot;</span></span><br><span class="line">    ],</span><br><span class="line">    <span class="string">&quot;疑似登录爆破&quot;</span>: [</span><br><span class="line">        <span class="string">r&quot;post\s+/login&quot;</span>,</span><br><span class="line">        <span class="string">r&quot;post\s+/admin&quot;</span>,</span><br><span class="line">        <span class="string">r&quot;post\s+/user/login&quot;</span></span><br><span class="line">    ]</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">LOG_PATTERN = re.<span class="built_in">compile</span>(</span><br><span class="line">    <span class="string">r&#x27;(?P&lt;ip&gt;\S+) \S+ \S+ \[(?P&lt;time&gt;.*?)\] &#x27;</span></span><br><span class="line">    <span class="string">r&#x27;&quot;(?P&lt;method&gt;\S+)\s+(?P&lt;url&gt;\S+)\s+(?P&lt;protocol&gt;[^&quot;]+)&quot; &#x27;</span></span><br><span class="line">    <span class="string">r&#x27;(?P&lt;status&gt;\d+) (?P&lt;size&gt;\S+) &#x27;</span></span><br><span class="line">    <span class="string">r&#x27;&quot;(?P&lt;referer&gt;[^&quot;]*)&quot; &quot;(?P&lt;ua&gt;[^&quot;]*)&quot;&#x27;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">parse_line</span>(<span class="params">line</span>):</span><br><span class="line">    <span class="keyword">match</span> = LOG_PATTERN.search(line)</span><br><span class="line">    <span class="keyword">if</span> <span class="keyword">not</span> <span class="keyword">match</span>:</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">None</span></span><br><span class="line"></span><br><span class="line">    data = <span class="keyword">match</span>.groupdict()</span><br><span class="line">    data[<span class="string">&quot;decoded_url&quot;</span>] = unquote(data[<span class="string">&quot;url&quot;</span>])</span><br><span class="line">    <span class="keyword">return</span> data</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">detect</span>(<span class="params">record</span>):</span><br><span class="line">    text = <span class="string">f&#x27;<span class="subst">&#123;record[<span class="string">&quot;method&quot;</span>]&#125;</span> <span class="subst">&#123;record[<span class="string">&quot;decoded_url&quot;</span>]&#125;</span> <span class="subst">&#123;record[<span class="string">&quot;ua&quot;</span>]&#125;</span>&#x27;</span>.lower()</span><br><span class="line">    hits = []</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> attack_type, rules <span class="keyword">in</span> RULES.items():</span><br><span class="line">        <span class="keyword">for</span> rule <span class="keyword">in</span> rules:</span><br><span class="line">            <span class="keyword">if</span> re.search(rule, text, re.IGNORECASE):</span><br><span class="line">                hits.append(attack_type)</span><br><span class="line">                <span class="keyword">break</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> hits</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">analyze</span>(<span class="params">log_path</span>):</span><br><span class="line">    attack_counter = Counter()</span><br><span class="line">    ip_counter = Counter()</span><br><span class="line">    url_counter = Counter()</span><br><span class="line">    status_counter = Counter()</span><br><span class="line">    timeline = defaultdict(<span class="built_in">list</span>)</span><br><span class="line">    rows = []</span><br><span class="line"></span><br><span class="line">    <span class="keyword">with</span> <span class="built_in">open</span>(log_path, <span class="string">&quot;r&quot;</span>, encoding=<span class="string">&quot;utf-8&quot;</span>, errors=<span class="string">&quot;ignore&quot;</span>) <span class="keyword">as</span> f:</span><br><span class="line">        <span class="keyword">for</span> line <span class="keyword">in</span> f:</span><br><span class="line">            record = parse_line(line)</span><br><span class="line">            <span class="keyword">if</span> <span class="keyword">not</span> record:</span><br><span class="line">                <span class="keyword">continue</span></span><br><span class="line"></span><br><span class="line">            hits = detect(record)</span><br><span class="line">            <span class="keyword">if</span> <span class="keyword">not</span> hits:</span><br><span class="line">                <span class="keyword">continue</span></span><br><span class="line"></span><br><span class="line">            ip = record[<span class="string">&quot;ip&quot;</span>]</span><br><span class="line">            url = record[<span class="string">&quot;decoded_url&quot;</span>]</span><br><span class="line">            status = record[<span class="string">&quot;status&quot;</span>]</span><br><span class="line"></span><br><span class="line">            ip_counter[ip] += <span class="number">1</span></span><br><span class="line">            url_counter[url] += <span class="number">1</span></span><br><span class="line">            status_counter[status] += <span class="number">1</span></span><br><span class="line"></span><br><span class="line">            <span class="keyword">for</span> hit <span class="keyword">in</span> hits:</span><br><span class="line">                attack_counter[hit] += <span class="number">1</span></span><br><span class="line">                timeline[ip].append((record[<span class="string">&quot;time&quot;</span>], hit, record[<span class="string">&quot;method&quot;</span>], url, status))</span><br><span class="line">                rows.append(&#123;</span><br><span class="line">                    <span class="string">&quot;ip&quot;</span>: ip,</span><br><span class="line">                    <span class="string">&quot;time&quot;</span>: record[<span class="string">&quot;time&quot;</span>],</span><br><span class="line">                    <span class="string">&quot;attack_type&quot;</span>: hit,</span><br><span class="line">                    <span class="string">&quot;method&quot;</span>: record[<span class="string">&quot;method&quot;</span>],</span><br><span class="line">                    <span class="string">&quot;url&quot;</span>: url,</span><br><span class="line">                    <span class="string">&quot;status&quot;</span>: status,</span><br><span class="line">                    <span class="string">&quot;user_agent&quot;</span>: record[<span class="string">&quot;ua&quot;</span>]</span><br><span class="line">                &#125;)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> attack_counter, ip_counter, url_counter, status_counter, timeline, rows</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">write_csv</span>(<span class="params">rows, output</span>):</span><br><span class="line">    <span class="keyword">if</span> <span class="keyword">not</span> rows:</span><br><span class="line">        <span class="keyword">return</span></span><br><span class="line"></span><br><span class="line">    fields = [<span class="string">&quot;ip&quot;</span>, <span class="string">&quot;time&quot;</span>, <span class="string">&quot;attack_type&quot;</span>, <span class="string">&quot;method&quot;</span>, <span class="string">&quot;url&quot;</span>, <span class="string">&quot;status&quot;</span>, <span class="string">&quot;user_agent&quot;</span>]</span><br><span class="line">    <span class="keyword">with</span> <span class="built_in">open</span>(output, <span class="string">&quot;w&quot;</span>, newline=<span class="string">&quot;&quot;</span>, encoding=<span class="string">&quot;utf-8-sig&quot;</span>) <span class="keyword">as</span> f:</span><br><span class="line">        writer = csv.DictWriter(f, fieldnames=fields)</span><br><span class="line">        writer.writeheader()</span><br><span class="line">        writer.writerows(rows)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">print_top</span>(<span class="params">title, counter, limit=<span class="number">10</span></span>):</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;\n[+] <span class="subst">&#123;title&#125;</span>&quot;</span>)</span><br><span class="line">    <span class="keyword">for</span> key, value <span class="keyword">in</span> counter.most_common(limit):</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">f&quot;<span class="subst">&#123;value:&gt;<span class="number">5</span>&#125;</span>  <span class="subst">&#123;key&#125;</span>&quot;</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">main</span>():</span><br><span class="line">    parser = argparse.ArgumentParser(description=<span class="string">&quot;Web access log attack feature extractor&quot;</span>)</span><br><span class="line">    parser.add_argument(<span class="string">&quot;-f&quot;</span>, <span class="string">&quot;--file&quot;</span>, required=<span class="literal">True</span>, <span class="built_in">help</span>=<span class="string">&quot;access.log path&quot;</span>)</span><br><span class="line">    parser.add_argument(<span class="string">&quot;-o&quot;</span>, <span class="string">&quot;--output&quot;</span>, default=<span class="string">&quot;result.csv&quot;</span>, <span class="built_in">help</span>=<span class="string">&quot;CSV output path&quot;</span>)</span><br><span class="line">    args = parser.parse_args()</span><br><span class="line"></span><br><span class="line">    attack_counter, ip_counter, url_counter, status_counter, timeline, rows = analyze(args.file)</span><br><span class="line"></span><br><span class="line">    print_top(<span class="string">&quot;攻击类型统计&quot;</span>, attack_counter)</span><br><span class="line">    print_top(<span class="string">&quot;异常 IP TOP 10&quot;</span>, ip_counter)</span><br><span class="line">    print_top(<span class="string">&quot;异常 URL TOP 10&quot;</span>, url_counter)</span><br><span class="line">    print_top(<span class="string">&quot;状态码统计&quot;</span>, status_counter)</span><br><span class="line"></span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;\n[+] 攻击时间线示例&quot;</span>)</span><br><span class="line">    <span class="keyword">for</span> ip, events <span class="keyword">in</span> <span class="built_in">list</span>(timeline.items())[:<span class="number">5</span>]:</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">f&quot;\nIP: <span class="subst">&#123;ip&#125;</span>&quot;</span>)</span><br><span class="line">        <span class="keyword">for</span> time, attack_type, method, url, status <span class="keyword">in</span> events[:<span class="number">10</span>]:</span><br><span class="line">            <span class="built_in">print</span>(<span class="string">f&quot;<span class="subst">&#123;time&#125;</span> [<span class="subst">&#123;attack_type&#125;</span>] <span class="subst">&#123;method&#125;</span> <span class="subst">&#123;url&#125;</span> status=<span class="subst">&#123;status&#125;</span>&quot;</span>)</span><br><span class="line"></span><br><span class="line">    write_csv(rows, args.output)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;\n[+] CSV 已导出: <span class="subst">&#123;args.output&#125;</span>&quot;</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&quot;__main__&quot;</span>:</span><br><span class="line">    main()</span><br></pre></td></tr></table></figure>
+
+<h2 id="六、使用方法"><a href="#六、使用方法" class="headerlink" title="六、使用方法"></a>六、使用方法</h2><p>保存脚本为 <code>log_analyzer.py</code>，然后执行：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python3 log_analyzer.py -f access.log -o result.csv</span><br></pre></td></tr></table></figure>
+
+<p>输出示例：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">[+] 攻击类型统计</span><br><span class="line">   28  敏感路径访问</span><br><span class="line">   15  SQL注入</span><br><span class="line">    8  XSS探测</span><br><span class="line">    6  疑似登录爆破</span><br><span class="line"></span><br><span class="line">[+] 异常 IP TOP 10</span><br><span class="line">   31  192.168.56.103</span><br><span class="line">   12  192.168.56.109</span><br><span class="line"></span><br><span class="line">[+] CSV 已导出: result.csv</span><br></pre></td></tr></table></figure>
+
+<p>CSV 结果可以用 Excel 打开，继续整理成应急响应报告。</p>
+<h2 id="七、结果分析思路"><a href="#七、结果分析思路" class="headerlink" title="七、结果分析思路"></a>七、结果分析思路</h2><p>拿到脚本输出后，可以从以下几个角度分析：</p>
+<h3 id="1-异常-IP"><a href="#1-异常-IP" class="headerlink" title="1. 异常 IP"></a>1. 异常 IP</h3><p>如果某个 IP 命中次数明显高于其他 IP，说明它可能正在进行扫描或攻击。</p>
+<p>需要进一步查看：</p>
+<ul>
+<li>访问时间是否集中。</li>
+<li>是否存在扫描路径。</li>
+<li>是否访问过上传目录。</li>
+<li>是否访问过后台登录接口。</li>
+</ul>
+<h3 id="2-状态码"><a href="#2-状态码" class="headerlink" title="2. 状态码"></a>2. 状态码</h3><p>状态码可以辅助判断攻击是否可能成功：</p>
+<ul>
+<li>大量 404：常见目录扫描。</li>
+<li>大量 403：访问被拦截或无权限。</li>
+<li>大量 500：可能触发后端异常。</li>
+<li>200：需要重点确认是否真的返回有效内容。</li>
+<li>302：可能涉及登录跳转或认证绕过。</li>
+</ul>
+<h3 id="3-攻击时间线"><a href="#3-攻击时间线" class="headerlink" title="3. 攻击时间线"></a>3. 攻击时间线</h3><p>攻击时间线可以帮助还原过程：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">目录扫描 -&gt; 漏洞探测 -&gt; 上传文件 -&gt; 访问 WebShell -&gt; 命令执行</span><br></pre></td></tr></table></figure>
+
+<p>如果日志中出现连续行为，就需要结合 Web 目录文件修改时间继续排查。</p>
+<h2 id="八、工具局限"><a href="#八、工具局限" class="headerlink" title="八、工具局限"></a>八、工具局限</h2><p>这个脚本是基于规则匹配的轻量工具，因此存在局限：</p>
+<ul>
+<li>混淆后的 Payload 可能绕过规则。</li>
+<li>正常业务请求可能误报。</li>
+<li>不同 Web 服务日志格式可能需要调整正则。</li>
+<li>无法直接判断攻击是否成功。</li>
+<li>需要结合文件、进程、系统日志做进一步确认。</li>
+</ul>
+<p>因此它更适合作为初筛工具，而不是最终判断依据。</p>
+<h2 id="九、后续优化方向"><a href="#九、后续优化方向" class="headerlink" title="九、后续优化方向"></a>九、后续优化方向</h2><p>后续可以继续增强：</p>
+<ul>
+<li>支持 Apache、Nginx 多种日志格式。</li>
+<li>增加 IP 归属地查询。</li>
+<li>输出 HTML 分析报告。</li>
+<li>增加时间窗口统计。</li>
+<li>对同一 IP 的攻击链自动排序。</li>
+<li>加入 WebShell 访问特征检测。</li>
+<li>做成命令行工具或 Web 可视化面板。</li>
+</ul>
+<h2 id="十、总结"><a href="#十、总结" class="headerlink" title="十、总结"></a>十、总结</h2><p>本文实现了一个基于 Python 的 Web 日志攻击特征提取工具，可以快速从 access.log 中提取异常 IP、攻击类型、异常 URL、状态码和攻击时间线。</p>
+<p>在实际安全运营中，这类工具适合用于日志初筛和报告辅助。它不能替代人工分析，但可以减少重复劳动，让分析人员更快定位重点 IP、重点路径和重点时间段。</p>
+
+        </div>
+
+        
+            <section class="post-copyright">
+                
+                    <p class="copyright-item">
+                        <span>Author:</span>
+                        <span>rowen</span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>Permalink:</span>
+                        <span><a href="https://forkmmat.github.io/2026/05/20/%E5%9F%BA%E4%BA%8EPython%E7%9A%84Web%E6%97%A5%E5%BF%97%E6%94%BB%E5%87%BB%E7%89%B9%E5%BE%81%E6%8F%90%E5%8F%96%E5%B7%A5%E5%85%B7/">https://forkmmat.github.io/2026/05/20/%E5%9F%BA%E4%BA%8EPython%E7%9A%84Web%E6%97%A5%E5%BF%97%E6%94%BB%E5%87%BB%E7%89%B9%E5%BE%81%E6%8F%90%E5%8F%96%E5%B7%A5%E5%85%B7/</a></span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>License:</span>
+                        <span>Copyright (c) 2019 <a target="_blank" rel="noopener" href="http://creativecommons.org/licenses/by-nc/4.0/">CC-BY-NC-4.0</a> LICENSE</span>
+                    </p>
+                
+                
+                     <p class="copyright-item">
+                         <span>Slogan:</span>
+                         <span>Do you believe in <strong>DESTINY</strong>?</span>
+                     </p>
+                
+
+            </section>
+        
+        <section class="post-tags">
+            <div>
+                <span>Tag(s):</span>
+                <span class="tag">
+                    
+                    
+                        <a href="/tags/%E6%97%A5%E5%BF%97%E5%88%86%E6%9E%90/"># 日志分析</a>
+                    
+                        <a href="/tags/%E5%AE%89%E5%85%A8%E8%BF%90%E8%90%A5/"># 安全运营</a>
+                    
+                        <a href="/tags/Python/"># Python</a>
+                    
+                        <a href="/tags/Web%E5%AE%89%E5%85%A8/"># Web安全</a>
+                    
+                        <a href="/tags/%E5%AE%89%E5%85%A8%E5%B7%A5%E5%85%B7/"># 安全工具</a>
+                    
+                        
+                </span>
+            </div>
+            <div>
+                <a href="javascript:window.history.back();">back</a>
+                <span>· </span>
+                <a href="/">home</a>
+            </div>
+        </section>
+        <section class="post-nav">
+            
+            
+            <a class="next" rel="next" href="/2026/05/20/Linux-WebShell%E6%8E%92%E6%9F%A5%E5%AE%9E%E8%B7%B5-%E6%96%87%E4%BB%B6%E8%BF%9B%E7%A8%8B%E6%97%A5%E5%BF%97%E8%AE%A1%E5%88%92%E4%BB%BB%E5%8A%A1%E5%88%86%E6%9E%90/">Linux WebShell 排查实践：文件、进程、日志、计划任务分析</a>
+            
+        </section>
+<script src="https://giscus.app/client.js"
+        data-repo="forkmmat/forkmmat.github.io"
+        data-repo-id="R_kgDOO0OA0g"
+        data-category="General"
+        data-category-id="DIC_kwDOO0OA0s4CtD6Y"
+        data-mapping="title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="zh-CN"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+</script>
+
+    </article>
+</div>
+
+            </div>
+            <footer id="footer" class="footer">
+    <div class="copyright">
+        <span>© rowen | Powered by <a href="https://hexo.io" target="_blank">Hexo</a> & <a href="https://github.com/Siricee/hexo-theme-Chic" target="_blank">Chic</a></span>
+    </div>
+</footer>
+
+    </div>
+</body>
+
+</html>
