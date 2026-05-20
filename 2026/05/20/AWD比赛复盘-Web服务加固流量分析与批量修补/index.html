@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <meta name="author" content="rowen">
+
+
+
+
+
+<title>AWD 比赛复盘：Web 服务加固、流量分析与批量修补 | Hexo</title>
+
+
+
+    <link rel="icon" href="/drink.ico">
+
+
+
+
+    <!-- stylesheets list from _config.yml -->
+    
+    <link rel="stylesheet" href="/css/style.css">
+    
+
+
+
+    <!-- scripts list from _config.yml -->
+    
+    <script src="/js/script.js"></script>
+    
+    <script src="/js/tocbot.min.js"></script>
+    
+
+
+
+    
+    
+        
+    
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+    <!-- 引入jQuery -->
+<script type="text/javascript" src="//libs.baidu.com/jquery/1.8.3/jquery.min.js"></script>
+<!-- 雪花特效2 -->
+ <script type="text/javascript" src="/js/snow2.js"></script>
+    <script>
+        // this function is used to check current theme before page loaded.
+        (() => {
+            const currentTheme = window.localStorage && window.localStorage.getItem('theme') || '';
+            const isDark = currentTheme === 'dark';
+            const pagebody = document.getElementsByTagName('body')[0]
+            if (isDark) {
+                pagebody.classList.add('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Dark"
+            } else {
+                pagebody.classList.remove('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Light"
+            }
+        })();
+    </script>
+<script>
+!
+function() {
+function n(n, e, t) {
+return n.getAttribute(e) || t
+}
+function e(n) {
+return document.getElementsByTagName(n)
+}
+function t() {
+var t = e("script"),
+o = t.length,
+i = t[o - 1];
+return {
+l: o,
+z: n(i, "zIndex", -1), //置于主页面背后
+o: n(i, "opacity", .5), //线条透明度
+c: n(i, "color", "0,0,0"), //线条颜色
+n: n(i, "count", 100) //线条数量
+}
+}
+function o() {
+a = m.width = window.innerWidth ||
+document.documentElement.clientWidth || document.body.clientWidth,
+c = m.height = window.innerHeight ||
+document.documentElement.clientHeight || document.body.clientHeight
+}
+function i() {
+r.clearRect(0, 0, a, c);
+var n, e, t, o, m, l;
+s.forEach(function(i, x) {
+for (i.x += i.xa, i.y += i.ya, i.xa *= i.x > a || i.x < 0 ? -1 :
+1, i.ya *= i.y > c || i.y < 0 ? -1 : 1, r.fillRect(i.x - .5, i.y - .5, 1,
+1), e = x + 1; e < u.length; e++) n = u[e],
+null !== n.x && null !== n.y && (o = i.x - n.x, m = i.y - n.y, l
+= o * o + m * m, l < n.max && (n === y && l >= n.max / 2 && (i.x -= .03 * o,
+i.y -= .03 * m), t = (n.max - l) / n.max, r.beginPath(), r.lineWidth = t /
+2, r.strokeStyle = "rgba(" + d.c + "," + (t + .2) + ")", r.moveTo(i.x, i.y),
+r.lineTo(n.x, n.y), r.stroke()))
+}),
+x(i)
+}
+var a, c, u, m = document.createElement("canvas"),
+d = t(),
+l = "c_n" + d.l,
+r = m.getContext("2d"),
+x = window.requestAnimationFrame || window.webkitRequestAnimationFrame
+|| window.mozRequestAnimationFrame || window.oRequestAnimationFrame ||
+window.msRequestAnimationFrame ||
+function(n) {
+window.setTimeout(n, 1e3 / 45)
+},
+w = Math.random,
+y = {
+x: null,
+y: null,
+max: 2e4
+};
+m.id = l,
+m.style.cssText = "position:fixed;top:0;left:0;z-index:" + d.z +
+";opacity:" + d.o,
+e("body")[0].appendChild(m),
+o(),
+window.onresize = o,
+window.onmousemove = function(n) {
+n = n || window.event,
+y.x = n.clientX,
+y.y = n.clientY
+},
+window.onmouseout = function() {
+y.x = null,
+y.y = null
+};
+for (var s = [], f = 0; d.n > f; f++) {
+var h = w() * a,
+g = w() * c,
+v = 2 * w() - 1,
+p = 2 * w() - 1;
+s.push({
+x: h,
+y: g,
+xa: v,
+ya: p,
+max: 6e3
+})
+}
+u = s.concat([y]),
+setTimeout(function() {
+i()
+},
+100)
+} ();
+</script>
+    <div class="wrapper">
+        <header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-header header-logo"><a href="/">bobo&#39;s Blog</a></div>
+            <div class="menu navbar-right">
+                
+                    <a class="menu-item" href="/archives">📖博文</a>
+                
+                    <a class="menu-item" href="/category">📚类别</a>
+                
+                    <a class="menu-item" href="/tag">🏷️标签</a>
+                
+                    <a class="menu-item" href="/about">💡关于</a>
+                
+                    <a class="menu-item" href="/links">🔗友链</a>
+                
+                <input id="switch_default" type="checkbox" class="switch_default">
+                <label for="switch_default" class="toggleBtn"></label>
+            </div>
+        </div>
+    </nav>
+
+    
+    <nav class="navbar-mobile" id="nav-mobile">
+        <div class="container">
+            <div class="navbar-header">
+                <div>
+                    <a href="/">bobo&#39;s Blog</a><a id="mobile-toggle-theme">·&nbsp;Light</a>
+                </div>
+                <div class="menu-toggle" onclick="mobileBtn()">&#9776; Menu</div>
+            </div>
+            <div class="menu" id="mobile-menu">
+                
+                    <a class="menu-item" href="/archives">📖博文</a>
+                
+                    <a class="menu-item" href="/category">📚类别</a>
+                
+                    <a class="menu-item" href="/tag">🏷️标签</a>
+                
+                    <a class="menu-item" href="/about">💡关于</a>
+                
+                    <a class="menu-item" href="/links">🔗友链</a>
+                
+            </div>
+        </div>
+    </nav>
+
+</header>
+<script>
+    var mobileBtn = function f() {
+        var toggleMenu = document.getElementsByClassName("menu-toggle")[0];
+        var mobileMenu = document.getElementById("mobile-menu");
+        if(toggleMenu.classList.contains("active")){
+           toggleMenu.classList.remove("active")
+            mobileMenu.classList.remove("active")
+        }else{
+            toggleMenu.classList.add("active")
+            mobileMenu.classList.add("active")
+        }
+    }
+</script>
+            <div class="main">
+                <div class="container">
+    
+    
+        <div class="post-toc">
+    <div class="tocbot-list">
+    </div>
+    <div class="tocbot-list-menu">
+        <a class="tocbot-toc-expand" onclick="expand_toc()">Expand all</a>
+        <a onclick="go_top()">Back to top</a>
+        <a onclick="go_bottom()">Go to bottom</a>
+    </div>
+</div>
+
+<script>
+    document.ready(
+        function () {
+            tocbot.init({
+                tocSelector: '.tocbot-list',
+                contentSelector: '.post-content',
+                headingSelector: 'h1, h2, h3, h4, h5',
+                collapseDepth: 1,
+                orderedList: false,
+                scrollSmooth: true,
+            })
+        }
+    )
+
+    function expand_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 6,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "collapse_toc()");
+        b.innerHTML = "Collapse all"
+    }
+
+    function collapse_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 1,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "expand_toc()");
+        b.innerHTML = "Expand all"
+    }
+
+    function go_top() {
+        window.scrollTo(0, 0);
+    }
+
+    function go_bottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+</script>
+    
+
+    
+    <article class="post-wrap">
+        <header class="post-header">
+            <h1 class="post-title">AWD 比赛复盘：Web 服务加固、流量分析与批量修补</h1>
+            
+                <div class="post-meta">
+                    
+                        Author: <a itemprop="author" rel="author" href="/">rowen</a>
+                    
+
+                    
+                        <span class="post-time">
+                        Date: <a href="#">May 20, 2026&nbsp;&nbsp;21:15:00</a>
+                        </span>
+                    
+                    
+                        <span class="post-category">
+                    Category:
+                            
+                                <a href="/categories/%E6%AF%94%E8%B5%9B%E5%A4%8D%E7%9B%98/">比赛复盘</a>
+                            
+                        </span>
+                    
+                </div>
+            
+        </header>
+
+        <div class="post-content">
+            <h1 id="AWD-比赛复盘：Web-服务加固、流量分析与批量修补"><a href="#AWD-比赛复盘：Web-服务加固、流量分析与批量修补" class="headerlink" title="AWD 比赛复盘：Web 服务加固、流量分析与批量修补"></a>AWD 比赛复盘：Web 服务加固、流量分析与批量修补</h1><h2 id="一、项目背景"><a href="#一、项目背景" class="headerlink" title="一、项目背景"></a>一、项目背景</h2><p>AWD 比赛的特点是攻防同时进行：一边要维护自己的服务可用性，一边要分析漏洞、修补漏洞、排查后门，同时还要关注其他队伍的攻击流量。</p>
+<p>相比普通 CTF 题解，AWD 更接近真实安全工作中的应急响应和安全运营场景。本文从一次 Web AWD 训练赛的角度，复盘赛前加固、文件备份、弱口令检查、WebShell 排查、漏洞修补、流量分析和批量脚本处理流程。</p>
+<p>本文内容仅用于本地靶场、校内训练赛或授权比赛环境。</p>
+<h2 id="二、环境说明"><a href="#二、环境说明" class="headerlink" title="二、环境说明"></a>二、环境说明</h2><table>
+<thead>
+<tr>
+<th>项目</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>比赛类型</td>
+<td>Web AWD</td>
+</tr>
+<tr>
+<td>服务类型</td>
+<td>PHP Web 服务</td>
+</tr>
+<tr>
+<td>系统环境</td>
+<td>Linux</td>
+</tr>
+<tr>
+<td>主要任务</td>
+<td>保持服务可用、修补漏洞、分析攻击流量</td>
+</tr>
+<tr>
+<td>常用工具</td>
+<td>grep、find、diff、tar、ps、netstat、tcpdump、Python</td>
+</tr>
+</tbody></table>
+<p>AWD 中最重要的不是“会一个漏洞”，而是能快速把服务稳住，并建立可重复执行的排查流程。</p>
+<h2 id="三、赛前加固流程"><a href="#三、赛前加固流程" class="headerlink" title="三、赛前加固流程"></a>三、赛前加固流程</h2><h3 id="1-备份源码和配置"><a href="#1-备份源码和配置" class="headerlink" title="1. 备份源码和配置"></a>1. 备份源码和配置</h3><p>拿到靶机后第一步是备份，避免修补过程中误删文件，也方便后续做差异对比。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">mkdir</span> -p /tmp/awd_backup</span><br><span class="line">tar -zcvf /tmp/awd_backup/web_$(<span class="built_in">date</span> +%F_%H%M).tar.gz /var/www/html</span><br><span class="line"><span class="built_in">cp</span> /etc/nginx/nginx.conf /tmp/awd_backup/nginx.conf.bak 2&gt;/dev/null</span><br><span class="line"><span class="built_in">cp</span> /etc/apache2/apache2.conf /tmp/awd_backup/apache2.conf.bak 2&gt;/dev/null</span><br></pre></td></tr></table></figure>
+
+<p>备份完成后，记录当前 Web 目录文件数量：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">find /var/www/html -<span class="built_in">type</span> f | <span class="built_in">wc</span> -l</span><br></pre></td></tr></table></figure>
+
+<p>后续如果文件数量突然增加，就要重点检查是否被写入 WebShell。</p>
+<h3 id="2-检查弱口令"><a href="#2-检查弱口令" class="headerlink" title="2. 检查弱口令"></a>2. 检查弱口令</h3><p>常见需要检查的位置：</p>
+<ul>
+<li>Web 后台账号</li>
+<li>数据库账号</li>
+<li>SSH 账号</li>
+<li>配置文件中的默认密码</li>
+<li>代码中硬编码的账号密码</li>
+</ul>
+<p>快速检索配置文件：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">grep -RniE <span class="string">&quot;password|passwd|pwd|user|username|root&quot;</span> /var/www/html 2&gt;/dev/null</span><br></pre></td></tr></table></figure>
+
+<p>如果发现默认密码，应立即修改，并同步更新配置文件中连接数据库的密码。</p>
+<h3 id="3-设置目录权限"><a href="#3-设置目录权限" class="headerlink" title="3. 设置目录权限"></a>3. 设置目录权限</h3><p>Web 目录权限过大时，攻击者可能上传或修改脚本文件。一般原则是：能只读就只读，必须上传的目录单独控制。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">chown</span> -R www-data:www-data /var/www/html</span><br><span class="line">find /var/www/html -<span class="built_in">type</span> d -<span class="built_in">exec</span> <span class="built_in">chmod</span> 755 &#123;&#125; \;</span><br><span class="line">find /var/www/html -<span class="built_in">type</span> f -<span class="built_in">exec</span> <span class="built_in">chmod</span> 644 &#123;&#125; \;</span><br></pre></td></tr></table></figure>
+
+<p>如果存在上传目录，可以单独设置：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">chmod</span> 755 /var/www/html/uploads</span><br><span class="line">find /var/www/html/uploads -<span class="built_in">type</span> f -name <span class="string">&quot;*.php&quot;</span> -delete</span><br></pre></td></tr></table></figure>
+
+<p>真实比赛中不能盲目删除文件，删除前建议先备份可疑文件。</p>
+<h2 id="四、WebShell-排查"><a href="#四、WebShell-排查" class="headerlink" title="四、WebShell 排查"></a>四、WebShell 排查</h2><h3 id="1-按危险函数排查"><a href="#1-按危险函数排查" class="headerlink" title="1. 按危险函数排查"></a>1. 按危险函数排查</h3><p>PHP WebShell 常见危险函数包括：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">eval</span><br><span class="line">assert</span><br><span class="line">system</span><br><span class="line">exec</span><br><span class="line">shell_exec</span><br><span class="line">passthru</span><br><span class="line">base64_decode</span><br><span class="line">file_put_contents</span><br><span class="line">preg_replace</span><br></pre></td></tr></table></figure>
+
+<p>排查命令：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">grep -RniE <span class="string">&quot;eval|assert|system|exec|shell_exec|passthru|base64_decode|file_put_contents|preg_replace&quot;</span> /var/www/html 2&gt;/dev/null</span><br></pre></td></tr></table></figure>
+
+<p>需要注意：出现危险函数不一定就是 WebShell，很多正常业务代码也可能使用这些函数。判断时要结合文件路径、修改时间、代码上下文和访问日志。</p>
+<h3 id="2-按最近修改时间排查"><a href="#2-按最近修改时间排查" class="headerlink" title="2. 按最近修改时间排查"></a>2. 按最近修改时间排查</h3><p>比赛过程中如果发现服务异常，优先查看最近被修改的文件：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">find /var/www/html -<span class="built_in">type</span> f -mmin -30 -<span class="built_in">ls</span></span><br></pre></td></tr></table></figure>
+
+<p>重点关注：</p>
+<ul>
+<li>上传目录中新出现的 PHP 文件</li>
+<li>图片目录中的脚本文件</li>
+<li>文件名伪装成 <code>.jpg.php</code>、<code>.ico.php</code></li>
+<li>内容高度混淆或只有一行代码的文件</li>
+</ul>
+<h3 id="3-按异常后缀排查"><a href="#3-按异常后缀排查" class="headerlink" title="3. 按异常后缀排查"></a>3. 按异常后缀排查</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">find /var/www/html -<span class="built_in">type</span> f \( -name <span class="string">&quot;*.php*&quot;</span> -o -name <span class="string">&quot;*.phtml&quot;</span> -o -name <span class="string">&quot;*.phar&quot;</span> \)</span><br></pre></td></tr></table></figure>
+
+<p>对于上传目录，可以限制脚本执行。以 Nginx 为例：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">location</span><span class="regexp"> ^~</span> /uploads/ &#123;</span><br><span class="line">    <span class="section">location</span> <span class="regexp">~ \.php$</span> &#123;</span><br><span class="line">        <span class="attribute">return</span> <span class="number">403</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="五、漏洞修补思路"><a href="#五、漏洞修补思路" class="headerlink" title="五、漏洞修补思路"></a>五、漏洞修补思路</h2><h3 id="1-SQL-注入修补"><a href="#1-SQL-注入修补" class="headerlink" title="1. SQL 注入修补"></a>1. SQL 注入修补</h3><p>常见问题代码：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$id</span> = <span class="variable">$_GET</span>[<span class="string">&#x27;id&#x27;</span>];</span><br><span class="line"><span class="variable">$sql</span> = <span class="string">&quot;select * from news where id=<span class="subst">$id</span>&quot;</span>;</span><br></pre></td></tr></table></figure>
+
+<p>修补思路：</p>
+<ul>
+<li>对数字参数做类型转换。</li>
+<li>使用预编译查询。</li>
+<li>不直接拼接用户输入。</li>
+</ul>
+<p>简单修补示例：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$id</span> = <span class="title function_ invoke__">intval</span>(<span class="variable">$_GET</span>[<span class="string">&#x27;id&#x27;</span>]);</span><br><span class="line"><span class="variable">$sql</span> = <span class="string">&quot;select * from news where id=<span class="subst">$id</span>&quot;</span>;</span><br></pre></td></tr></table></figure>
+
+<p>这只是临时修补方式，更推荐使用 PDO 预编译。</p>
+<h3 id="2-文件上传修补"><a href="#2-文件上传修补" class="headerlink" title="2. 文件上传修补"></a>2. 文件上传修补</h3><p>上传漏洞是 AWD 中常见入口。临时加固可以从以下几个方面处理：</p>
+<ul>
+<li>限制文件后缀。</li>
+<li>检查 MIME 类型。</li>
+<li>重命名上传文件。</li>
+<li>上传目录禁止脚本执行。</li>
+<li>禁止双后缀绕过。</li>
+</ul>
+<p>示例检查逻辑：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$allow_ext</span> = [<span class="string">&#x27;jpg&#x27;</span>, <span class="string">&#x27;png&#x27;</span>, <span class="string">&#x27;gif&#x27;</span>];</span><br><span class="line"><span class="variable">$ext</span> = <span class="title function_ invoke__">strtolower</span>(<span class="title function_ invoke__">pathinfo</span>(<span class="variable">$_FILES</span>[<span class="string">&#x27;file&#x27;</span>][<span class="string">&#x27;name&#x27;</span>], PATHINFO_EXTENSION));</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (!<span class="title function_ invoke__">in_array</span>(<span class="variable">$ext</span>, <span class="variable">$allow_ext</span>)) &#123;</span><br><span class="line">    <span class="keyword">die</span>(<span class="string">&quot;invalid file type&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="3-命令执行修补"><a href="#3-命令执行修补" class="headerlink" title="3. 命令执行修补"></a>3. 命令执行修补</h3><p>危险写法：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$host</span> = <span class="variable">$_GET</span>[<span class="string">&#x27;host&#x27;</span>];</span><br><span class="line"><span class="title function_ invoke__">system</span>(<span class="string">&quot;ping -c 1 &quot;</span> . <span class="variable">$host</span>);</span><br></pre></td></tr></table></figure>
+
+<p>修补思路：</p>
+<ul>
+<li>避免调用系统命令。</li>
+<li>必须调用时使用白名单。</li>
+<li>使用 <code>escapeshellarg</code> 处理参数。</li>
+</ul>
+<p>示例：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$host</span> = <span class="variable">$_GET</span>[<span class="string">&#x27;host&#x27;</span>];</span><br><span class="line"><span class="keyword">if</span> (!<span class="title function_ invoke__">preg_match</span>(<span class="string">&#x27;/^[a-zA-Z0-9\.\-]+$/&#x27;</span>, <span class="variable">$host</span>)) &#123;</span><br><span class="line">    <span class="keyword">die</span>(<span class="string">&quot;invalid host&quot;</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="title function_ invoke__">system</span>(<span class="string">&quot;ping -c 1 &quot;</span> . <span class="title function_ invoke__">escapeshellarg</span>(<span class="variable">$host</span>));</span><br></pre></td></tr></table></figure>
+
+<h2 id="六、流量分析"><a href="#六、流量分析" class="headerlink" title="六、流量分析"></a>六、流量分析</h2><h3 id="1-Nginx-Apache-日志分析"><a href="#1-Nginx-Apache-日志分析" class="headerlink" title="1. Nginx&#x2F;Apache 日志分析"></a>1. Nginx&#x2F;Apache 日志分析</h3><p>常用日志位置：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">/var/log/nginx/access.log</span><br><span class="line">/var/log/nginx/error.log</span><br><span class="line">/var/log/apache2/access.log</span><br><span class="line">/var/log/apache2/error.log</span><br></pre></td></tr></table></figure>
+
+<p>统计访问最多的 IP：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">awk <span class="string">&#x27;&#123;print $1&#125;&#x27;</span> /var/log/nginx/access.log | <span class="built_in">sort</span> | <span class="built_in">uniq</span> -c | <span class="built_in">sort</span> -nr | <span class="built_in">head</span></span><br></pre></td></tr></table></figure>
+
+<p>统计访问最多的路径：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">awk <span class="string">&#x27;&#123;print $7&#125;&#x27;</span> /var/log/nginx/access.log | <span class="built_in">sort</span> | <span class="built_in">uniq</span> -c | <span class="built_in">sort</span> -nr | <span class="built_in">head</span></span><br></pre></td></tr></table></figure>
+
+<p>筛选疑似攻击 Payload：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">grep -Ei <span class="string">&quot;union|select|sleep|benchmark|base64|eval|assert|upload|cmd=|shell&quot;</span> /var/log/nginx/access.log</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-tcpdump-抓包"><a href="#2-tcpdump-抓包" class="headerlink" title="2. tcpdump 抓包"></a>2. tcpdump 抓包</h3><p>如果怀疑有攻击流量持续打入，可以临时抓包：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tcpdump -i eth0 -w /tmp/awd_traffic.pcap</span><br></pre></td></tr></table></figure>
+
+<p>抓包后可以用 Wireshark 分析 HTTP 请求、上传行为和异常 Payload。</p>
+<h3 id="3-判断攻击成功迹象"><a href="#3-判断攻击成功迹象" class="headerlink" title="3. 判断攻击成功迹象"></a>3. 判断攻击成功迹象</h3><p>需要重点关注：</p>
+<ul>
+<li>攻击请求返回 200。</li>
+<li>上传目录出现新文件。</li>
+<li>Web 日志中出现可疑参数后，系统出现异常进程。</li>
+<li>同一 IP 先扫描、再上传、再访问上传文件。</li>
+<li>error.log 中出现 PHP 报错或执行痕迹。</li>
+</ul>
+<h2 id="七、批量排查脚本"><a href="#七、批量排查脚本" class="headerlink" title="七、批量排查脚本"></a>七、批量排查脚本</h2><p>比赛中手工排查效率不够，可以写一个简单脚本快速统计可疑文件。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> os</span><br><span class="line"><span class="keyword">import</span> re</span><br><span class="line"><span class="keyword">from</span> datetime <span class="keyword">import</span> datetime</span><br><span class="line"></span><br><span class="line">web_root = <span class="string">&quot;/var/www/html&quot;</span></span><br><span class="line">rules = [</span><br><span class="line">    <span class="string">r&quot;eval\s*\(&quot;</span>,</span><br><span class="line">    <span class="string">r&quot;assert\s*\(&quot;</span>,</span><br><span class="line">    <span class="string">r&quot;system\s*\(&quot;</span>,</span><br><span class="line">    <span class="string">r&quot;shell_exec\s*\(&quot;</span>,</span><br><span class="line">    <span class="string">r&quot;passthru\s*\(&quot;</span>,</span><br><span class="line">    <span class="string">r&quot;base64_decode\s*\(&quot;</span>,</span><br><span class="line">    <span class="string">r&quot;file_put_contents\s*\(&quot;</span>,</span><br><span class="line">]</span><br><span class="line"></span><br><span class="line">pattern = re.<span class="built_in">compile</span>(<span class="string">&quot;|&quot;</span>.join(rules), re.IGNORECASE)</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> root, dirs, files <span class="keyword">in</span> os.walk(web_root):</span><br><span class="line">    <span class="keyword">for</span> name <span class="keyword">in</span> files:</span><br><span class="line">        path = os.path.join(root, name)</span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            <span class="keyword">with</span> <span class="built_in">open</span>(path, <span class="string">&quot;r&quot;</span>, encoding=<span class="string">&quot;utf-8&quot;</span>, errors=<span class="string">&quot;ignore&quot;</span>) <span class="keyword">as</span> f:</span><br><span class="line">                content = f.read()</span><br><span class="line">        <span class="keyword">except</span> Exception:</span><br><span class="line">            <span class="keyword">continue</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> pattern.search(content):</span><br><span class="line">            mtime = datetime.fromtimestamp(os.path.getmtime(path))</span><br><span class="line">            <span class="built_in">print</span>(<span class="string">f&quot;[!] <span class="subst">&#123;path&#125;</span>  modified: <span class="subst">&#123;mtime&#125;</span>&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+<p>脚本作用：</p>
+<ul>
+<li>递归扫描 Web 目录。</li>
+<li>匹配常见危险函数。</li>
+<li>输出文件路径和修改时间。</li>
+<li>辅助定位可疑 WebShell 或被篡改文件。</li>
+</ul>
+<h2 id="八、比赛中遇到的问题"><a href="#八、比赛中遇到的问题" class="headerlink" title="八、比赛中遇到的问题"></a>八、比赛中遇到的问题</h2><h3 id="1-修补后服务不可用"><a href="#1-修补后服务不可用" class="headerlink" title="1. 修补后服务不可用"></a>1. 修补后服务不可用</h3><p>原因通常是修补过急，误删业务文件或改错权限。解决方式：</p>
+<ul>
+<li>修改前先备份。</li>
+<li>每次只改一个点。</li>
+<li>修改后立即访问首页和关键功能。</li>
+<li>保留回滚包。</li>
+</ul>
+<h3 id="2-WebShell-没清理干净"><a href="#2-WebShell-没清理干净" class="headerlink" title="2. WebShell 没清理干净"></a>2. WebShell 没清理干净</h3><p>常见原因：</p>
+<ul>
+<li>只删了一个入口文件，没有清理变种。</li>
+<li>忽略了上传目录。</li>
+<li>忽略了图片目录中的脚本。</li>
+<li>没有结合访问日志定位落点。</li>
+</ul>
+<h3 id="3-只修漏洞不看日志"><a href="#3-只修漏洞不看日志" class="headerlink" title="3. 只修漏洞不看日志"></a>3. 只修漏洞不看日志</h3><p>AWD 中只修代码不看日志，很容易错过攻击者已经写入的后门。正确流程应该是：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">备份 -&gt; 查日志 -&gt; 找入口 -&gt; 修漏洞 -&gt; 查 WebShell -&gt; 验证服务 -&gt; 持续监控</span><br></pre></td></tr></table></figure>
+
+<h2 id="九、复盘总结"><a href="#九、复盘总结" class="headerlink" title="九、复盘总结"></a>九、复盘总结</h2><p>本次 AWD 训练的重点不是单个漏洞利用，而是建立一套比赛中可执行的防守流程：</p>
+<ul>
+<li>先备份，保证服务可回滚。</li>
+<li>快速检查弱口令和敏感配置。</li>
+<li>通过危险函数、修改时间和异常后缀排查 WebShell。</li>
+<li>根据访问日志还原攻击路径。</li>
+<li>对 SQL 注入、文件上传、命令执行等入口做临时修补。</li>
+<li>使用脚本提高重复排查效率。</li>
+</ul>
+<p>从求职角度看，AWD 复盘能体现安全运营、应急响应和渗透测试的综合能力。后续可以继续完善成自动化工具，例如加入日志统计、WebShell 特征库、文件哈希对比和 HTML 报告导出。</p>
+
+        </div>
+
+        
+            <section class="post-copyright">
+                
+                    <p class="copyright-item">
+                        <span>Author:</span>
+                        <span>rowen</span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>Permalink:</span>
+                        <span><a href="https://forkmmat.github.io/2026/05/20/AWD%E6%AF%94%E8%B5%9B%E5%A4%8D%E7%9B%98-Web%E6%9C%8D%E5%8A%A1%E5%8A%A0%E5%9B%BA%E6%B5%81%E9%87%8F%E5%88%86%E6%9E%90%E4%B8%8E%E6%89%B9%E9%87%8F%E4%BF%AE%E8%A1%A5/">https://forkmmat.github.io/2026/05/20/AWD%E6%AF%94%E8%B5%9B%E5%A4%8D%E7%9B%98-Web%E6%9C%8D%E5%8A%A1%E5%8A%A0%E5%9B%BA%E6%B5%81%E9%87%8F%E5%88%86%E6%9E%90%E4%B8%8E%E6%89%B9%E9%87%8F%E4%BF%AE%E8%A1%A5/</a></span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>License:</span>
+                        <span>Copyright (c) 2019 <a target="_blank" rel="noopener" href="http://creativecommons.org/licenses/by-nc/4.0/">CC-BY-NC-4.0</a> LICENSE</span>
+                    </p>
+                
+                
+                     <p class="copyright-item">
+                         <span>Slogan:</span>
+                         <span>Do you believe in <strong>DESTINY</strong>?</span>
+                     </p>
+                
+
+            </section>
+        
+        <section class="post-tags">
+            <div>
+                <span>Tag(s):</span>
+                <span class="tag">
+                    
+                    
+                        <a href="/tags/Web%E5%AE%89%E5%85%A8/"># Web安全</a>
+                    
+                        <a href="/tags/AWD/"># AWD</a>
+                    
+                        <a href="/tags/%E5%AE%89%E5%85%A8%E5%8A%A0%E5%9B%BA/"># 安全加固</a>
+                    
+                        <a href="/tags/%E6%B5%81%E9%87%8F%E5%88%86%E6%9E%90/"># 流量分析</a>
+                    
+                        <a href="/tags/WebShell/"># WebShell</a>
+                    
+                        
+                </span>
+            </div>
+            <div>
+                <a href="javascript:window.history.back();">back</a>
+                <span>· </span>
+                <a href="/">home</a>
+            </div>
+        </section>
+        <section class="post-nav">
+            
+            
+            <a class="next" rel="next" href="/2026/05/20/VulnHub%E9%9D%B6%E5%9C%BA%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95%E6%8A%A5%E5%91%8A-%E4%BB%8E%E4%BF%A1%E6%81%AF%E6%94%B6%E9%9B%86%E5%88%B0%E6%9D%83%E9%99%90%E6%8F%90%E5%8D%87/">VulnHub 靶场渗透测试报告：从信息收集到权限提升</a>
+            
+        </section>
+<script src="https://giscus.app/client.js"
+        data-repo="forkmmat/forkmmat.github.io"
+        data-repo-id="R_kgDOO0OA0g"
+        data-category="General"
+        data-category-id="DIC_kwDOO0OA0s4CtD6Y"
+        data-mapping="title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="zh-CN"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+</script>
+
+    </article>
+</div>
+
+            </div>
+            <footer id="footer" class="footer">
+    <div class="copyright">
+        <span>© rowen | Powered by <a href="https://hexo.io" target="_blank">Hexo</a> & <a href="https://github.com/Siricee/hexo-theme-Chic" target="_blank">Chic</a></span>
+    </div>
+</footer>
+
+    </div>
+</body>
+
+</html>
