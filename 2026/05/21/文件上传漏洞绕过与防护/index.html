@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <meta name="author" content="rowen">
+
+
+
+
+
+<title>文件上传漏洞绕过与防护 | Hexo</title>
+
+
+
+    <link rel="icon" href="/drink.ico">
+
+
+
+
+    <!-- stylesheets list from _config.yml -->
+    
+    <link rel="stylesheet" href="/css/style.css">
+    
+
+
+
+    <!-- scripts list from _config.yml -->
+    
+    <script src="/js/script.js"></script>
+    
+    <script src="/js/tocbot.min.js"></script>
+    
+
+
+
+    
+    
+        
+    
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+    <!-- 引入jQuery -->
+<script type="text/javascript" src="//libs.baidu.com/jquery/1.8.3/jquery.min.js"></script>
+<!-- 雪花特效2 -->
+ <script type="text/javascript" src="/js/snow2.js"></script>
+    <script>
+        // this function is used to check current theme before page loaded.
+        (() => {
+            const currentTheme = window.localStorage && window.localStorage.getItem('theme') || '';
+            const isDark = currentTheme === 'dark';
+            const pagebody = document.getElementsByTagName('body')[0]
+            if (isDark) {
+                pagebody.classList.add('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Dark"
+            } else {
+                pagebody.classList.remove('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Light"
+            }
+        })();
+    </script>
+<script>
+!
+function() {
+function n(n, e, t) {
+return n.getAttribute(e) || t
+}
+function e(n) {
+return document.getElementsByTagName(n)
+}
+function t() {
+var t = e("script"),
+o = t.length,
+i = t[o - 1];
+return {
+l: o,
+z: n(i, "zIndex", -1), //置于主页面背后
+o: n(i, "opacity", .5), //线条透明度
+c: n(i, "color", "0,0,0"), //线条颜色
+n: n(i, "count", 100) //线条数量
+}
+}
+function o() {
+a = m.width = window.innerWidth ||
+document.documentElement.clientWidth || document.body.clientWidth,
+c = m.height = window.innerHeight ||
+document.documentElement.clientHeight || document.body.clientHeight
+}
+function i() {
+r.clearRect(0, 0, a, c);
+var n, e, t, o, m, l;
+s.forEach(function(i, x) {
+for (i.x += i.xa, i.y += i.ya, i.xa *= i.x > a || i.x < 0 ? -1 :
+1, i.ya *= i.y > c || i.y < 0 ? -1 : 1, r.fillRect(i.x - .5, i.y - .5, 1,
+1), e = x + 1; e < u.length; e++) n = u[e],
+null !== n.x && null !== n.y && (o = i.x - n.x, m = i.y - n.y, l
+= o * o + m * m, l < n.max && (n === y && l >= n.max / 2 && (i.x -= .03 * o,
+i.y -= .03 * m), t = (n.max - l) / n.max, r.beginPath(), r.lineWidth = t /
+2, r.strokeStyle = "rgba(" + d.c + "," + (t + .2) + ")", r.moveTo(i.x, i.y),
+r.lineTo(n.x, n.y), r.stroke()))
+}),
+x(i)
+}
+var a, c, u, m = document.createElement("canvas"),
+d = t(),
+l = "c_n" + d.l,
+r = m.getContext("2d"),
+x = window.requestAnimationFrame || window.webkitRequestAnimationFrame
+|| window.mozRequestAnimationFrame || window.oRequestAnimationFrame ||
+window.msRequestAnimationFrame ||
+function(n) {
+window.setTimeout(n, 1e3 / 45)
+},
+w = Math.random,
+y = {
+x: null,
+y: null,
+max: 2e4
+};
+m.id = l,
+m.style.cssText = "position:fixed;top:0;left:0;z-index:" + d.z +
+";opacity:" + d.o,
+e("body")[0].appendChild(m),
+o(),
+window.onresize = o,
+window.onmousemove = function(n) {
+n = n || window.event,
+y.x = n.clientX,
+y.y = n.clientY
+},
+window.onmouseout = function() {
+y.x = null,
+y.y = null
+};
+for (var s = [], f = 0; d.n > f; f++) {
+var h = w() * a,
+g = w() * c,
+v = 2 * w() - 1,
+p = 2 * w() - 1;
+s.push({
+x: h,
+y: g,
+xa: v,
+ya: p,
+max: 6e3
+})
+}
+u = s.concat([y]),
+setTimeout(function() {
+i()
+},
+100)
+} ();
+</script>
+    <div class="wrapper">
+        <header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-header header-logo"><a href="/">bobo&#39;s Blog</a></div>
+            <div class="menu navbar-right">
+                
+                    <a class="menu-item" href="/archives">📖博文</a>
+                
+                    <a class="menu-item" href="/category">📚类别</a>
+                
+                    <a class="menu-item" href="/tag">🏷️标签</a>
+                
+                    <a class="menu-item" href="/about">💡关于</a>
+                
+                    <a class="menu-item" href="/links">🔗友链</a>
+                
+                <input id="switch_default" type="checkbox" class="switch_default">
+                <label for="switch_default" class="toggleBtn"></label>
+            </div>
+        </div>
+    </nav>
+
+    
+    <nav class="navbar-mobile" id="nav-mobile">
+        <div class="container">
+            <div class="navbar-header">
+                <div>
+                    <a href="/">bobo&#39;s Blog</a><a id="mobile-toggle-theme">·&nbsp;Light</a>
+                </div>
+                <div class="menu-toggle" onclick="mobileBtn()">&#9776; Menu</div>
+            </div>
+            <div class="menu" id="mobile-menu">
+                
+                    <a class="menu-item" href="/archives">📖博文</a>
+                
+                    <a class="menu-item" href="/category">📚类别</a>
+                
+                    <a class="menu-item" href="/tag">🏷️标签</a>
+                
+                    <a class="menu-item" href="/about">💡关于</a>
+                
+                    <a class="menu-item" href="/links">🔗友链</a>
+                
+            </div>
+        </div>
+    </nav>
+
+</header>
+<script>
+    var mobileBtn = function f() {
+        var toggleMenu = document.getElementsByClassName("menu-toggle")[0];
+        var mobileMenu = document.getElementById("mobile-menu");
+        if(toggleMenu.classList.contains("active")){
+           toggleMenu.classList.remove("active")
+            mobileMenu.classList.remove("active")
+        }else{
+            toggleMenu.classList.add("active")
+            mobileMenu.classList.add("active")
+        }
+    }
+</script>
+            <div class="main">
+                <div class="container">
+    
+    
+        <div class="post-toc">
+    <div class="tocbot-list">
+    </div>
+    <div class="tocbot-list-menu">
+        <a class="tocbot-toc-expand" onclick="expand_toc()">Expand all</a>
+        <a onclick="go_top()">Back to top</a>
+        <a onclick="go_bottom()">Go to bottom</a>
+    </div>
+</div>
+
+<script>
+    document.ready(
+        function () {
+            tocbot.init({
+                tocSelector: '.tocbot-list',
+                contentSelector: '.post-content',
+                headingSelector: 'h1, h2, h3, h4, h5',
+                collapseDepth: 1,
+                orderedList: false,
+                scrollSmooth: true,
+            })
+        }
+    )
+
+    function expand_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 6,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "collapse_toc()");
+        b.innerHTML = "Collapse all"
+    }
+
+    function collapse_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 1,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "expand_toc()");
+        b.innerHTML = "Expand all"
+    }
+
+    function go_top() {
+        window.scrollTo(0, 0);
+    }
+
+    function go_bottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+</script>
+    
+
+    
+    <article class="post-wrap">
+        <header class="post-header">
+            <h1 class="post-title">文件上传漏洞绕过与防护</h1>
+            
+                <div class="post-meta">
+                    
+                        Author: <a itemprop="author" rel="author" href="/">rowen</a>
+                    
+
+                    
+                        <span class="post-time">
+                        Date: <a href="#">May 21, 2026&nbsp;&nbsp;1:50:00</a>
+                        </span>
+                    
+                    
+                        <span class="post-category">
+                    Category:
+                            
+                                <a href="/categories/%E7%BA%A2%E9%98%9F%E5%AD%A6%E4%B9%A0/">红队学习</a>
+                            
+                        </span>
+                    
+                </div>
+            
+        </header>
+
+        <div class="post-content">
+            <h1 id="文件上传漏洞绕过与防护"><a href="#文件上传漏洞绕过与防护" class="headerlink" title="文件上传漏洞绕过与防护"></a>文件上传漏洞绕过与防护</h1><h2 id="一、前言"><a href="#一、前言" class="headerlink" title="一、前言"></a>一、前言</h2><p>文件上传是 Web 渗透中非常常见的高危入口。如果后端对上传文件校验不严格，攻击者可能上传 WebShell、HTML 钓鱼页面、恶意脚本或可被解析执行的文件。</p>
+<p>在红队和渗透测试中，文件上传漏洞的价值在于：它可能从一个普通 Web 功能变成服务器命令执行入口。</p>
+<p>本文总结文件上传漏洞的判断、绕过思路和防护建议，仅用于靶场和授权环境。</p>
+<h2 id="二、常见上传场景"><a href="#二、常见上传场景" class="headerlink" title="二、常见上传场景"></a>二、常见上传场景</h2><p>常见功能点：</p>
+<ul>
+<li>头像上传</li>
+<li>附件上传</li>
+<li>富文本图片上传</li>
+<li>简历上传</li>
+<li>Excel&#x2F;Word 导入</li>
+<li>插件上传</li>
+<li>压缩包上传</li>
+<li>后台模板上传</li>
+</ul>
+<p>常见接口参数：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">file</span><br><span class="line">upload</span><br><span class="line">image</span><br><span class="line">avatar</span><br><span class="line">attachment</span><br><span class="line">document</span><br><span class="line">plugin</span><br></pre></td></tr></table></figure>
+
+<p>看到这些功能时，可以重点关注文件类型限制、保存路径、访问路径和是否能被解析执行。</p>
+<h2 id="三、漏洞判断流程"><a href="#三、漏洞判断流程" class="headerlink" title="三、漏洞判断流程"></a>三、漏洞判断流程</h2><h3 id="1-上传普通文件"><a href="#1-上传普通文件" class="headerlink" title="1. 上传普通文件"></a>1. 上传普通文件</h3><p>先上传正常图片：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">test.jpg</span><br></pre></td></tr></table></figure>
+
+<p>观察：</p>
+<ul>
+<li>是否上传成功。</li>
+<li>返回文件路径。</li>
+<li>文件是否可访问。</li>
+<li>文件名是否被重命名。</li>
+<li>保存目录是否可执行脚本。</li>
+</ul>
+<h3 id="2-测试后缀限制"><a href="#2-测试后缀限制" class="headerlink" title="2. 测试后缀限制"></a>2. 测试后缀限制</h3><p>尝试上传：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">test.php</span><br><span class="line">test.phtml</span><br><span class="line">test.php5</span><br><span class="line">test.jsp</span><br><span class="line">test.asp</span><br></pre></td></tr></table></figure>
+
+<p>如果直接上传成功，并且能访问执行，说明风险非常高。</p>
+<h3 id="3-测试内容校验"><a href="#3-测试内容校验" class="headerlink" title="3. 测试内容校验"></a>3. 测试内容校验</h3><p>有些系统只检查文件后缀，不检查内容；有些系统检查 MIME 或文件头。</p>
+<p>可以构造图片马：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">GIF89a</span><br><span class="line"><span class="meta">&lt;?php</span> <span class="title function_ invoke__">phpinfo</span>(); <span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>如果服务器将该文件作为 PHP 解析，就可能执行其中的 PHP 代码。</p>
+<h2 id="四、常见绕过方式"><a href="#四、常见绕过方式" class="headerlink" title="四、常见绕过方式"></a>四、常见绕过方式</h2><h3 id="1-前端校验绕过"><a href="#1-前端校验绕过" class="headerlink" title="1. 前端校验绕过"></a>1. 前端校验绕过</h3><p>如果只在前端 JavaScript 校验文件类型，可以直接用 Burp Suite 修改请求包。</p>
+<p>例如前端只允许：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">jpg</span><br><span class="line">png</span><br><span class="line">gif</span><br></pre></td></tr></table></figure>
+
+<p>可以先选择 <code>1.jpg</code>，拦截请求后改成：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">1.php</span><br></pre></td></tr></table></figure>
+
+<p>如果后端没有再次校验，就能绕过。</p>
+<h3 id="2-MIME-类型绕过"><a href="#2-MIME-类型绕过" class="headerlink" title="2. MIME 类型绕过"></a>2. MIME 类型绕过</h3><p>后端可能只判断：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Content-Type: image/jpeg</span><br></pre></td></tr></table></figure>
+
+<p>上传 PHP 文件时修改请求头：</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">Content-Type</span><span class="punctuation">: </span>image/jpeg</span><br></pre></td></tr></table></figure>
+
+<p>但真实防护不能只依赖 MIME，因为该字段可被客户端控制。</p>
+<h3 id="3-黑名单后缀绕过"><a href="#3-黑名单后缀绕过" class="headerlink" title="3. 黑名单后缀绕过"></a>3. 黑名单后缀绕过</h3><p>如果只禁止 <code>.php</code>，可以尝试：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">.phtml</span><br><span class="line">.php3</span><br><span class="line">.php5</span><br><span class="line">.phar</span><br><span class="line">.shtml</span><br></pre></td></tr></table></figure>
+
+<p>具体是否解析取决于服务器配置。</p>
+<h3 id="4-双后缀绕过"><a href="#4-双后缀绕过" class="headerlink" title="4. 双后缀绕过"></a>4. 双后缀绕过</h3><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">shell.jpg.php</span><br><span class="line">shell.php.jpg</span><br></pre></td></tr></table></figure>
+
+<p>有些系统只检查最后一个后缀，有些解析器可能按中间后缀处理，需要结合实际环境判断。</p>
+<h3 id="5-大小写绕过"><a href="#5-大小写绕过" class="headerlink" title="5. 大小写绕过"></a>5. 大小写绕过</h3><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">shell.PHP</span><br><span class="line">shell.PhP</span><br></pre></td></tr></table></figure>
+
+<p>如果后端判断时没有统一转小写，可能被绕过。</p>
+<h3 id="6-文件头绕过"><a href="#6-文件头绕过" class="headerlink" title="6. 文件头绕过"></a>6. 文件头绕过</h3><p>部分系统检查图片文件头，可以在文件开头添加图片标识：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">GIF89a</span><br></pre></td></tr></table></figure>
+
+<p>然后追加脚本内容。</p>
+<h3 id="7-压缩包上传风险"><a href="#7-压缩包上传风险" class="headerlink" title="7. 压缩包上传风险"></a>7. 压缩包上传风险</h3><p>如果系统支持 zip 上传并自动解压，要关注：</p>
+<ul>
+<li>解压路径是否可控。</li>
+<li>是否存在 Zip Slip。</li>
+<li>是否能解压出脚本文件。</li>
+<li>是否会覆盖已有文件。</li>
+</ul>
+<p>Zip Slip 风险示例路径：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">../../../../var/www/html/shell.php</span><br></pre></td></tr></table></figure>
+
+<h2 id="五、解析漏洞与配置问题"><a href="#五、解析漏洞与配置问题" class="headerlink" title="五、解析漏洞与配置问题"></a>五、解析漏洞与配置问题</h2><p>有时上传本身没有问题，真正的问题在 Web 服务器解析配置。</p>
+<h3 id="1-上传目录可执行"><a href="#1-上传目录可执行" class="headerlink" title="1. 上传目录可执行"></a>1. 上传目录可执行</h3><p>上传目录应只存静态资源，不能执行脚本。</p>
+<p>高风险配置：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/uploads/shell.php 可以被 PHP 解析</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-Nginx-解析配置不当"><a href="#2-Nginx-解析配置不当" class="headerlink" title="2. Nginx 解析配置不当"></a>2. Nginx 解析配置不当</h3><p>如果 Nginx 与 PHP-FPM 配置不当，可能出现路径解析问题。</p>
+<p>防护重点：</p>
+<ul>
+<li>严格设置 <code>SCRIPT_FILENAME</code>。</li>
+<li>禁止上传目录执行 PHP。</li>
+<li>不将任意路径交给 PHP-FPM。</li>
+</ul>
+<h3 id="3-Apache-解析风险"><a href="#3-Apache-解析风险" class="headerlink" title="3. Apache 解析风险"></a>3. Apache 解析风险</h3><p>Apache 中如果启用了特殊解析规则，某些多后缀文件可能被当作脚本解析。</p>
+<p>例如：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">shell.php.jpg</span><br></pre></td></tr></table></figure>
+
+<p>具体行为取决于配置。</p>
+<h2 id="六、上传后利用验证"><a href="#六、上传后利用验证" class="headerlink" title="六、上传后利用验证"></a>六、上传后利用验证</h2><p>上传成功后需要确认：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">文件保存路径</span><br><span class="line">文件访问 URL</span><br><span class="line">是否能执行</span><br><span class="line">当前执行用户</span><br><span class="line">是否能写入其他目录</span><br><span class="line">是否能执行系统命令</span><br></pre></td></tr></table></figure>
+
+<p>常见验证内容：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span> <span class="title function_ invoke__">phpinfo</span>(); <span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>或：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span> <span class="keyword">echo</span> <span class="string">&quot;ok&quot;</span>; <span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>授权测试中不要随意上传破坏性 WebShell，验证风险即可。</p>
+<h2 id="七、真实风险"><a href="#七、真实风险" class="headerlink" title="七、真实风险"></a>七、真实风险</h2><p>文件上传漏洞可能导致：</p>
+<ul>
+<li>WebShell 写入</li>
+<li>服务器命令执行</li>
+<li>网站被篡改</li>
+<li>钓鱼页面托管</li>
+<li>内网入口建立</li>
+<li>敏感文件读取</li>
+<li>横向移动</li>
+</ul>
+<p>在渗透测试报告中，不应只写“上传成功”，而要说明上传后能造成什么影响。</p>
+<h2 id="八、防护建议"><a href="#八、防护建议" class="headerlink" title="八、防护建议"></a>八、防护建议</h2><h3 id="1-后端白名单校验"><a href="#1-后端白名单校验" class="headerlink" title="1. 后端白名单校验"></a>1. 后端白名单校验</h3><p>只允许业务需要的类型：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">jpg</span><br><span class="line">png</span><br><span class="line">gif</span><br><span class="line">pdf</span><br><span class="line">docx</span><br></pre></td></tr></table></figure>
+
+<p>不要使用黑名单作为主要防护。</p>
+<h3 id="2-校验文件内容"><a href="#2-校验文件内容" class="headerlink" title="2. 校验文件内容"></a>2. 校验文件内容</h3><p>结合文件头、图片解析库、MIME、扩展名多重判断。</p>
+<p>图片上传可以重新编码：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">用户上传图片 -&gt; 服务端重新生成图片 -&gt; 保存新文件</span><br></pre></td></tr></table></figure>
+
+<p>这样可以破坏图片马中的脚本内容。</p>
+<h3 id="3-重命名文件"><a href="#3-重命名文件" class="headerlink" title="3. 重命名文件"></a>3. 重命名文件</h3><p>上传后使用随机文件名：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">uuid.jpg</span><br></pre></td></tr></table></figure>
+
+<p>不要保留用户原始文件名。</p>
+<h3 id="4-上传目录禁止执行"><a href="#4-上传目录禁止执行" class="headerlink" title="4. 上传目录禁止执行"></a>4. 上传目录禁止执行</h3><p>Nginx 示例：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">location</span><span class="regexp"> ^~</span> /uploads/ &#123;</span><br><span class="line">    <span class="section">location</span> <span class="regexp">~ \.php$</span> &#123;</span><br><span class="line">        <span class="attribute">return</span> <span class="number">403</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Apache 可以通过 <code>.htaccess</code> 或主配置禁止脚本执行。</p>
+<h3 id="5-文件存储隔离"><a href="#5-文件存储隔离" class="headerlink" title="5. 文件存储隔离"></a>5. 文件存储隔离</h3><ul>
+<li>上传文件放到静态文件服务器。</li>
+<li>上传目录与代码目录分离。</li>
+<li>不让上传文件被脚本引擎解析。</li>
+</ul>
+<h3 id="6-权限控制"><a href="#6-权限控制" class="headerlink" title="6. 权限控制"></a>6. 权限控制</h3><ul>
+<li>上传目录不给执行权限。</li>
+<li>Web 用户使用低权限账号。</li>
+<li>限制文件大小。</li>
+<li>限制上传频率。</li>
+</ul>
+<h2 id="九、测试清单"><a href="#九、测试清单" class="headerlink" title="九、测试清单"></a>九、测试清单</h2><p>文件上传测试时可以按这个清单走：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">是否只前端校验</span><br><span class="line">是否校验后缀</span><br><span class="line">是否校验 MIME</span><br><span class="line">是否校验文件头</span><br><span class="line">是否可上传脚本后缀</span><br><span class="line">是否可双后缀绕过</span><br><span class="line">是否可大小写绕过</span><br><span class="line">是否返回访问路径</span><br><span class="line">上传目录是否可执行</span><br><span class="line">压缩包是否自动解压</span><br><span class="line">文件名是否可控</span><br></pre></td></tr></table></figure>
+
+<h2 id="十、总结"><a href="#十、总结" class="headerlink" title="十、总结"></a>十、总结</h2><p>文件上传漏洞的核心不只是“能不能传 PHP”，而是完整判断：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">上传入口 -&gt; 校验逻辑 -&gt; 存储路径 -&gt; 访问路径 -&gt; 解析环境 -&gt; 可造成的影响</span><br></pre></td></tr></table></figure>
+
+<p>红队面试中，如果能把上传漏洞从发现、绕过、验证、风险到修复建议说完整，会比单纯背几个后缀更有说服力。</p>
+
+        </div>
+
+        
+            <section class="post-copyright">
+                
+                    <p class="copyright-item">
+                        <span>Author:</span>
+                        <span>rowen</span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>Permalink:</span>
+                        <span><a href="https://forkmmat.github.io/2026/05/21/%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0%E6%BC%8F%E6%B4%9E%E7%BB%95%E8%BF%87%E4%B8%8E%E9%98%B2%E6%8A%A4/">https://forkmmat.github.io/2026/05/21/%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0%E6%BC%8F%E6%B4%9E%E7%BB%95%E8%BF%87%E4%B8%8E%E9%98%B2%E6%8A%A4/</a></span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>License:</span>
+                        <span>Copyright (c) 2019 <a target="_blank" rel="noopener" href="http://creativecommons.org/licenses/by-nc/4.0/">CC-BY-NC-4.0</a> LICENSE</span>
+                    </p>
+                
+                
+                     <p class="copyright-item">
+                         <span>Slogan:</span>
+                         <span>Do you believe in <strong>DESTINY</strong>?</span>
+                     </p>
+                
+
+            </section>
+        
+        <section class="post-tags">
+            <div>
+                <span>Tag(s):</span>
+                <span class="tag">
+                    
+                    
+                        <a href="/tags/Web%E5%AE%89%E5%85%A8/"># Web安全</a>
+                    
+                        <a href="/tags/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95/"># 渗透测试</a>
+                    
+                        <a href="/tags/%E5%AE%89%E5%85%A8%E5%8A%A0%E5%9B%BA/"># 安全加固</a>
+                    
+                        <a href="/tags/%E7%BA%A2%E9%98%9F/"># 红队</a>
+                    
+                        <a href="/tags/%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0/"># 文件上传</a>
+                    
+                        
+                </span>
+            </div>
+            <div>
+                <a href="javascript:window.history.back();">back</a>
+                <span>· </span>
+                <a href="/">home</a>
+            </div>
+        </section>
+        <section class="post-nav">
+            
+                <a class="prev" rel="prev" href="/2026/05/21/%E5%86%85%E7%BD%91%E6%B8%97%E9%80%8F%E5%9F%BA%E7%A1%80-%E4%B8%BB%E6%9C%BA%E4%BF%A1%E6%81%AF%E6%94%B6%E9%9B%86%E4%B8%8E%E5%87%AD%E6%8D%AE%E6%90%9C%E9%9B%86/">内网渗透基础：主机信息收集与凭据搜集</a>
+            
+            
+            <a class="next" rel="next" href="/2026/05/21/SSRF%E6%BC%8F%E6%B4%9E%E5%88%A9%E7%94%A8%E4%B8%8E%E5%86%85%E7%BD%91%E6%8E%A2%E6%B5%8B%E6%80%9D%E8%B7%AF/">SSRF 漏洞利用与内网探测思路</a>
+            
+        </section>
+<script src="https://giscus.app/client.js"
+        data-repo="forkmmat/forkmmat.github.io"
+        data-repo-id="R_kgDOO0OA0g"
+        data-category="General"
+        data-category-id="DIC_kwDOO0OA0s4CtD6Y"
+        data-mapping="title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="zh-CN"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+</script>
+
+    </article>
+</div>
+
+            </div>
+            <footer id="footer" class="footer">
+    <div class="copyright">
+        <span>© rowen | Powered by <a href="https://hexo.io" target="_blank">Hexo</a> & <a href="https://github.com/Siricee/hexo-theme-Chic" target="_blank">Chic</a></span>
+    </div>
+</footer>
+
+    </div>
+</body>
+
+</html>

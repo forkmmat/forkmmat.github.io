@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <meta name="author" content="rowen">
+
+
+
+
+
+<title>内网渗透基础：主机信息收集与凭据搜集 | Hexo</title>
+
+
+
+    <link rel="icon" href="/drink.ico">
+
+
+
+
+    <!-- stylesheets list from _config.yml -->
+    
+    <link rel="stylesheet" href="/css/style.css">
+    
+
+
+
+    <!-- scripts list from _config.yml -->
+    
+    <script src="/js/script.js"></script>
+    
+    <script src="/js/tocbot.min.js"></script>
+    
+
+
+
+    
+    
+        
+    
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+    <!-- 引入jQuery -->
+<script type="text/javascript" src="//libs.baidu.com/jquery/1.8.3/jquery.min.js"></script>
+<!-- 雪花特效2 -->
+ <script type="text/javascript" src="/js/snow2.js"></script>
+    <script>
+        // this function is used to check current theme before page loaded.
+        (() => {
+            const currentTheme = window.localStorage && window.localStorage.getItem('theme') || '';
+            const isDark = currentTheme === 'dark';
+            const pagebody = document.getElementsByTagName('body')[0]
+            if (isDark) {
+                pagebody.classList.add('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Dark"
+            } else {
+                pagebody.classList.remove('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Light"
+            }
+        })();
+    </script>
+<script>
+!
+function() {
+function n(n, e, t) {
+return n.getAttribute(e) || t
+}
+function e(n) {
+return document.getElementsByTagName(n)
+}
+function t() {
+var t = e("script"),
+o = t.length,
+i = t[o - 1];
+return {
+l: o,
+z: n(i, "zIndex", -1), //置于主页面背后
+o: n(i, "opacity", .5), //线条透明度
+c: n(i, "color", "0,0,0"), //线条颜色
+n: n(i, "count", 100) //线条数量
+}
+}
+function o() {
+a = m.width = window.innerWidth ||
+document.documentElement.clientWidth || document.body.clientWidth,
+c = m.height = window.innerHeight ||
+document.documentElement.clientHeight || document.body.clientHeight
+}
+function i() {
+r.clearRect(0, 0, a, c);
+var n, e, t, o, m, l;
+s.forEach(function(i, x) {
+for (i.x += i.xa, i.y += i.ya, i.xa *= i.x > a || i.x < 0 ? -1 :
+1, i.ya *= i.y > c || i.y < 0 ? -1 : 1, r.fillRect(i.x - .5, i.y - .5, 1,
+1), e = x + 1; e < u.length; e++) n = u[e],
+null !== n.x && null !== n.y && (o = i.x - n.x, m = i.y - n.y, l
+= o * o + m * m, l < n.max && (n === y && l >= n.max / 2 && (i.x -= .03 * o,
+i.y -= .03 * m), t = (n.max - l) / n.max, r.beginPath(), r.lineWidth = t /
+2, r.strokeStyle = "rgba(" + d.c + "," + (t + .2) + ")", r.moveTo(i.x, i.y),
+r.lineTo(n.x, n.y), r.stroke()))
+}),
+x(i)
+}
+var a, c, u, m = document.createElement("canvas"),
+d = t(),
+l = "c_n" + d.l,
+r = m.getContext("2d"),
+x = window.requestAnimationFrame || window.webkitRequestAnimationFrame
+|| window.mozRequestAnimationFrame || window.oRequestAnimationFrame ||
+window.msRequestAnimationFrame ||
+function(n) {
+window.setTimeout(n, 1e3 / 45)
+},
+w = Math.random,
+y = {
+x: null,
+y: null,
+max: 2e4
+};
+m.id = l,
+m.style.cssText = "position:fixed;top:0;left:0;z-index:" + d.z +
+";opacity:" + d.o,
+e("body")[0].appendChild(m),
+o(),
+window.onresize = o,
+window.onmousemove = function(n) {
+n = n || window.event,
+y.x = n.clientX,
+y.y = n.clientY
+},
+window.onmouseout = function() {
+y.x = null,
+y.y = null
+};
+for (var s = [], f = 0; d.n > f; f++) {
+var h = w() * a,
+g = w() * c,
+v = 2 * w() - 1,
+p = 2 * w() - 1;
+s.push({
+x: h,
+y: g,
+xa: v,
+ya: p,
+max: 6e3
+})
+}
+u = s.concat([y]),
+setTimeout(function() {
+i()
+},
+100)
+} ();
+</script>
+    <div class="wrapper">
+        <header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-header header-logo"><a href="/">bobo&#39;s Blog</a></div>
+            <div class="menu navbar-right">
+                
+                    <a class="menu-item" href="/archives">📖博文</a>
+                
+                    <a class="menu-item" href="/category">📚类别</a>
+                
+                    <a class="menu-item" href="/tag">🏷️标签</a>
+                
+                    <a class="menu-item" href="/about">💡关于</a>
+                
+                    <a class="menu-item" href="/links">🔗友链</a>
+                
+                <input id="switch_default" type="checkbox" class="switch_default">
+                <label for="switch_default" class="toggleBtn"></label>
+            </div>
+        </div>
+    </nav>
+
+    
+    <nav class="navbar-mobile" id="nav-mobile">
+        <div class="container">
+            <div class="navbar-header">
+                <div>
+                    <a href="/">bobo&#39;s Blog</a><a id="mobile-toggle-theme">·&nbsp;Light</a>
+                </div>
+                <div class="menu-toggle" onclick="mobileBtn()">&#9776; Menu</div>
+            </div>
+            <div class="menu" id="mobile-menu">
+                
+                    <a class="menu-item" href="/archives">📖博文</a>
+                
+                    <a class="menu-item" href="/category">📚类别</a>
+                
+                    <a class="menu-item" href="/tag">🏷️标签</a>
+                
+                    <a class="menu-item" href="/about">💡关于</a>
+                
+                    <a class="menu-item" href="/links">🔗友链</a>
+                
+            </div>
+        </div>
+    </nav>
+
+</header>
+<script>
+    var mobileBtn = function f() {
+        var toggleMenu = document.getElementsByClassName("menu-toggle")[0];
+        var mobileMenu = document.getElementById("mobile-menu");
+        if(toggleMenu.classList.contains("active")){
+           toggleMenu.classList.remove("active")
+            mobileMenu.classList.remove("active")
+        }else{
+            toggleMenu.classList.add("active")
+            mobileMenu.classList.add("active")
+        }
+    }
+</script>
+            <div class="main">
+                <div class="container">
+    
+    
+        <div class="post-toc">
+    <div class="tocbot-list">
+    </div>
+    <div class="tocbot-list-menu">
+        <a class="tocbot-toc-expand" onclick="expand_toc()">Expand all</a>
+        <a onclick="go_top()">Back to top</a>
+        <a onclick="go_bottom()">Go to bottom</a>
+    </div>
+</div>
+
+<script>
+    document.ready(
+        function () {
+            tocbot.init({
+                tocSelector: '.tocbot-list',
+                contentSelector: '.post-content',
+                headingSelector: 'h1, h2, h3, h4, h5',
+                collapseDepth: 1,
+                orderedList: false,
+                scrollSmooth: true,
+            })
+        }
+    )
+
+    function expand_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 6,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "collapse_toc()");
+        b.innerHTML = "Collapse all"
+    }
+
+    function collapse_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 1,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "expand_toc()");
+        b.innerHTML = "Expand all"
+    }
+
+    function go_top() {
+        window.scrollTo(0, 0);
+    }
+
+    function go_bottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+</script>
+    
+
+    
+    <article class="post-wrap">
+        <header class="post-header">
+            <h1 class="post-title">内网渗透基础：主机信息收集与凭据搜集</h1>
+            
+                <div class="post-meta">
+                    
+                        Author: <a itemprop="author" rel="author" href="/">rowen</a>
+                    
+
+                    
+                        <span class="post-time">
+                        Date: <a href="#">May 21, 2026&nbsp;&nbsp;2:10:00</a>
+                        </span>
+                    
+                    
+                        <span class="post-category">
+                    Category:
+                            
+                                <a href="/categories/%E7%BA%A2%E9%98%9F%E5%AD%A6%E4%B9%A0/">红队学习</a>
+                            
+                        </span>
+                    
+                </div>
+            
+        </header>
+
+        <div class="post-content">
+            <h1 id="内网渗透基础：主机信息收集与凭据搜集"><a href="#内网渗透基础：主机信息收集与凭据搜集" class="headerlink" title="内网渗透基础：主机信息收集与凭据搜集"></a>内网渗透基础：主机信息收集与凭据搜集</h1><h2 id="一、前言"><a href="#一、前言" class="headerlink" title="一、前言"></a>一、前言</h2><p>在红队和渗透测试中，外网打点只是第一步。拿到一台主机权限后，更重要的是判断当前主机所处网络位置、用户权限、可访问资源和是否存在可继续利用的凭据。</p>
+<p>本文总结内网渗透中的基础信息收集和凭据搜集思路，仅用于靶场和授权测试环境。</p>
+<h2 id="二、为什么要做内网信息收集"><a href="#二、为什么要做内网信息收集" class="headerlink" title="二、为什么要做内网信息收集"></a>二、为什么要做内网信息收集</h2><p>拿到一台机器后，需要回答几个问题：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">我是谁？</span><br><span class="line">这是什么机器？</span><br><span class="line">它在哪个网段？</span><br><span class="line">它能访问谁？</span><br><span class="line">当前权限多大？</span><br><span class="line">有没有域环境？</span><br><span class="line">有没有凭据？</span><br><span class="line">能不能横向移动？</span><br></pre></td></tr></table></figure>
+
+<p>这些问题决定后续攻击路径。</p>
+<h2 id="三、Linux-主机信息收集"><a href="#三、Linux-主机信息收集" class="headerlink" title="三、Linux 主机信息收集"></a>三、Linux 主机信息收集</h2><h3 id="1-当前用户和系统信息"><a href="#1-当前用户和系统信息" class="headerlink" title="1. 当前用户和系统信息"></a>1. 当前用户和系统信息</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">whoami</span></span><br><span class="line"><span class="built_in">id</span></span><br><span class="line">hostname</span><br><span class="line"><span class="built_in">uname</span> -a</span><br><span class="line"><span class="built_in">cat</span> /etc/os-release</span><br></pre></td></tr></table></figure>
+
+<p>查看登录用户：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">w</span><br><span class="line">last</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-网络信息"><a href="#2-网络信息" class="headerlink" title="2. 网络信息"></a>2. 网络信息</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">ip addr</span><br><span class="line">ip route</span><br><span class="line">ss -antp</span><br><span class="line"><span class="built_in">cat</span> /etc/resolv.conf</span><br></pre></td></tr></table></figure>
+
+<p>重点关注：</p>
+<ul>
+<li>当前 IP</li>
+<li>默认网关</li>
+<li>DNS 服务器</li>
+<li>已建立连接</li>
+<li>本机监听端口</li>
+</ul>
+<h3 id="3-进程和服务"><a href="#3-进程和服务" class="headerlink" title="3. 进程和服务"></a>3. 进程和服务</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ps aux</span><br><span class="line">systemctl list-units --<span class="built_in">type</span>=service --state=running</span><br></pre></td></tr></table></figure>
+
+<p>关注：</p>
+<ul>
+<li>数据库进程</li>
+<li>Web 服务</li>
+<li>Java 应用</li>
+<li>Docker</li>
+<li>定时任务</li>
+<li>安全软件</li>
+</ul>
+<h3 id="4-环境变量"><a href="#4-环境变量" class="headerlink" title="4. 环境变量"></a>4. 环境变量</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">env</span></span><br></pre></td></tr></table></figure>
+
+<p>环境变量中可能出现：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">DB_PASSWORD</span><br><span class="line">SECRET_KEY</span><br><span class="line">TOKEN</span><br><span class="line">ACCESS_KEY</span><br></pre></td></tr></table></figure>
+
+<h2 id="四、Windows-主机信息收集"><a href="#四、Windows-主机信息收集" class="headerlink" title="四、Windows 主机信息收集"></a>四、Windows 主机信息收集</h2><h3 id="1-当前用户和系统信息-1"><a href="#1-当前用户和系统信息-1" class="headerlink" title="1. 当前用户和系统信息"></a>1. 当前用户和系统信息</h3><figure class="highlight cmd"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">whoami</span><br><span class="line">whoami /priv</span><br><span class="line">hostname</span><br><span class="line">systeminfo</span><br></pre></td></tr></table></figure>
+
+<p>查看本地用户：</p>
+<figure class="highlight cmd"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">net</span> user</span><br><span class="line"><span class="built_in">net</span> localgroup administrators</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-网络信息-1"><a href="#2-网络信息-1" class="headerlink" title="2. 网络信息"></a>2. 网络信息</h3><figure class="highlight cmd"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">ipconfig</span> /all</span><br><span class="line">route <span class="built_in">print</span></span><br><span class="line">netstat -ano</span><br><span class="line">arp -a</span><br></pre></td></tr></table></figure>
+
+<p>重点关注：</p>
+<ul>
+<li>DNS 后缀</li>
+<li>网关</li>
+<li>内网网段</li>
+<li>已连接主机</li>
+<li>域控线索</li>
+</ul>
+<h3 id="3-域信息判断"><a href="#3-域信息判断" class="headerlink" title="3. 域信息判断"></a>3. 域信息判断</h3><figure class="highlight cmd"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">whoami /fqdn</span><br><span class="line">nltest /dsgetdc:域名</span><br><span class="line"><span class="built_in">net</span> config workstation</span><br></pre></td></tr></table></figure>
+
+<p>如果当前机器在域中，信息收集重点会转向：</p>
+<ul>
+<li>域用户</li>
+<li>域控</li>
+<li>域组</li>
+<li>共享目录</li>
+<li>登录会话</li>
+</ul>
+<h2 id="五、内网网段发现"><a href="#五、内网网段发现" class="headerlink" title="五、内网网段发现"></a>五、内网网段发现</h2><p>拿到主机后，不要盲目大规模扫描。先从本机信息判断网段。</p>
+<p>Linux：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ip route</span><br><span class="line">arp -a</span><br></pre></td></tr></table></figure>
+
+<p>Windows：</p>
+<figure class="highlight cmd"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">ipconfig</span></span><br><span class="line">arp -a</span><br><span class="line">route <span class="built_in">print</span></span><br></pre></td></tr></table></figure>
+
+<p>常见内网网段：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">10.0.0.0/8</span><br><span class="line">172.16.0.0/12</span><br><span class="line">192.168.0.0/16</span><br></pre></td></tr></table></figure>
+
+<p>如果授权允许，可以做小范围探测：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ping -c 1 192.168.1.1</span><br></pre></td></tr></table></figure>
+
+<p>或使用更安静的方式观察已有连接和 ARP 缓存。</p>
+<h2 id="六、凭据搜集思路"><a href="#六、凭据搜集思路" class="headerlink" title="六、凭据搜集思路"></a>六、凭据搜集思路</h2><p>凭据是内网横向移动的关键。常见来源包括配置文件、历史命令、浏览器、数据库、脚本和内存。</p>
+<h3 id="1-Web-配置文件"><a href="#1-Web-配置文件" class="headerlink" title="1. Web 配置文件"></a>1. Web 配置文件</h3><p>Linux 下常见路径：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">/var/www</span><br><span class="line">/opt</span><br><span class="line">/srv</span><br><span class="line">/home</span><br></pre></td></tr></table></figure>
+
+<p>搜索关键字：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">grep -RniE <span class="string">&quot;password|passwd|pwd|secret|token|key|username|jdbc|mysql|redis&quot;</span> /var/www 2&gt;/dev/null</span><br></pre></td></tr></table></figure>
+
+<p>常见文件：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">.env</span><br><span class="line">config.php</span><br><span class="line">wp-config.php</span><br><span class="line">database.php</span><br><span class="line">application.yml</span><br><span class="line">settings.py</span><br><span class="line">config.json</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-Shell-历史"><a href="#2-Shell-历史" class="headerlink" title="2. Shell 历史"></a>2. Shell 历史</h3><p>Linux：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cat</span> ~/.bash_history</span><br><span class="line">find /home -name <span class="string">&quot;.bash_history&quot;</span> -<span class="built_in">exec</span> <span class="built_in">cat</span> &#123;&#125; \; 2&gt;/dev/null</span><br></pre></td></tr></table></figure>
+
+<p>可能出现：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">mysql -uroot -p123456</span><br><span class="line">ssh user@host</span><br><span class="line">scp key.pem</span><br><span class="line">redis-cli -a password</span><br></pre></td></tr></table></figure>
+
+<h3 id="3-SSH-私钥"><a href="#3-SSH-私钥" class="headerlink" title="3. SSH 私钥"></a>3. SSH 私钥</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">find / -name <span class="string">&quot;id_rsa&quot;</span> -o -name <span class="string">&quot;*.pem&quot;</span> 2&gt;/dev/null</span><br></pre></td></tr></table></figure>
+
+<p>如果发现私钥，需要确认：</p>
+<ul>
+<li>私钥归属用户</li>
+<li>是否有 passphrase</li>
+<li>是否能登录其他主机</li>
+</ul>
+<h3 id="4-数据库凭据"><a href="#4-数据库凭据" class="headerlink" title="4. 数据库凭据"></a>4. 数据库凭据</h3><p>拿到数据库账号后，可以尝试读取：</p>
+<ul>
+<li>用户表</li>
+<li>后台账号</li>
+<li>配置表</li>
+<li>token</li>
+<li>密码哈希</li>
+</ul>
+<p>如果数据库密码与系统用户复用，可能成为横向移动入口。</p>
+<h3 id="5-Windows-凭据线索"><a href="#5-Windows-凭据线索" class="headerlink" title="5. Windows 凭据线索"></a>5. Windows 凭据线索</h3><p>Windows 中可以关注：</p>
+<figure class="highlight cmd"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">cmdkey /list</span><br><span class="line"><span class="built_in">dir</span> /s /b *password*</span><br><span class="line"><span class="built_in">dir</span> /s /b *.config</span><br><span class="line"><span class="built_in">dir</span> /s /b web.config</span><br></pre></td></tr></table></figure>
+
+<p>常见敏感文件：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">web.config</span><br><span class="line">appsettings.json</span><br><span class="line">*.rdp</span><br><span class="line">*.kdbx</span><br><span class="line">unattend.xml</span><br></pre></td></tr></table></figure>
+
+<h2 id="七、共享目录与横向线索"><a href="#七、共享目录与横向线索" class="headerlink" title="七、共享目录与横向线索"></a>七、共享目录与横向线索</h2><p>Windows 查看共享：</p>
+<figure class="highlight cmd"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">net</span> view</span><br><span class="line"><span class="built_in">net</span> view \\host</span><br></pre></td></tr></table></figure>
+
+<p>Linux 查看挂载：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">mount</span><br><span class="line"><span class="built_in">df</span> -h</span><br><span class="line"><span class="built_in">cat</span> /etc/fstab</span><br></pre></td></tr></table></figure>
+
+<p>共享目录中可能存在：</p>
+<ul>
+<li>部署脚本</li>
+<li>数据库备份</li>
+<li>源码包</li>
+<li>运维文档</li>
+<li>密码文件</li>
+</ul>
+<p>这些往往比直接扫描漏洞更有价值。</p>
+<h2 id="八、常见横向移动入口"><a href="#八、常见横向移动入口" class="headerlink" title="八、常见横向移动入口"></a>八、常见横向移动入口</h2><p>凭据收集后，常见可尝试的服务：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">SSH     22</span><br><span class="line">SMB     445</span><br><span class="line">RDP     3389</span><br><span class="line">WinRM   5985/5986</span><br><span class="line">MySQL   3306</span><br><span class="line">MSSQL   1433</span><br><span class="line">Redis   6379</span><br></pre></td></tr></table></figure>
+
+<p>但横向移动必须在授权范围内进行，不能对未知资产随意尝试。</p>
+<h2 id="九、报告中怎么写"><a href="#九、报告中怎么写" class="headerlink" title="九、报告中怎么写"></a>九、报告中怎么写</h2><p>红队报告里不要只写“发现密码”，要写清楚：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">凭据来源</span><br><span class="line">影响范围</span><br><span class="line">是否可登录其他服务</span><br><span class="line">是否存在密码复用</span><br><span class="line">可造成的后果</span><br><span class="line">修复建议</span><br></pre></td></tr></table></figure>
+
+<p>示例：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">在 /var/www/html/.env 中发现数据库账号密码。经验证，该账号可连接内网 MySQL 服务并读取业务用户表。若攻击者获取 WebShell，可进一步读取敏感数据，建议迁移密钥到安全配置中心并限制数据库访问来源。</span><br></pre></td></tr></table></figure>
+
+<h2 id="十、防护建议"><a href="#十、防护建议" class="headerlink" title="十、防护建议"></a>十、防护建议</h2><ul>
+<li>配置文件不保存明文密码。</li>
+<li>使用密钥管理系统或环境变量管理敏感信息。</li>
+<li>数据库账号最小权限。</li>
+<li>SSH 私钥设置 passphrase。</li>
+<li>禁止密码复用。</li>
+<li>定期清理历史命令。</li>
+<li>限制内网服务访问来源。</li>
+<li>对共享目录做权限审计。</li>
+<li>对异常登录和横向连接做告警。</li>
+</ul>
+<h2 id="十一、总结"><a href="#十一、总结" class="headerlink" title="十一、总结"></a>十一、总结</h2><p>内网渗透不是一上来就大范围扫描，而是先从当前主机出发，做细致的信息收集：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">身份 -&gt; 系统 -&gt; 网络 -&gt; 服务 -&gt; 凭据 -&gt; 共享 -&gt; 横向入口</span><br></pre></td></tr></table></figure>
+
+<p>对红队面试来说，能讲清楚这套流程非常重要。它体现的是“拿到一个点后如何继续扩大影响”的能力，而不是只会单点漏洞利用。</p>
+
+        </div>
+
+        
+            <section class="post-copyright">
+                
+                    <p class="copyright-item">
+                        <span>Author:</span>
+                        <span>rowen</span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>Permalink:</span>
+                        <span><a href="https://forkmmat.github.io/2026/05/21/%E5%86%85%E7%BD%91%E6%B8%97%E9%80%8F%E5%9F%BA%E7%A1%80-%E4%B8%BB%E6%9C%BA%E4%BF%A1%E6%81%AF%E6%94%B6%E9%9B%86%E4%B8%8E%E5%87%AD%E6%8D%AE%E6%90%9C%E9%9B%86/">https://forkmmat.github.io/2026/05/21/%E5%86%85%E7%BD%91%E6%B8%97%E9%80%8F%E5%9F%BA%E7%A1%80-%E4%B8%BB%E6%9C%BA%E4%BF%A1%E6%81%AF%E6%94%B6%E9%9B%86%E4%B8%8E%E5%87%AD%E6%8D%AE%E6%90%9C%E9%9B%86/</a></span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>License:</span>
+                        <span>Copyright (c) 2019 <a target="_blank" rel="noopener" href="http://creativecommons.org/licenses/by-nc/4.0/">CC-BY-NC-4.0</a> LICENSE</span>
+                    </p>
+                
+                
+                     <p class="copyright-item">
+                         <span>Slogan:</span>
+                         <span>Do you believe in <strong>DESTINY</strong>?</span>
+                     </p>
+                
+
+            </section>
+        
+        <section class="post-tags">
+            <div>
+                <span>Tag(s):</span>
+                <span class="tag">
+                    
+                    
+                        <a href="/tags/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95/"># 渗透测试</a>
+                    
+                        <a href="/tags/%E4%BF%A1%E6%81%AF%E6%94%B6%E9%9B%86/"># 信息收集</a>
+                    
+                        <a href="/tags/%E7%BA%A2%E9%98%9F/"># 红队</a>
+                    
+                        <a href="/tags/%E5%86%85%E7%BD%91%E6%B8%97%E9%80%8F/"># 内网渗透</a>
+                    
+                        <a href="/tags/%E5%87%AD%E6%8D%AE%E6%90%9C%E9%9B%86/"># 凭据搜集</a>
+                    
+                        
+                </span>
+            </div>
+            <div>
+                <a href="javascript:window.history.back();">back</a>
+                <span>· </span>
+                <a href="/">home</a>
+            </div>
+        </section>
+        <section class="post-nav">
+            
+            
+            <a class="next" rel="next" href="/2026/05/21/%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0%E6%BC%8F%E6%B4%9E%E7%BB%95%E8%BF%87%E4%B8%8E%E9%98%B2%E6%8A%A4/">文件上传漏洞绕过与防护</a>
+            
+        </section>
+<script src="https://giscus.app/client.js"
+        data-repo="forkmmat/forkmmat.github.io"
+        data-repo-id="R_kgDOO0OA0g"
+        data-category="General"
+        data-category-id="DIC_kwDOO0OA0s4CtD6Y"
+        data-mapping="title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="zh-CN"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+</script>
+
+    </article>
+</div>
+
+            </div>
+            <footer id="footer" class="footer">
+    <div class="copyright">
+        <span>© rowen | Powered by <a href="https://hexo.io" target="_blank">Hexo</a> & <a href="https://github.com/Siricee/hexo-theme-Chic" target="_blank">Chic</a></span>
+    </div>
+</footer>
+
+    </div>
+</body>
+
+</html>
