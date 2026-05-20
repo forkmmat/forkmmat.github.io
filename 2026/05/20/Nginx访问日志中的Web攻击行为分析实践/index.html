@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <meta name="author" content="rowen">
+
+
+
+
+
+<title>Nginx 访问日志中的 Web 攻击行为分析实践 | Hexo</title>
+
+
+
+    <link rel="icon" href="/drink.ico">
+
+
+
+
+    <!-- stylesheets list from _config.yml -->
+    
+    <link rel="stylesheet" href="/css/style.css">
+    
+
+
+
+    <!-- scripts list from _config.yml -->
+    
+    <script src="/js/script.js"></script>
+    
+    <script src="/js/tocbot.min.js"></script>
+    
+
+
+
+    
+    
+        
+    
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+    <!-- 引入jQuery -->
+<script type="text/javascript" src="//libs.baidu.com/jquery/1.8.3/jquery.min.js"></script>
+<!-- 雪花特效2 -->
+ <script type="text/javascript" src="/js/snow2.js"></script>
+    <script>
+        // this function is used to check current theme before page loaded.
+        (() => {
+            const currentTheme = window.localStorage && window.localStorage.getItem('theme') || '';
+            const isDark = currentTheme === 'dark';
+            const pagebody = document.getElementsByTagName('body')[0]
+            if (isDark) {
+                pagebody.classList.add('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Dark"
+            } else {
+                pagebody.classList.remove('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Light"
+            }
+        })();
+    </script>
+<script>
+!
+function() {
+function n(n, e, t) {
+return n.getAttribute(e) || t
+}
+function e(n) {
+return document.getElementsByTagName(n)
+}
+function t() {
+var t = e("script"),
+o = t.length,
+i = t[o - 1];
+return {
+l: o,
+z: n(i, "zIndex", -1), //置于主页面背后
+o: n(i, "opacity", .5), //线条透明度
+c: n(i, "color", "0,0,0"), //线条颜色
+n: n(i, "count", 100) //线条数量
+}
+}
+function o() {
+a = m.width = window.innerWidth ||
+document.documentElement.clientWidth || document.body.clientWidth,
+c = m.height = window.innerHeight ||
+document.documentElement.clientHeight || document.body.clientHeight
+}
+function i() {
+r.clearRect(0, 0, a, c);
+var n, e, t, o, m, l;
+s.forEach(function(i, x) {
+for (i.x += i.xa, i.y += i.ya, i.xa *= i.x > a || i.x < 0 ? -1 :
+1, i.ya *= i.y > c || i.y < 0 ? -1 : 1, r.fillRect(i.x - .5, i.y - .5, 1,
+1), e = x + 1; e < u.length; e++) n = u[e],
+null !== n.x && null !== n.y && (o = i.x - n.x, m = i.y - n.y, l
+= o * o + m * m, l < n.max && (n === y && l >= n.max / 2 && (i.x -= .03 * o,
+i.y -= .03 * m), t = (n.max - l) / n.max, r.beginPath(), r.lineWidth = t /
+2, r.strokeStyle = "rgba(" + d.c + "," + (t + .2) + ")", r.moveTo(i.x, i.y),
+r.lineTo(n.x, n.y), r.stroke()))
+}),
+x(i)
+}
+var a, c, u, m = document.createElement("canvas"),
+d = t(),
+l = "c_n" + d.l,
+r = m.getContext("2d"),
+x = window.requestAnimationFrame || window.webkitRequestAnimationFrame
+|| window.mozRequestAnimationFrame || window.oRequestAnimationFrame ||
+window.msRequestAnimationFrame ||
+function(n) {
+window.setTimeout(n, 1e3 / 45)
+},
+w = Math.random,
+y = {
+x: null,
+y: null,
+max: 2e4
+};
+m.id = l,
+m.style.cssText = "position:fixed;top:0;left:0;z-index:" + d.z +
+";opacity:" + d.o,
+e("body")[0].appendChild(m),
+o(),
+window.onresize = o,
+window.onmousemove = function(n) {
+n = n || window.event,
+y.x = n.clientX,
+y.y = n.clientY
+},
+window.onmouseout = function() {
+y.x = null,
+y.y = null
+};
+for (var s = [], f = 0; d.n > f; f++) {
+var h = w() * a,
+g = w() * c,
+v = 2 * w() - 1,
+p = 2 * w() - 1;
+s.push({
+x: h,
+y: g,
+xa: v,
+ya: p,
+max: 6e3
+})
+}
+u = s.concat([y]),
+setTimeout(function() {
+i()
+},
+100)
+} ();
+</script>
+    <div class="wrapper">
+        <header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-header header-logo"><a href="/">bobo&#39;s Blog</a></div>
+            <div class="menu navbar-right">
+                
+                    <a class="menu-item" href="/archives">📖博文</a>
+                
+                    <a class="menu-item" href="/category">📚类别</a>
+                
+                    <a class="menu-item" href="/tag">🏷️标签</a>
+                
+                    <a class="menu-item" href="/about">💡关于</a>
+                
+                    <a class="menu-item" href="/links">🔗友链</a>
+                
+                <input id="switch_default" type="checkbox" class="switch_default">
+                <label for="switch_default" class="toggleBtn"></label>
+            </div>
+        </div>
+    </nav>
+
+    
+    <nav class="navbar-mobile" id="nav-mobile">
+        <div class="container">
+            <div class="navbar-header">
+                <div>
+                    <a href="/">bobo&#39;s Blog</a><a id="mobile-toggle-theme">·&nbsp;Light</a>
+                </div>
+                <div class="menu-toggle" onclick="mobileBtn()">&#9776; Menu</div>
+            </div>
+            <div class="menu" id="mobile-menu">
+                
+                    <a class="menu-item" href="/archives">📖博文</a>
+                
+                    <a class="menu-item" href="/category">📚类别</a>
+                
+                    <a class="menu-item" href="/tag">🏷️标签</a>
+                
+                    <a class="menu-item" href="/about">💡关于</a>
+                
+                    <a class="menu-item" href="/links">🔗友链</a>
+                
+            </div>
+        </div>
+    </nav>
+
+</header>
+<script>
+    var mobileBtn = function f() {
+        var toggleMenu = document.getElementsByClassName("menu-toggle")[0];
+        var mobileMenu = document.getElementById("mobile-menu");
+        if(toggleMenu.classList.contains("active")){
+           toggleMenu.classList.remove("active")
+            mobileMenu.classList.remove("active")
+        }else{
+            toggleMenu.classList.add("active")
+            mobileMenu.classList.add("active")
+        }
+    }
+</script>
+            <div class="main">
+                <div class="container">
+    
+    
+        <div class="post-toc">
+    <div class="tocbot-list">
+    </div>
+    <div class="tocbot-list-menu">
+        <a class="tocbot-toc-expand" onclick="expand_toc()">Expand all</a>
+        <a onclick="go_top()">Back to top</a>
+        <a onclick="go_bottom()">Go to bottom</a>
+    </div>
+</div>
+
+<script>
+    document.ready(
+        function () {
+            tocbot.init({
+                tocSelector: '.tocbot-list',
+                contentSelector: '.post-content',
+                headingSelector: 'h1, h2, h3, h4, h5',
+                collapseDepth: 1,
+                orderedList: false,
+                scrollSmooth: true,
+            })
+        }
+    )
+
+    function expand_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 6,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "collapse_toc()");
+        b.innerHTML = "Collapse all"
+    }
+
+    function collapse_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 1,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "expand_toc()");
+        b.innerHTML = "Expand all"
+    }
+
+    function go_top() {
+        window.scrollTo(0, 0);
+    }
+
+    function go_bottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+</script>
+    
+
+    
+    <article class="post-wrap">
+        <header class="post-header">
+            <h1 class="post-title">Nginx 访问日志中的 Web 攻击行为分析实践</h1>
+            
+                <div class="post-meta">
+                    
+                        Author: <a itemprop="author" rel="author" href="/">rowen</a>
+                    
+
+                    
+                        <span class="post-time">
+                        Date: <a href="#">May 20, 2026&nbsp;&nbsp;20:30:00</a>
+                        </span>
+                    
+                    
+                        <span class="post-category">
+                    Category:
+                            
+                                <a href="/categories/%E5%AE%89%E5%85%A8%E8%BF%90%E8%90%A5/">安全运营</a>
+                            
+                        </span>
+                    
+                </div>
+            
+        </header>
+
+        <div class="post-content">
+            <h1 id="Nginx-访问日志中的-Web-攻击行为分析实践"><a href="#Nginx-访问日志中的-Web-攻击行为分析实践" class="headerlink" title="Nginx 访问日志中的 Web 攻击行为分析实践"></a>Nginx 访问日志中的 Web 攻击行为分析实践</h1><h2 id="一、项目背景"><a href="#一、项目背景" class="headerlink" title="一、项目背景"></a>一、项目背景</h2><p>在安全运营和应急响应工作中，Web 访问日志是判断攻击行为的重要依据。相比只看工具扫描结果，日志分析更接近真实工作场景：需要从大量请求中找出异常 IP、攻击路径、Payload、状态码变化和攻击时间线。</p>
+<p>本文基于本地靶场和授权测试环境中的 Nginx 访问日志，模拟一次 Web 攻击行为分析流程，重点关注以下几类常见风险：</p>
+<ul>
+<li>SQL 注入探测</li>
+<li>XSS 探测</li>
+<li>目录扫描</li>
+<li>弱口令爆破</li>
+<li>敏感路径访问</li>
+</ul>
+<p>目标不是单纯判断“有没有攻击”，而是整理出一份可用于安全运营和应急处置的分析结果。</p>
+<h2 id="二、环境说明"><a href="#二、环境说明" class="headerlink" title="二、环境说明"></a>二、环境说明</h2><p>分析环境如下：</p>
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Web 服务</td>
+<td>Nginx</td>
+</tr>
+<tr>
+<td>日志文件</td>
+<td>access.log</td>
+</tr>
+<tr>
+<td>分析语言</td>
+<td>Python</td>
+</tr>
+<tr>
+<td>分析对象</td>
+<td>本地靶场&#x2F;授权环境访问日志</td>
+</tr>
+<tr>
+<td>分析重点</td>
+<td>攻击特征、异常 IP、攻击路径、状态码、时间线</td>
+</tr>
+</tbody></table>
+<p>Nginx 常见访问日志格式如下：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">192.168.56.101 - - [20/May/2026:10:12:33 +0800] &quot;GET /login.php?id=1 HTTP/1.1&quot; 200 1024 &quot;-&quot; &quot;Mozilla/5.0&quot;</span><br></pre></td></tr></table></figure>
+
+<p>其中重点字段包括：</p>
+<ul>
+<li>访问 IP</li>
+<li>请求时间</li>
+<li>请求方法</li>
+<li>URL 路径和参数</li>
+<li>HTTP 状态码</li>
+<li>User-Agent</li>
+</ul>
+<h2 id="三、攻击特征整理"><a href="#三、攻击特征整理" class="headerlink" title="三、攻击特征整理"></a>三、攻击特征整理</h2><h3 id="1-SQL-注入特征"><a href="#1-SQL-注入特征" class="headerlink" title="1. SQL 注入特征"></a>1. SQL 注入特征</h3><p>SQL 注入请求通常会在参数中出现数据库关键字、注释符、逻辑判断语句等内容，例如：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">/news.php?id=1&#x27; and &#x27;1&#x27;=&#x27;1</span><br><span class="line">/user.php?id=1 union select 1,2,3</span><br><span class="line">/search.php?q=test%27%20or%201=1--</span><br></pre></td></tr></table></figure>
+
+<p>常见特征包括：</p>
+<ul>
+<li>URL 中出现 <code>union select</code></li>
+<li>参数中出现 <code>&#39; or &#39;1&#39;=&#39;1</code></li>
+<li>出现 <code>--</code>、<code>#</code> 等 SQL 注释符</li>
+<li>请求频率较高，参数变化明显</li>
+<li>可能伴随 500、403、302、200 等状态码变化</li>
+</ul>
+<h3 id="2-XSS-特征"><a href="#2-XSS-特征" class="headerlink" title="2. XSS 特征"></a>2. XSS 特征</h3><p>XSS 探测通常会在参数中插入 HTML 或 JavaScript 片段，例如：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">/search.php?keyword=&lt;script&gt;alert(1)&lt;/script&gt;</span><br><span class="line">/comment.php?content=&lt;img src=x onerror=alert(1)&gt;</span><br></pre></td></tr></table></figure>
+
+<p>常见特征包括：</p>
+<ul>
+<li>URL 中出现 <code>&lt;script&gt;</code></li>
+<li>出现 <code>onerror</code>、<code>onload</code> 等事件属性</li>
+<li>出现 <code>javascript:</code> 伪协议</li>
+<li>请求路径多集中在搜索、评论、留言等功能点</li>
+</ul>
+<h3 id="3-目录扫描特征"><a href="#3-目录扫描特征" class="headerlink" title="3. 目录扫描特征"></a>3. 目录扫描特征</h3><p>目录扫描常见于攻击者的信息收集阶段，目的是发现后台、备份文件、配置文件、上传目录等敏感资源。</p>
+<p>常见路径包括：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">/admin/</span><br><span class="line">/backup.zip</span><br><span class="line">/.git/config</span><br><span class="line">/phpinfo.php</span><br><span class="line">/uploads/</span><br><span class="line">/robots.txt</span><br></pre></td></tr></table></figure>
+
+<p>判断依据：</p>
+<ul>
+<li>单个 IP 在短时间内访问大量不同路径</li>
+<li>状态码以 404、403 为主</li>
+<li>请求路径具有明显字典扫描特征</li>
+<li>User-Agent 可能为空，或出现扫描器特征</li>
+</ul>
+<h3 id="4-弱口令爆破特征"><a href="#4-弱口令爆破特征" class="headerlink" title="4. 弱口令爆破特征"></a>4. 弱口令爆破特征</h3><p>弱口令爆破通常集中在登录接口，例如：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">POST /login.php HTTP/1.1</span><br><span class="line">POST /admin/login HTTP/1.1</span><br></pre></td></tr></table></figure>
+
+<p>判断依据：</p>
+<ul>
+<li>同一 IP 短时间内多次请求登录接口</li>
+<li>状态码可能持续为 200、302、401、403</li>
+<li>请求时间间隔较短</li>
+<li>失败次数明显异常</li>
+</ul>
+<h2 id="四、Python-分析脚本"><a href="#四、Python-分析脚本" class="headerlink" title="四、Python 分析脚本"></a>四、Python 分析脚本</h2><p>下面脚本用于从 Nginx access.log 中提取异常请求，并按照攻击类型进行简单分类。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> re</span><br><span class="line"><span class="keyword">from</span> collections <span class="keyword">import</span> Counter, defaultdict</span><br><span class="line"></span><br><span class="line">log_file = <span class="string">&quot;access.log&quot;</span></span><br><span class="line"></span><br><span class="line">patterns = &#123;</span><br><span class="line">    <span class="string">&quot;SQL注入&quot;</span>: [</span><br><span class="line">        <span class="string">r&quot;union\s+select&quot;</span>,</span><br><span class="line">        <span class="string">r&quot;or\s+1=1&quot;</span>,</span><br><span class="line">        <span class="string">r&quot;and\s+1=1&quot;</span>,</span><br><span class="line">        <span class="string">r&quot;sleep\s*\(&quot;</span>,</span><br><span class="line">        <span class="string">r&quot;benchmark\s*\(&quot;</span>,</span><br><span class="line">        <span class="string">r&quot;information_schema&quot;</span>,</span><br><span class="line">        <span class="string">r&quot;(--|%2d%2d|#|%23)&quot;</span></span><br><span class="line">    ],</span><br><span class="line">    <span class="string">&quot;XSS探测&quot;</span>: [</span><br><span class="line">        <span class="string">r&quot;&lt;script&quot;</span>,</span><br><span class="line">        <span class="string">r&quot;%3cscript&quot;</span>,</span><br><span class="line">        <span class="string">r&quot;onerror&quot;</span>,</span><br><span class="line">        <span class="string">r&quot;onload&quot;</span>,</span><br><span class="line">        <span class="string">r&quot;javascript:&quot;</span></span><br><span class="line">    ],</span><br><span class="line">    <span class="string">&quot;敏感路径访问&quot;</span>: [</span><br><span class="line">        <span class="string">r&quot;/\.git&quot;</span>,</span><br><span class="line">        <span class="string">r&quot;/admin&quot;</span>,</span><br><span class="line">        <span class="string">r&quot;/phpinfo\.php&quot;</span>,</span><br><span class="line">        <span class="string">r&quot;/backup&quot;</span>,</span><br><span class="line">        <span class="string">r&quot;/config&quot;</span>,</span><br><span class="line">        <span class="string">r&quot;/uploads&quot;</span></span><br><span class="line">    ],</span><br><span class="line">    <span class="string">&quot;弱口令爆破&quot;</span>: [</span><br><span class="line">        <span class="string">r&quot;POST\s+/login&quot;</span>,</span><br><span class="line">        <span class="string">r&quot;POST\s+/admin&quot;</span>,</span><br><span class="line">        <span class="string">r&quot;POST\s+/user/login&quot;</span></span><br><span class="line">    ]</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">ip_counter = Counter()</span><br><span class="line">attack_counter = Counter()</span><br><span class="line">path_counter = Counter()</span><br><span class="line">timeline = defaultdict(<span class="built_in">list</span>)</span><br><span class="line"></span><br><span class="line">log_pattern = re.<span class="built_in">compile</span>(</span><br><span class="line">    <span class="string">r&#x27;(?P&lt;ip&gt;\S+) \S+ \S+ \[(?P&lt;time&gt;.*?)\] &quot;(?P&lt;request&gt;.*?)&quot; (?P&lt;status&gt;\d+) (?P&lt;size&gt;\S+)&#x27;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">detect_attack</span>(<span class="params">request</span>):</span><br><span class="line">    request_lower = request.lower()</span><br><span class="line">    result = []</span><br><span class="line">    <span class="keyword">for</span> attack_type, rules <span class="keyword">in</span> patterns.items():</span><br><span class="line">        <span class="keyword">for</span> rule <span class="keyword">in</span> rules:</span><br><span class="line">            <span class="keyword">if</span> re.search(rule, request_lower):</span><br><span class="line">                result.append(attack_type)</span><br><span class="line">                <span class="keyword">break</span></span><br><span class="line">    <span class="keyword">return</span> result</span><br><span class="line"></span><br><span class="line"><span class="keyword">with</span> <span class="built_in">open</span>(log_file, <span class="string">&quot;r&quot;</span>, encoding=<span class="string">&quot;utf-8&quot;</span>, errors=<span class="string">&quot;ignore&quot;</span>) <span class="keyword">as</span> f:</span><br><span class="line">    <span class="keyword">for</span> line <span class="keyword">in</span> f:</span><br><span class="line">        <span class="keyword">match</span> = log_pattern.search(line)</span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">not</span> <span class="keyword">match</span>:</span><br><span class="line">            <span class="keyword">continue</span></span><br><span class="line"></span><br><span class="line">        ip = <span class="keyword">match</span>.group(<span class="string">&quot;ip&quot;</span>)</span><br><span class="line">        time = <span class="keyword">match</span>.group(<span class="string">&quot;time&quot;</span>)</span><br><span class="line">        request = <span class="keyword">match</span>.group(<span class="string">&quot;request&quot;</span>)</span><br><span class="line">        status = <span class="keyword">match</span>.group(<span class="string">&quot;status&quot;</span>)</span><br><span class="line"></span><br><span class="line">        attacks = detect_attack(request)</span><br><span class="line">        <span class="keyword">if</span> attacks:</span><br><span class="line">            ip_counter[ip] += <span class="number">1</span></span><br><span class="line">            path_counter[request] += <span class="number">1</span></span><br><span class="line">            <span class="keyword">for</span> attack <span class="keyword">in</span> attacks:</span><br><span class="line">                attack_counter[attack] += <span class="number">1</span></span><br><span class="line">                timeline[ip].append((time, attack, status, request))</span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;[+] 攻击类型统计&quot;</span>)</span><br><span class="line"><span class="keyword">for</span> attack, count <span class="keyword">in</span> attack_counter.most_common():</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;<span class="subst">&#123;attack&#125;</span>: <span class="subst">&#123;count&#125;</span>&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;\n[+] 异常 IP TOP 10&quot;</span>)</span><br><span class="line"><span class="keyword">for</span> ip, count <span class="keyword">in</span> ip_counter.most_common(<span class="number">10</span>):</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;<span class="subst">&#123;ip&#125;</span>: <span class="subst">&#123;count&#125;</span>&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;\n[+] 高频异常请求 TOP 10&quot;</span>)</span><br><span class="line"><span class="keyword">for</span> path, count <span class="keyword">in</span> path_counter.most_common(<span class="number">10</span>):</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;<span class="subst">&#123;count&#125;</span>  <span class="subst">&#123;path&#125;</span>&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;\n[+] 攻击时间线&quot;</span>)</span><br><span class="line"><span class="keyword">for</span> ip, events <span class="keyword">in</span> timeline.items():</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;\nIP: <span class="subst">&#123;ip&#125;</span>&quot;</span>)</span><br><span class="line">    <span class="keyword">for</span> time, attack, status, request <span class="keyword">in</span> events[:<span class="number">10</span>]:</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">f&quot;<span class="subst">&#123;time&#125;</span> [<span class="subst">&#123;attack&#125;</span>] status=<span class="subst">&#123;status&#125;</span> <span class="subst">&#123;request&#125;</span>&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+<h2 id="五、分析结果示例"><a href="#五、分析结果示例" class="headerlink" title="五、分析结果示例"></a>五、分析结果示例</h2><p>脚本输出示例：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">[+] 攻击类型统计</span><br><span class="line">敏感路径访问: 48</span><br><span class="line">SQL注入: 19</span><br><span class="line">XSS探测: 11</span><br><span class="line">弱口令爆破: 9</span><br><span class="line"></span><br><span class="line">[+] 异常 IP TOP 10</span><br><span class="line">192.168.56.103: 37</span><br><span class="line">192.168.56.109: 22</span><br><span class="line">192.168.56.120: 18</span><br><span class="line"></span><br><span class="line">[+] 高频异常请求 TOP 10</span><br><span class="line">12  GET /admin/ HTTP/1.1</span><br><span class="line">8   GET /.git/config HTTP/1.1</span><br><span class="line">6   GET /search.php?q=&lt;script&gt;alert(1)&lt;/script&gt; HTTP/1.1</span><br><span class="line">5   GET /news.php?id=1 union select 1,2,3 HTTP/1.1</span><br></pre></td></tr></table></figure>
+
+<p>从结果可以看出：</p>
+<ul>
+<li><code>192.168.56.103</code> 请求次数最多，存在明显目录扫描行为。</li>
+<li><code>/.git/config</code>、<code>/admin/</code>、<code>/backup.zip</code> 等敏感路径被多次访问。</li>
+<li>部分 URL 参数中出现 SQL 注入和 XSS Payload。</li>
+<li>登录接口存在连续 POST 请求，需要进一步结合认证日志判断是否存在爆破成功。</li>
+</ul>
+<h2 id="六、攻击时间线"><a href="#六、攻击时间线" class="headerlink" title="六、攻击时间线"></a>六、攻击时间线</h2><p>根据日志时间字段，可以整理出攻击过程：</p>
+<table>
+<thead>
+<tr>
+<th>时间</th>
+<th>行为</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>10:12</td>
+<td>目录扫描</td>
+<td>访问 <code>/admin/</code>、<code>/backup.zip</code>、<code>/.git/config</code></td>
+</tr>
+<tr>
+<td>10:15</td>
+<td>SQL 注入探测</td>
+<td>对 <code>id</code> 参数构造注入 Payload</td>
+</tr>
+<tr>
+<td>10:19</td>
+<td>XSS 探测</td>
+<td>对搜索参数插入脚本标签</td>
+</tr>
+<tr>
+<td>10:23</td>
+<td>登录爆破</td>
+<td>对 <code>/login.php</code> 连续发送 POST 请求</td>
+</tr>
+<tr>
+<td>10:30</td>
+<td>敏感文件探测</td>
+<td>访问配置文件和上传目录</td>
+</tr>
+</tbody></table>
+<p>该时间线说明攻击者先进行信息收集，再尝试漏洞探测，最后对登录口进行弱口令尝试，符合常见 Web 攻击流程。</p>
+<h2 id="七、影响范围判断"><a href="#七、影响范围判断" class="headerlink" title="七、影响范围判断"></a>七、影响范围判断</h2><p>本次日志中暂未发现明确的 Getshell 迹象，但存在以下风险：</p>
+<ul>
+<li>后台登录入口暴露，存在弱口令爆破风险。</li>
+<li>敏感路径被扫描，可能泄露配置文件或备份文件。</li>
+<li>参数存在注入探测行为，需要确认后端是否做了过滤和参数化查询。</li>
+<li>搜索、评论等输入点存在 XSS 探测，需要检查输出编码。</li>
+<li>如果攻击请求返回 200 或 500，需要优先复查对应接口。</li>
+</ul>
+<p>进一步排查建议：</p>
+<ul>
+<li>检查 Web 根目录是否存在异常文件。</li>
+<li>检查最近修改的 PHP、JSP、ASP 文件。</li>
+<li>检查 Nginx、应用、数据库日志是否存在异常。</li>
+<li>检查系统用户、计划任务、启动项和可疑进程。</li>
+<li>对高危 IP 做临时封禁或访问频率限制。</li>
+</ul>
+<h2 id="八、处置建议"><a href="#八、处置建议" class="headerlink" title="八、处置建议"></a>八、处置建议</h2><h3 id="1-Web-层加固"><a href="#1-Web-层加固" class="headerlink" title="1. Web 层加固"></a>1. Web 层加固</h3><ul>
+<li>后台入口限制访问 IP。</li>
+<li>登录接口增加验证码或频率限制。</li>
+<li>禁止访问 <code>.git</code>、备份文件、配置文件等敏感资源。</li>
+<li>上传目录禁止脚本执行。</li>
+<li>对异常 User-Agent 和高频请求做限速。</li>
+</ul>
+<h3 id="2-代码层修复"><a href="#2-代码层修复" class="headerlink" title="2. 代码层修复"></a>2. 代码层修复</h3><ul>
+<li>SQL 查询使用预编译语句。</li>
+<li>用户输入统一校验和过滤。</li>
+<li>页面输出进行 HTML 编码。</li>
+<li>文件上传限制后缀、MIME 类型和文件内容。</li>
+<li>重要接口增加鉴权和权限校验。</li>
+</ul>
+<h3 id="3-运营侧监控"><a href="#3-运营侧监控" class="headerlink" title="3. 运营侧监控"></a>3. 运营侧监控</h3><ul>
+<li>对 404、403 高频 IP 建立告警规则。</li>
+<li>对登录失败次数设置阈值告警。</li>
+<li>对 SQL 注入、XSS、目录扫描关键字建立检测规则。</li>
+<li>定期归档日志，便于追溯攻击时间线。</li>
+<li>将封禁、通知、复盘流程文档化。</li>
+</ul>
+<h2 id="九、总结"><a href="#九、总结" class="headerlink" title="九、总结"></a>九、总结</h2><p>通过这次日志分析，可以看到安全运营工作并不是只依赖工具扫描，而是要把日志、攻击特征、时间线、影响范围和处置建议串起来。</p>
+<p>本项目主要完成了以下内容：</p>
+<ul>
+<li>梳理常见 Web 攻击在 Nginx 日志中的表现。</li>
+<li>使用 Python 提取异常 IP、攻击路径、Payload 和状态码。</li>
+<li>根据日志整理攻击时间线。</li>
+<li>给出 Web 层、代码层和运营侧的加固建议。</li>
+</ul>
+<p>这类项目适合作为安全运营、应急响应和渗透测试实习的博客材料。后续可以继续完善脚本，例如加入 CSV 导出、IP 归属地查询、图表统计和自动生成分析报告。</p>
+
+        </div>
+
+        
+            <section class="post-copyright">
+                
+                    <p class="copyright-item">
+                        <span>Author:</span>
+                        <span>rowen</span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>Permalink:</span>
+                        <span><a href="https://forkmmat.github.io/2026/05/20/Nginx%E8%AE%BF%E9%97%AE%E6%97%A5%E5%BF%97%E4%B8%AD%E7%9A%84Web%E6%94%BB%E5%87%BB%E8%A1%8C%E4%B8%BA%E5%88%86%E6%9E%90%E5%AE%9E%E8%B7%B5/">https://forkmmat.github.io/2026/05/20/Nginx%E8%AE%BF%E9%97%AE%E6%97%A5%E5%BF%97%E4%B8%AD%E7%9A%84Web%E6%94%BB%E5%87%BB%E8%A1%8C%E4%B8%BA%E5%88%86%E6%9E%90%E5%AE%9E%E8%B7%B5/</a></span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>License:</span>
+                        <span>Copyright (c) 2019 <a target="_blank" rel="noopener" href="http://creativecommons.org/licenses/by-nc/4.0/">CC-BY-NC-4.0</a> LICENSE</span>
+                    </p>
+                
+                
+                     <p class="copyright-item">
+                         <span>Slogan:</span>
+                         <span>Do you believe in <strong>DESTINY</strong>?</span>
+                     </p>
+                
+
+            </section>
+        
+        <section class="post-tags">
+            <div>
+                <span>Tag(s):</span>
+                <span class="tag">
+                    
+                    
+                        <a href="/tags/%E6%97%A5%E5%BF%97%E5%88%86%E6%9E%90/"># 日志分析</a>
+                    
+                        <a href="/tags/%E5%AE%89%E5%85%A8%E8%BF%90%E8%90%A5/"># 安全运营</a>
+                    
+                        <a href="/tags/%E5%BA%94%E6%80%A5%E5%93%8D%E5%BA%94/"># 应急响应</a>
+                    
+                        <a href="/tags/Python/"># Python</a>
+                    
+                        <a href="/tags/Web%E5%AE%89%E5%85%A8/"># Web安全</a>
+                    
+                        
+                </span>
+            </div>
+            <div>
+                <a href="javascript:window.history.back();">back</a>
+                <span>· </span>
+                <a href="/">home</a>
+            </div>
+        </section>
+        <section class="post-nav">
+            
+            
+            <a class="next" rel="next" href="/2025/10/30/%E7%BD%91%E7%AB%99%E6%8E%A8%E8%8D%90/">网站推荐</a>
+            
+        </section>
+<script src="https://giscus.app/client.js"
+        data-repo="forkmmat/forkmmat.github.io"
+        data-repo-id="R_kgDOO0OA0g"
+        data-category="General"
+        data-category-id="DIC_kwDOO0OA0s4CtD6Y"
+        data-mapping="title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="zh-CN"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+</script>
+
+    </article>
+</div>
+
+            </div>
+            <footer id="footer" class="footer">
+    <div class="copyright">
+        <span>© rowen | Powered by <a href="https://hexo.io" target="_blank">Hexo</a> & <a href="https://github.com/Siricee/hexo-theme-Chic" target="_blank">Chic</a></span>
+    </div>
+</footer>
+
+    </div>
+</body>
+
+</html>
