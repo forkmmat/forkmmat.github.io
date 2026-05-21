@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <meta name="author" content="rowen">
+
+
+
+
+
+<title>从 OWASP Top 10 到业务漏洞挖掘：安全攻防实习复盘 | Hexo</title>
+
+
+
+    <link rel="icon" href="/drink.ico">
+
+
+
+
+    <!-- stylesheets list from _config.yml -->
+    
+    <link rel="stylesheet" href="/css/style.css">
+    
+
+
+
+    <!-- scripts list from _config.yml -->
+    
+    <script src="/js/script.js"></script>
+    
+    <script src="/js/tocbot.min.js"></script>
+    
+
+
+
+    
+    
+        
+    
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+    <!-- 引入jQuery -->
+<script type="text/javascript" src="//libs.baidu.com/jquery/1.8.3/jquery.min.js"></script>
+<!-- 雪花特效2 -->
+ <script type="text/javascript" src="/js/snow2.js"></script>
+    <script>
+        // this function is used to check current theme before page loaded.
+        (() => {
+            const currentTheme = window.localStorage && window.localStorage.getItem('theme') || '';
+            const isDark = currentTheme === 'dark';
+            const pagebody = document.getElementsByTagName('body')[0]
+            if (isDark) {
+                pagebody.classList.add('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Dark"
+            } else {
+                pagebody.classList.remove('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Light"
+            }
+        })();
+    </script>
+<script>
+!
+function() {
+function n(n, e, t) {
+return n.getAttribute(e) || t
+}
+function e(n) {
+return document.getElementsByTagName(n)
+}
+function t() {
+var t = e("script"),
+o = t.length,
+i = t[o - 1];
+return {
+l: o,
+z: n(i, "zIndex", -1), //置于主页面背后
+o: n(i, "opacity", .5), //线条透明度
+c: n(i, "color", "0,0,0"), //线条颜色
+n: n(i, "count", 100) //线条数量
+}
+}
+function o() {
+a = m.width = window.innerWidth ||
+document.documentElement.clientWidth || document.body.clientWidth,
+c = m.height = window.innerHeight ||
+document.documentElement.clientHeight || document.body.clientHeight
+}
+function i() {
+r.clearRect(0, 0, a, c);
+var n, e, t, o, m, l;
+s.forEach(function(i, x) {
+for (i.x += i.xa, i.y += i.ya, i.xa *= i.x > a || i.x < 0 ? -1 :
+1, i.ya *= i.y > c || i.y < 0 ? -1 : 1, r.fillRect(i.x - .5, i.y - .5, 1,
+1), e = x + 1; e < u.length; e++) n = u[e],
+null !== n.x && null !== n.y && (o = i.x - n.x, m = i.y - n.y, l
+= o * o + m * m, l < n.max && (n === y && l >= n.max / 2 && (i.x -= .03 * o,
+i.y -= .03 * m), t = (n.max - l) / n.max, r.beginPath(), r.lineWidth = t /
+2, r.strokeStyle = "rgba(" + d.c + "," + (t + .2) + ")", r.moveTo(i.x, i.y),
+r.lineTo(n.x, n.y), r.stroke()))
+}),
+x(i)
+}
+var a, c, u, m = document.createElement("canvas"),
+d = t(),
+l = "c_n" + d.l,
+r = m.getContext("2d"),
+x = window.requestAnimationFrame || window.webkitRequestAnimationFrame
+|| window.mozRequestAnimationFrame || window.oRequestAnimationFrame ||
+window.msRequestAnimationFrame ||
+function(n) {
+window.setTimeout(n, 1e3 / 45)
+},
+w = Math.random,
+y = {
+x: null,
+y: null,
+max: 2e4
+};
+m.id = l,
+m.style.cssText = "position:fixed;top:0;left:0;z-index:" + d.z +
+";opacity:" + d.o,
+e("body")[0].appendChild(m),
+o(),
+window.onresize = o,
+window.onmousemove = function(n) {
+n = n || window.event,
+y.x = n.clientX,
+y.y = n.clientY
+},
+window.onmouseout = function() {
+y.x = null,
+y.y = null
+};
+for (var s = [], f = 0; d.n > f; f++) {
+var h = w() * a,
+g = w() * c,
+v = 2 * w() - 1,
+p = 2 * w() - 1;
+s.push({
+x: h,
+y: g,
+xa: v,
+ya: p,
+max: 6e3
+})
+}
+u = s.concat([y]),
+setTimeout(function() {
+i()
+},
+100)
+} ();
+</script>
+    <div class="wrapper">
+        <header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-header header-logo"><a href="/">bobo&#39;s Blog</a></div>
+            <div class="menu navbar-right">
+                
+                    <a class="menu-item" href="/archives">📖博文</a>
+                
+                    <a class="menu-item" href="/category">📚类别</a>
+                
+                    <a class="menu-item" href="/tag">🏷️标签</a>
+                
+                    <a class="menu-item" href="/about">💡关于</a>
+                
+                    <a class="menu-item" href="/links">🔗友链</a>
+                
+                <input id="switch_default" type="checkbox" class="switch_default">
+                <label for="switch_default" class="toggleBtn"></label>
+            </div>
+        </div>
+    </nav>
+
+    
+    <nav class="navbar-mobile" id="nav-mobile">
+        <div class="container">
+            <div class="navbar-header">
+                <div>
+                    <a href="/">bobo&#39;s Blog</a><a id="mobile-toggle-theme">·&nbsp;Light</a>
+                </div>
+                <div class="menu-toggle" onclick="mobileBtn()">&#9776; Menu</div>
+            </div>
+            <div class="menu" id="mobile-menu">
+                
+                    <a class="menu-item" href="/archives">📖博文</a>
+                
+                    <a class="menu-item" href="/category">📚类别</a>
+                
+                    <a class="menu-item" href="/tag">🏷️标签</a>
+                
+                    <a class="menu-item" href="/about">💡关于</a>
+                
+                    <a class="menu-item" href="/links">🔗友链</a>
+                
+            </div>
+        </div>
+    </nav>
+
+</header>
+<script>
+    var mobileBtn = function f() {
+        var toggleMenu = document.getElementsByClassName("menu-toggle")[0];
+        var mobileMenu = document.getElementById("mobile-menu");
+        if(toggleMenu.classList.contains("active")){
+           toggleMenu.classList.remove("active")
+            mobileMenu.classList.remove("active")
+        }else{
+            toggleMenu.classList.add("active")
+            mobileMenu.classList.add("active")
+        }
+    }
+</script>
+            <div class="main">
+                <div class="container">
+    
+    
+        <div class="post-toc">
+    <div class="tocbot-list">
+    </div>
+    <div class="tocbot-list-menu">
+        <a class="tocbot-toc-expand" onclick="expand_toc()">Expand all</a>
+        <a onclick="go_top()">Back to top</a>
+        <a onclick="go_bottom()">Go to bottom</a>
+    </div>
+</div>
+
+<script>
+    document.ready(
+        function () {
+            tocbot.init({
+                tocSelector: '.tocbot-list',
+                contentSelector: '.post-content',
+                headingSelector: 'h1, h2, h3, h4, h5',
+                collapseDepth: 1,
+                orderedList: false,
+                scrollSmooth: true,
+            })
+        }
+    )
+
+    function expand_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 6,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "collapse_toc()");
+        b.innerHTML = "Collapse all"
+    }
+
+    function collapse_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 1,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "expand_toc()");
+        b.innerHTML = "Expand all"
+    }
+
+    function go_top() {
+        window.scrollTo(0, 0);
+    }
+
+    function go_bottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+</script>
+    
+
+    
+    <article class="post-wrap">
+        <header class="post-header">
+            <h1 class="post-title">从 OWASP Top 10 到业务漏洞挖掘：安全攻防实习复盘</h1>
+            
+                <div class="post-meta">
+                    
+                        Author: <a itemprop="author" rel="author" href="/">rowen</a>
+                    
+
+                    
+                        <span class="post-time">
+                        Date: <a href="#">May 21, 2026&nbsp;&nbsp;18:00:00</a>
+                        </span>
+                    
+                    
+                        <span class="post-category">
+                    Category:
+                            
+                                <a href="/categories/%E7%BA%A2%E9%98%9F%E5%AD%A6%E4%B9%A0/">红队学习</a>
+                            
+                        </span>
+                    
+                </div>
+            
+        </header>
+
+        <div class="post-content">
+            <h1 id="从-OWASP-Top-10-到业务漏洞挖掘：安全攻防实习复盘"><a href="#从-OWASP-Top-10-到业务漏洞挖掘：安全攻防实习复盘" class="headerlink" title="从 OWASP Top 10 到业务漏洞挖掘：安全攻防实习复盘"></a>从 OWASP Top 10 到业务漏洞挖掘：安全攻防实习复盘</h1><h2 id="一、前言"><a href="#一、前言" class="headerlink" title="一、前言"></a>一、前言</h2><p>很多安全攻防实习岗位都会写：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">熟悉 OWASP Top 10 漏洞原理与防御技术</span><br><span class="line">基于攻防视角挖掘内部系统漏洞</span><br></pre></td></tr></table></figure>
+
+<p>这说明岗位不只是要求会复现 CTF payload，更希望候选人能理解真实业务系统中的漏洞产生原因、验证方法和修复建议。</p>
+<p>本文整理从 OWASP Top 10 到业务漏洞挖掘的学习思路。</p>
+<h2 id="二、OWASP-Top-10-怎么理解"><a href="#二、OWASP-Top-10-怎么理解" class="headerlink" title="二、OWASP Top 10 怎么理解"></a>二、OWASP Top 10 怎么理解</h2><p>OWASP Top 10 不是十个固定 payload，而是十类常见 Web 风险。</p>
+<p>常见方向：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">访问控制失效</span><br><span class="line">加密机制失效</span><br><span class="line">注入</span><br><span class="line">不安全设计</span><br><span class="line">安全配置错误</span><br><span class="line">易受攻击和过时组件</span><br><span class="line">身份认证失败</span><br><span class="line">软件和数据完整性失败</span><br><span class="line">日志和监控失败</span><br><span class="line">SSRF</span><br></pre></td></tr></table></figure>
+
+<p>在真实测试中，最常见、最容易出成果的通常是：</p>
+<ul>
+<li>越权访问</li>
+<li>接口未授权</li>
+<li>SQL 注入</li>
+<li>文件上传</li>
+<li>SSRF</li>
+<li>敏感信息泄露</li>
+<li>认证逻辑缺陷</li>
+</ul>
+<h2 id="三、访问控制失效"><a href="#三、访问控制失效" class="headerlink" title="三、访问控制失效"></a>三、访问控制失效</h2><p>访问控制失效是业务系统中最常见的问题之一。</p>
+<p>常见参数：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">userId</span><br><span class="line">uid</span><br><span class="line">orderId</span><br><span class="line">fileId</span><br><span class="line">projectId</span><br><span class="line">teamId</span><br><span class="line">role</span><br><span class="line">isAdmin</span><br></pre></td></tr></table></figure>
+
+<p>测试方式：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">1. 使用 A 账号创建资源</span><br><span class="line">2. 记录资源 ID</span><br><span class="line">3. 使用 B 账号访问或修改该资源</span><br><span class="line">4. 判断是否存在越权</span><br></pre></td></tr></table></figure>
+
+<p>常见漏洞：</p>
+<ul>
+<li>查看他人订单</li>
+<li>下载他人文件</li>
+<li>修改他人资料</li>
+<li>越权进入管理页面</li>
+<li>普通用户修改角色字段</li>
+</ul>
+<p>修复建议：</p>
+<ul>
+<li>服务端基于当前登录用户做权限判断。</li>
+<li>不信任客户端传入的用户 ID。</li>
+<li>敏感字段不允许批量赋值。</li>
+<li>管理接口单独鉴权。</li>
+</ul>
+<h2 id="四、注入漏洞"><a href="#四、注入漏洞" class="headerlink" title="四、注入漏洞"></a>四、注入漏洞</h2><p>注入不只包括 SQL 注入，还包括：</p>
+<ul>
+<li>命令注入</li>
+<li>模板注入</li>
+<li>LDAP 注入</li>
+<li>NoSQL 注入</li>
+<li>SpEL 表达式注入</li>
+</ul>
+<p>测试思路：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">输入特殊字符</span><br><span class="line">观察报错</span><br><span class="line">判断语句结构</span><br><span class="line">构造最小化验证 payload</span><br><span class="line">证明影响即可</span><br></pre></td></tr></table></figure>
+
+<p>SQL 注入测试时，不要直接拖库。只需要证明：</p>
+<ul>
+<li>输入进入 SQL 语句。</li>
+<li>能改变查询逻辑。</li>
+<li>能读取当前库名或有限测试数据。</li>
+</ul>
+<p>报告要写清楚：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">注入参数</span><br><span class="line">请求方法</span><br><span class="line">影响接口</span><br><span class="line">数据库类型</span><br><span class="line">风险影响</span><br><span class="line">修复建议</span><br></pre></td></tr></table></figure>
+
+<h2 id="五、SSRF"><a href="#五、SSRF" class="headerlink" title="五、SSRF"></a>五、SSRF</h2><p>SSRF 常出现在：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">图片抓取</span><br><span class="line">URL 预览</span><br><span class="line">Webhook</span><br><span class="line">在线截图</span><br><span class="line">文件下载</span><br><span class="line">RSS 订阅</span><br></pre></td></tr></table></figure>
+
+<p>测试重点：</p>
+<ul>
+<li>服务端是否发起请求。</li>
+<li>是否能访问内网地址。</li>
+<li>是否能访问云元数据。</li>
+<li>是否支持危险协议。</li>
+</ul>
+<p>低风险验证：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">让目标请求自己的 DNSLog 或测试服务器</span><br></pre></td></tr></table></figure>
+
+<p>修复建议：</p>
+<ul>
+<li>URL 白名单。</li>
+<li>DNS 解析后检查最终 IP。</li>
+<li>禁止访问内网和元数据地址。</li>
+<li>禁止危险协议。</li>
+<li>禁止跟随跳转到内网。</li>
+</ul>
+<h2 id="六、文件上传"><a href="#六、文件上传" class="headerlink" title="六、文件上传"></a>六、文件上传</h2><p>文件上传测试要看完整链路：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">上传入口</span><br><span class="line">-&gt; 文件校验</span><br><span class="line">-&gt; 保存路径</span><br><span class="line">-&gt; 访问路径</span><br><span class="line">-&gt; 是否解析执行</span><br></pre></td></tr></table></figure>
+
+<p>常见绕过：</p>
+<ul>
+<li>前端校验绕过</li>
+<li>MIME 修改</li>
+<li>大小写后缀</li>
+<li>双后缀</li>
+<li>图片马</li>
+<li>压缩包解压风险</li>
+</ul>
+<p>真实业务测试中，验证到风险即可，不要上传破坏性 WebShell。</p>
+<p>修复建议：</p>
+<ul>
+<li>后端白名单校验。</li>
+<li>上传目录禁止执行。</li>
+<li>文件重命名。</li>
+<li>图片重新编码。</li>
+<li>文件存储与代码目录隔离。</li>
+</ul>
+<h2 id="七、认证与会话问题"><a href="#七、认证与会话问题" class="headerlink" title="七、认证与会话问题"></a>七、认证与会话问题</h2><p>常见问题：</p>
+<ul>
+<li>JWT 未验签。</li>
+<li>JWT 弱密钥。</li>
+<li>Session 固定。</li>
+<li>找回密码 token 可预测。</li>
+<li>验证码可爆破。</li>
+<li>OAuth 回调校验不严。</li>
+</ul>
+<p>测试时重点看：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">token 是否可篡改</span><br><span class="line">过期时间是否生效</span><br><span class="line">退出登录后 token 是否仍可用</span><br><span class="line">重置密码链接是否一次性</span><br><span class="line">验证码是否绑定用户和场景</span><br></pre></td></tr></table></figure>
+
+<p>修复建议：</p>
+<ul>
+<li>严格校验 JWT 签名。</li>
+<li>token 设置过期时间。</li>
+<li>服务端维护关键状态。</li>
+<li>密码重置 token 一次性使用。</li>
+<li>验证码增加频率限制。</li>
+</ul>
+<h2 id="八、安全配置错误"><a href="#八、安全配置错误" class="headerlink" title="八、安全配置错误"></a>八、安全配置错误</h2><p>常见配置问题：</p>
+<ul>
+<li>Swagger 暴露</li>
+<li>Actuator 暴露</li>
+<li>.git 泄露</li>
+<li>备份文件泄露</li>
+<li>Debug 模式开启</li>
+<li>目录列表开启</li>
+<li>默认账号密码</li>
+</ul>
+<p>新手 SRC 很适合从这类问题练手，因为风险相对容易证明，也不需要破坏业务。</p>
+<p>修复建议：</p>
+<ul>
+<li>生产环境关闭调试接口。</li>
+<li>管理页面加鉴权。</li>
+<li>清理备份文件。</li>
+<li>禁止目录列表。</li>
+<li>删除默认账号。</li>
+</ul>
+<h2 id="九、从漏洞到业务影响"><a href="#九、从漏洞到业务影响" class="headerlink" title="九、从漏洞到业务影响"></a>九、从漏洞到业务影响</h2><p>真实报告不能只写：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">存在 XSS</span><br><span class="line">存在 SQL 注入</span><br><span class="line">存在越权</span><br></pre></td></tr></table></figure>
+
+<p>还要写清楚业务影响：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">可查看他人订单</span><br><span class="line">可下载他人发票</span><br><span class="line">可修改用户地址</span><br><span class="line">可读取接口文档</span><br><span class="line">可辅助进一步攻击</span><br></pre></td></tr></table></figure>
+
+<p>面试官更关注你是否能把技术漏洞转化成业务风险。</p>
+<h2 id="十、我的测试方法论"><a href="#十、我的测试方法论" class="headerlink" title="十、我的测试方法论"></a>十、我的测试方法论</h2><p>一个比较稳的测试流程：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">1. 明确测试范围</span><br><span class="line">2. 收集资产和功能点</span><br><span class="line">3. 注册两个测试账号</span><br><span class="line">4. 抓包梳理接口</span><br><span class="line">5. 标记关键 ID 参数</span><br><span class="line">6. 测未授权和越权</span><br><span class="line">7. 测上传、搜索、URL 抓取等高危功能</span><br><span class="line">8. 记录证据</span><br><span class="line">9. 输出修复建议</span><br></pre></td></tr></table></figure>
+
+<p>对于内部系统，可以重点关注：</p>
+<ul>
+<li>管理后台</li>
+<li>数据导出</li>
+<li>文件下载</li>
+<li>权限角色</li>
+<li>工单系统</li>
+<li>用户管理</li>
+<li>配置中心</li>
+<li>插件系统</li>
+</ul>
+<h2 id="十一、报告模板"><a href="#十一、报告模板" class="headerlink" title="十一、报告模板"></a>十一、报告模板</h2><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">漏洞标题：</span><br><span class="line">某接口存在水平越权，可查看其他用户订单信息</span><br><span class="line"></span><br><span class="line">漏洞类型：</span><br><span class="line">访问控制失效</span><br><span class="line"></span><br><span class="line">影响接口：</span><br><span class="line">GET /api/order/detail?orderId=xxx</span><br><span class="line"></span><br><span class="line">复现步骤：</span><br><span class="line">1. 使用 A 账号登录并获取订单 ID</span><br><span class="line">2. 使用 B 账号登录</span><br><span class="line">3. 将 B 账号请求中的 orderId 替换为 A 的订单 ID</span><br><span class="line">4. 服务端返回 A 账号订单详情</span><br><span class="line"></span><br><span class="line">影响：</span><br><span class="line">攻击者可越权查看其他用户订单信息，造成用户隐私泄露。</span><br><span class="line"></span><br><span class="line">修复建议：</span><br><span class="line">服务端根据当前登录用户校验订单归属关系，不允许仅根据 orderId 返回数据。</span><br></pre></td></tr></table></figure>
+
+<h2 id="十二、总结"><a href="#十二、总结" class="headerlink" title="十二、总结"></a>十二、总结</h2><p>OWASP Top 10 是基础，但真正的攻防能力体现在：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">能不能从业务流程中发现漏洞</span><br><span class="line">能不能低风险验证漏洞</span><br><span class="line">能不能讲清楚影响</span><br><span class="line">能不能给出可落地修复建议</span><br></pre></td></tr></table></figure>
+
+<p>对安全攻防实习来说，建议多写这类复盘文章，把单个漏洞和业务场景结合起来。这样面试官看到博客时，会更容易判断你具备真实测试思维。</p>
+
+        </div>
+
+        
+            <section class="post-copyright">
+                
+                    <p class="copyright-item">
+                        <span>Author:</span>
+                        <span>rowen</span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>Permalink:</span>
+                        <span><a href="https://forkmmat.github.io/2026/05/21/OWASP-Top10%E5%88%B0%E4%B8%9A%E5%8A%A1%E6%BC%8F%E6%B4%9E%E6%8C%96%E6%8E%98-%E5%AE%89%E5%85%A8%E6%94%BB%E9%98%B2%E5%AE%9E%E4%B9%A0%E5%A4%8D%E7%9B%98/">https://forkmmat.github.io/2026/05/21/OWASP-Top10%E5%88%B0%E4%B8%9A%E5%8A%A1%E6%BC%8F%E6%B4%9E%E6%8C%96%E6%8E%98-%E5%AE%89%E5%85%A8%E6%94%BB%E9%98%B2%E5%AE%9E%E4%B9%A0%E5%A4%8D%E7%9B%98/</a></span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>License:</span>
+                        <span>Copyright (c) 2019 <a target="_blank" rel="noopener" href="http://creativecommons.org/licenses/by-nc/4.0/">CC-BY-NC-4.0</a> LICENSE</span>
+                    </p>
+                
+                
+                     <p class="copyright-item">
+                         <span>Slogan:</span>
+                         <span>Do you believe in <strong>DESTINY</strong>?</span>
+                     </p>
+                
+
+            </section>
+        
+        <section class="post-tags">
+            <div>
+                <span>Tag(s):</span>
+                <span class="tag">
+                    
+                    
+                        <a href="/tags/Web%E5%AE%89%E5%85%A8/"># Web安全</a>
+                    
+                        <a href="/tags/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95/"># 渗透测试</a>
+                    
+                        <a href="/tags/%E7%BA%A2%E9%98%9F/"># 红队</a>
+                    
+                        <a href="/tags/OWASP/"># OWASP</a>
+                    
+                        <a href="/tags/%E4%B8%9A%E5%8A%A1%E5%AE%89%E5%85%A8/"># 业务安全</a>
+                    
+                        
+                </span>
+            </div>
+            <div>
+                <a href="javascript:window.history.back();">back</a>
+                <span>· </span>
+                <a href="/">home</a>
+            </div>
+        </section>
+        <section class="post-nav">
+            
+            
+            <a class="next" rel="next" href="/2026/05/21/AI%E4%BA%A7%E5%93%81%E5%AE%89%E5%85%A8%E6%B5%8B%E8%AF%95%E6%B8%85%E5%8D%95-%E4%BB%8EWeb%E6%8E%A5%E5%8F%A3%E5%88%B0LLM%E5%8A%9F%E8%83%BD/">AI 产品安全测试清单：从 Web 接口到 LLM 功能</a>
+            
+        </section>
+<script src="https://giscus.app/client.js"
+        data-repo="forkmmat/forkmmat.github.io"
+        data-repo-id="R_kgDOO0OA0g"
+        data-category="General"
+        data-category-id="DIC_kwDOO0OA0s4CtD6Y"
+        data-mapping="title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="zh-CN"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+</script>
+
+    </article>
+</div>
+
+            </div>
+            <footer id="footer" class="footer">
+    <div class="copyright">
+        <span>© rowen | Powered by <a href="https://hexo.io" target="_blank">Hexo</a> & <a href="https://github.com/Siricee/hexo-theme-Chic" target="_blank">Chic</a></span>
+    </div>
+</footer>
+
+    </div>
+</body>
+
+</html>
