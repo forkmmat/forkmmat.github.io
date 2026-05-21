@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <meta name="author" content="rowen">
+
+
+
+
+
+<title>AI Agent 工程入门：Vibe Coding、MCP、OpenClaw 与 Hermes | Hexo</title>
+
+
+
+    <link rel="icon" href="/drink.ico">
+
+
+
+
+    <!-- stylesheets list from _config.yml -->
+    
+    <link rel="stylesheet" href="/css/style.css">
+    
+
+
+
+    <!-- scripts list from _config.yml -->
+    
+    <script src="/js/script.js"></script>
+    
+    <script src="/js/tocbot.min.js"></script>
+    
+
+
+
+    
+    
+        
+    
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+    <!-- 引入jQuery -->
+<script type="text/javascript" src="//libs.baidu.com/jquery/1.8.3/jquery.min.js"></script>
+<!-- 雪花特效2 -->
+ <script type="text/javascript" src="/js/snow2.js"></script>
+    <script>
+        // this function is used to check current theme before page loaded.
+        (() => {
+            const currentTheme = window.localStorage && window.localStorage.getItem('theme') || '';
+            const isDark = currentTheme === 'dark';
+            const pagebody = document.getElementsByTagName('body')[0]
+            if (isDark) {
+                pagebody.classList.add('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Dark"
+            } else {
+                pagebody.classList.remove('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Light"
+            }
+        })();
+    </script>
+<script>
+!
+function() {
+function n(n, e, t) {
+return n.getAttribute(e) || t
+}
+function e(n) {
+return document.getElementsByTagName(n)
+}
+function t() {
+var t = e("script"),
+o = t.length,
+i = t[o - 1];
+return {
+l: o,
+z: n(i, "zIndex", -1), //置于主页面背后
+o: n(i, "opacity", .5), //线条透明度
+c: n(i, "color", "0,0,0"), //线条颜色
+n: n(i, "count", 100) //线条数量
+}
+}
+function o() {
+a = m.width = window.innerWidth ||
+document.documentElement.clientWidth || document.body.clientWidth,
+c = m.height = window.innerHeight ||
+document.documentElement.clientHeight || document.body.clientHeight
+}
+function i() {
+r.clearRect(0, 0, a, c);
+var n, e, t, o, m, l;
+s.forEach(function(i, x) {
+for (i.x += i.xa, i.y += i.ya, i.xa *= i.x > a || i.x < 0 ? -1 :
+1, i.ya *= i.y > c || i.y < 0 ? -1 : 1, r.fillRect(i.x - .5, i.y - .5, 1,
+1), e = x + 1; e < u.length; e++) n = u[e],
+null !== n.x && null !== n.y && (o = i.x - n.x, m = i.y - n.y, l
+= o * o + m * m, l < n.max && (n === y && l >= n.max / 2 && (i.x -= .03 * o,
+i.y -= .03 * m), t = (n.max - l) / n.max, r.beginPath(), r.lineWidth = t /
+2, r.strokeStyle = "rgba(" + d.c + "," + (t + .2) + ")", r.moveTo(i.x, i.y),
+r.lineTo(n.x, n.y), r.stroke()))
+}),
+x(i)
+}
+var a, c, u, m = document.createElement("canvas"),
+d = t(),
+l = "c_n" + d.l,
+r = m.getContext("2d"),
+x = window.requestAnimationFrame || window.webkitRequestAnimationFrame
+|| window.mozRequestAnimationFrame || window.oRequestAnimationFrame ||
+window.msRequestAnimationFrame ||
+function(n) {
+window.setTimeout(n, 1e3 / 45)
+},
+w = Math.random,
+y = {
+x: null,
+y: null,
+max: 2e4
+};
+m.id = l,
+m.style.cssText = "position:fixed;top:0;left:0;z-index:" + d.z +
+";opacity:" + d.o,
+e("body")[0].appendChild(m),
+o(),
+window.onresize = o,
+window.onmousemove = function(n) {
+n = n || window.event,
+y.x = n.clientX,
+y.y = n.clientY
+},
+window.onmouseout = function() {
+y.x = null,
+y.y = null
+};
+for (var s = [], f = 0; d.n > f; f++) {
+var h = w() * a,
+g = w() * c,
+v = 2 * w() - 1,
+p = 2 * w() - 1;
+s.push({
+x: h,
+y: g,
+xa: v,
+ya: p,
+max: 6e3
+})
+}
+u = s.concat([y]),
+setTimeout(function() {
+i()
+},
+100)
+} ();
+</script>
+    <div class="wrapper">
+        <header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-header header-logo"><a href="/">bobo&#39;s Blog</a></div>
+            <div class="menu navbar-right">
+                
+                    <a class="menu-item" href="/archives">📖博文</a>
+                
+                    <a class="menu-item" href="/category">📚类别</a>
+                
+                    <a class="menu-item" href="/tag">🏷️标签</a>
+                
+                    <a class="menu-item" href="/about">💡关于</a>
+                
+                    <a class="menu-item" href="/links">🔗友链</a>
+                
+                <input id="switch_default" type="checkbox" class="switch_default">
+                <label for="switch_default" class="toggleBtn"></label>
+            </div>
+        </div>
+    </nav>
+
+    
+    <nav class="navbar-mobile" id="nav-mobile">
+        <div class="container">
+            <div class="navbar-header">
+                <div>
+                    <a href="/">bobo&#39;s Blog</a><a id="mobile-toggle-theme">·&nbsp;Light</a>
+                </div>
+                <div class="menu-toggle" onclick="mobileBtn()">&#9776; Menu</div>
+            </div>
+            <div class="menu" id="mobile-menu">
+                
+                    <a class="menu-item" href="/archives">📖博文</a>
+                
+                    <a class="menu-item" href="/category">📚类别</a>
+                
+                    <a class="menu-item" href="/tag">🏷️标签</a>
+                
+                    <a class="menu-item" href="/about">💡关于</a>
+                
+                    <a class="menu-item" href="/links">🔗友链</a>
+                
+            </div>
+        </div>
+    </nav>
+
+</header>
+<script>
+    var mobileBtn = function f() {
+        var toggleMenu = document.getElementsByClassName("menu-toggle")[0];
+        var mobileMenu = document.getElementById("mobile-menu");
+        if(toggleMenu.classList.contains("active")){
+           toggleMenu.classList.remove("active")
+            mobileMenu.classList.remove("active")
+        }else{
+            toggleMenu.classList.add("active")
+            mobileMenu.classList.add("active")
+        }
+    }
+</script>
+            <div class="main">
+                <div class="container">
+    
+    
+        <div class="post-toc">
+    <div class="tocbot-list">
+    </div>
+    <div class="tocbot-list-menu">
+        <a class="tocbot-toc-expand" onclick="expand_toc()">Expand all</a>
+        <a onclick="go_top()">Back to top</a>
+        <a onclick="go_bottom()">Go to bottom</a>
+    </div>
+</div>
+
+<script>
+    document.ready(
+        function () {
+            tocbot.init({
+                tocSelector: '.tocbot-list',
+                contentSelector: '.post-content',
+                headingSelector: 'h1, h2, h3, h4, h5',
+                collapseDepth: 1,
+                orderedList: false,
+                scrollSmooth: true,
+            })
+        }
+    )
+
+    function expand_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 6,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "collapse_toc()");
+        b.innerHTML = "Collapse all"
+    }
+
+    function collapse_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 1,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "expand_toc()");
+        b.innerHTML = "Expand all"
+    }
+
+    function go_top() {
+        window.scrollTo(0, 0);
+    }
+
+    function go_bottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+</script>
+    
+
+    
+    <article class="post-wrap">
+        <header class="post-header">
+            <h1 class="post-title">AI Agent 工程入门：Vibe Coding、MCP、OpenClaw 与 Hermes</h1>
+            
+                <div class="post-meta">
+                    
+                        Author: <a itemprop="author" rel="author" href="/">rowen</a>
+                    
+
+                    
+                        <span class="post-time">
+                        Date: <a href="#">May 21, 2026&nbsp;&nbsp;9:30:00</a>
+                        </span>
+                    
+                    
+                        <span class="post-category">
+                    Category:
+                            
+                                <a href="/categories/AI%E5%AE%89%E5%85%A8/">AI安全</a>
+                            
+                        </span>
+                    
+                </div>
+            
+        </header>
+
+        <div class="post-content">
+            <h1 id="AI-Agent-工程入门：Vibe-Coding、MCP、OpenClaw-与-Hermes"><a href="#AI-Agent-工程入门：Vibe-Coding、MCP、OpenClaw-与-Hermes" class="headerlink" title="AI Agent 工程入门：Vibe Coding、MCP、OpenClaw 与 Hermes"></a>AI Agent 工程入门：Vibe Coding、MCP、OpenClaw 与 Hermes</h1><h2 id="一、为什么安全岗位也要了解-AI-Agent"><a href="#一、为什么安全岗位也要了解-AI-Agent" class="headerlink" title="一、为什么安全岗位也要了解 AI Agent"></a>一、为什么安全岗位也要了解 AI Agent</h2><p>最近面试安全研究、红队、蓝队和安全开发岗位时，越来越容易被问到：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">有没有 vibe coding 经验？</span><br><span class="line">接触过 skill、OpenClaw、Hermes、MCP 这些技术栈吗？</span><br></pre></td></tr></table></figure>
+
+<p>这类问题本质上不是单纯问“会不会用 AI 写代码”，而是在看你是否了解新一代 AI Agent 工程方式：</p>
+<ul>
+<li>如何让 AI 读代码、改代码、跑命令、调用工具。</li>
+<li>如何通过 MCP 把外部系统接入大模型。</li>
+<li>如何把经验沉淀成可复用 skill。</li>
+<li>如何理解 AI Agent 带来的安全风险。</li>
+</ul>
+<p>对安全研究实习来说，这些内容可以和自动化漏洞分析、日志研判、报告生成、代码审计辅助结合起来。</p>
+<h2 id="二、Vibe-Coding-是什么"><a href="#二、Vibe-Coding-是什么" class="headerlink" title="二、Vibe Coding 是什么"></a>二、Vibe Coding 是什么</h2><p>Vibe Coding 可以理解为一种高度依赖大模型的开发方式：人用自然语言描述目标，AI 生成代码，人再通过运行、反馈、修正来不断迭代。</p>
+<p>它适合：</p>
+<ul>
+<li>快速写原型。</li>
+<li>写小工具。</li>
+<li>生成测试脚本。</li>
+<li>整理报告模板。</li>
+<li>辅助理解陌生代码。</li>
+</ul>
+<p>但它不等于“完全不看代码”。如果不审查 AI 生成的代码，就容易出现：</p>
+<ul>
+<li>安全漏洞。</li>
+<li>逻辑错误。</li>
+<li>依赖混乱。</li>
+<li>敏感信息泄露。</li>
+<li>代码不可维护。</li>
+</ul>
+<p>我更推荐把它理解成：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">AI 辅助开发 + 人类负责审查、测试和安全边界</span><br></pre></td></tr></table></figure>
+
+<p>而不是把 AI 生成结果直接上线。</p>
+<h2 id="三、Skill-是什么"><a href="#三、Skill-是什么" class="headerlink" title="三、Skill 是什么"></a>三、Skill 是什么</h2><p>Skill 可以理解为给 AI Agent 的“专业操作手册”。</p>
+<p>普通提示词可能只告诉 AI：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">帮我分析日志</span><br></pre></td></tr></table></figure>
+
+<p>而 skill 会把流程固化下来：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">1. 先识别日志格式</span><br><span class="line">2. 提取 IP、URL、状态码、User-Agent</span><br><span class="line">3. 匹配 SQL 注入、XSS、扫描器特征</span><br><span class="line">4. 统计攻击时间线</span><br><span class="line">5. 输出处置建议</span><br></pre></td></tr></table></figure>
+
+<p>对安全方向来说，适合沉淀成 skill 的内容包括：</p>
+<ul>
+<li>Web 日志分析流程</li>
+<li>WebShell 排查流程</li>
+<li>渗透测试报告模板</li>
+<li>SRC 报告模板</li>
+<li>代码审计检查清单</li>
+<li>应急响应检查清单</li>
+</ul>
+<p>简单说，skill 的价值是把一次性的经验变成可复用能力。</p>
+<h2 id="四、MCP-是什么"><a href="#四、MCP-是什么" class="headerlink" title="四、MCP 是什么"></a>四、MCP 是什么</h2><p>MCP 全称 Model Context Protocol，可以理解为一种让 AI 应用连接外部工具、数据源和服务的标准协议。</p>
+<p>传统方式中，每个 AI 工具都要单独适配数据库、GitHub、文件系统、浏览器、消息平台等能力。</p>
+<p>MCP 的思路是：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">AI Client &lt;-&gt; MCP Server &lt;-&gt; 外部工具/数据源</span><br></pre></td></tr></table></figure>
+
+<p>常见 MCP Server 可以提供：</p>
+<ul>
+<li>文件读取</li>
+<li>数据库查询</li>
+<li>GitHub 操作</li>
+<li>浏览器自动化</li>
+<li>搜索能力</li>
+<li>消息平台读写</li>
+<li>内部系统 API 调用</li>
+</ul>
+<p>对安全研究来说，MCP 很有价值，因为它让 AI 不只是聊天，而是能“带工具工作”：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">读取日志 -&gt; 分析异常 -&gt; 调用脚本 -&gt; 生成报告</span><br></pre></td></tr></table></figure>
+
+<p>但 MCP 也会引入新的安全边界问题，比如工具权限过大、提示注入诱导工具调用、敏感文件被读取等。</p>
+<h2 id="五、OpenClaw-是什么"><a href="#五、OpenClaw-是什么" class="headerlink" title="五、OpenClaw 是什么"></a>五、OpenClaw 是什么</h2><p>OpenClaw &#x2F; OpenClaw CE 这类工具可以理解为开源 AI Agent 平台。它们通常会把大模型和本地工具、浏览器、GitHub、文件系统、MCP Server 等能力连接起来。</p>
+<p>典型能力：</p>
+<ul>
+<li>接入 OpenAI、Claude、Gemini、Ollama 等模型。</li>
+<li>通过 MCP 调用外部工具。</li>
+<li>浏览网页获取实时信息。</li>
+<li>操作文件系统。</li>
+<li>辅助代码开发。</li>
+<li>作为桌面端或 CLI Agent 使用。</li>
+</ul>
+<p>从安全角度看，OpenClaw 这类平台的重点不是“能不能聊天”，而是：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">AI 是否被授予了实际操作权限</span><br></pre></td></tr></table></figure>
+
+<p>一旦 Agent 能读文件、跑命令、访问浏览器、调用 API，就必须考虑权限控制和审计。</p>
+<h2 id="六、Hermes-是什么"><a href="#六、Hermes-是什么" class="headerlink" title="六、Hermes 是什么"></a>六、Hermes 是什么</h2><p>Hermes Agent 可以理解为一个支持消息平台、工具调用和 MCP 的 AI Agent 系统。它既可以连接 MCP Server，也可以作为 MCP Server 暴露能力给其他客户端。</p>
+<p>比如：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">Claude Code / Cursor / Codex</span><br><span class="line">        |</span><br><span class="line">       MCP</span><br><span class="line">        |</span><br><span class="line">    Hermes Agent</span><br><span class="line">        |</span><br><span class="line">Telegram / Discord / Slack / 会话历史</span><br></pre></td></tr></table></figure>
+
+<p>这种架构的价值是：</p>
+<ul>
+<li>让 AI Agent 接入消息平台。</li>
+<li>让其他 MCP 客户端读取会话或发送消息。</li>
+<li>把跨平台消息能力变成可调用工具。</li>
+</ul>
+<p>安全上要关注：</p>
+<ul>
+<li>会话历史是否包含敏感信息。</li>
+<li>发送消息是否需要人工确认。</li>
+<li>MCP 工具是否暴露过多权限。</li>
+<li>Agent 是否可能被提示注入诱导发送敏感内容。</li>
+</ul>
+<h2 id="七、安全研究中的实践方向"><a href="#七、安全研究中的实践方向" class="headerlink" title="七、安全研究中的实践方向"></a>七、安全研究中的实践方向</h2><p>如果我要把这些技术和安全研究结合，可以从以下方向做小项目：</p>
+<h3 id="1-AI-辅助-Web-日志分析"><a href="#1-AI-辅助-Web-日志分析" class="headerlink" title="1. AI 辅助 Web 日志分析"></a>1. AI 辅助 Web 日志分析</h3><p>流程：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Nginx access.log</span><br><span class="line">-&gt; Python 脚本提取异常请求</span><br><span class="line">-&gt; AI 总结攻击时间线</span><br><span class="line">-&gt; 输出应急响应建议</span><br></pre></td></tr></table></figure>
+
+<p>体现能力：</p>
+<ul>
+<li>日志分析</li>
+<li>Python</li>
+<li>AI 辅助研判</li>
+<li>安全报告</li>
+</ul>
+<h3 id="2-MCP-安全实验环境"><a href="#2-MCP-安全实验环境" class="headerlink" title="2. MCP 安全实验环境"></a>2. MCP 安全实验环境</h3><p>搭建一个只读文件 MCP Server：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">只允许读取 ./logs 目录</span><br><span class="line">禁止读取系统敏感路径</span><br><span class="line">记录每次工具调用</span><br></pre></td></tr></table></figure>
+
+<p>然后测试：</p>
+<ul>
+<li>工具边界是否生效。</li>
+<li>提示注入能否诱导读取敏感文件。</li>
+<li>Agent 是否会泄露不该输出的内容。</li>
+</ul>
+<h3 id="3-SRC-报告生成助手"><a href="#3-SRC-报告生成助手" class="headerlink" title="3. SRC 报告生成助手"></a>3. SRC 报告生成助手</h3><p>输入：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">漏洞 URL</span><br><span class="line">请求包</span><br><span class="line">响应截图说明</span><br><span class="line">漏洞类型</span><br><span class="line">影响范围</span><br></pre></td></tr></table></figure>
+
+<p>输出：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">漏洞标题</span><br><span class="line">复现步骤</span><br><span class="line">影响说明</span><br><span class="line">修复建议</span><br><span class="line">补天报告格式</span><br></pre></td></tr></table></figure>
+
+<p>这个项目很适合和 SRC 练习结合。</p>
+<h3 id="4-AI-代码审计辅助"><a href="#4-AI-代码审计辅助" class="headerlink" title="4. AI 代码审计辅助"></a>4. AI 代码审计辅助</h3><p>让 AI 读取某个项目中的代码，重点检查：</p>
+<ul>
+<li>SQL 拼接</li>
+<li>文件上传</li>
+<li>SSRF</li>
+<li>反序列化</li>
+<li>命令执行</li>
+<li>鉴权缺失</li>
+</ul>
+<p>但最终结论必须人工复核。</p>
+<h2 id="八、面试时怎么回答"><a href="#八、面试时怎么回答" class="headerlink" title="八、面试时怎么回答"></a>八、面试时怎么回答</h2><p>如果面试官问：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">你有 vibe coding 经验吗？</span><br></pre></td></tr></table></figure>
+
+<p>可以这样回答：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">有接触。我会用 AI 辅助写 Python 安全小工具和博客分析脚本，比如日志攻击特征提取、报告模板生成。但我不会直接信任 AI 生成的代码，会自己检查逻辑、运行测试，并关注敏感信息和命令执行风险。</span><br></pre></td></tr></table></figure>
+
+<p>如果问：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">了解 MCP 吗？</span><br></pre></td></tr></table></figure>
+
+<p>可以回答：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">MCP 是一种让 AI Agent 连接外部工具和数据源的协议。它可以把文件系统、数据库、浏览器、消息平台等能力暴露给模型调用。安全上我比较关注工具权限、调用审计、提示注入和敏感数据泄露问题。</span><br></pre></td></tr></table></figure>
+
+<p>如果问：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">OpenClaw / Hermes 了解吗？</span><br></pre></td></tr></table></figure>
+
+<p>可以回答：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">我理解它们属于 AI Agent 平台或 Agent 运行环境，可以连接模型、工具、MCP 和外部服务。我的关注点是它们如何授权工具调用，以及如何避免 Agent 误读文件、误发消息或被提示注入诱导执行危险操作。</span><br></pre></td></tr></table></figure>
+
+<h2 id="九、学习路线"><a href="#九、学习路线" class="headerlink" title="九、学习路线"></a>九、学习路线</h2><p>建议按这个顺序学：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">1. Vibe Coding：用 AI 写小脚本，但自己审查</span><br><span class="line">2. Skill：把安全流程沉淀成可复用模板</span><br><span class="line">3. MCP：理解 client/server/tools/resources</span><br><span class="line">4. OpenClaw/Hermes：了解 Agent 平台如何接工具</span><br><span class="line">5. AI Agent 安全：提示注入、工具滥用、权限边界</span><br></pre></td></tr></table></figure>
+
+<h2 id="十、总结"><a href="#十、总结" class="headerlink" title="十、总结"></a>十、总结</h2><p>Vibe Coding、Skill、MCP、OpenClaw、Hermes 这些词背后，其实都指向同一个趋势：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">AI 不再只是回答问题，而是在工具授权下执行任务</span><br></pre></td></tr></table></figure>
+
+<p>对安全研究方向来说，这既是效率提升，也是新的攻击面。真正有价值的不是简单说“我会用 AI”，而是能讲清楚：</p>
+<ul>
+<li>AI Agent 怎么接入工具。</li>
+<li>工具调用有什么权限边界。</li>
+<li>如何把安全经验变成 skill。</li>
+<li>如何防止提示注入和敏感数据泄露。</li>
+</ul>
+<p>这类能力会越来越像安全研究和安全开发的基础技能。</p>
+
+        </div>
+
+        
+            <section class="post-copyright">
+                
+                    <p class="copyright-item">
+                        <span>Author:</span>
+                        <span>rowen</span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>Permalink:</span>
+                        <span><a href="https://forkmmat.github.io/2026/05/21/AI-Agent%E5%B7%A5%E7%A8%8B%E5%85%A5%E9%97%A8-Vibe-Coding-MCP-OpenClaw%E4%B8%8EHermes/">https://forkmmat.github.io/2026/05/21/AI-Agent%E5%B7%A5%E7%A8%8B%E5%85%A5%E9%97%A8-Vibe-Coding-MCP-OpenClaw%E4%B8%8EHermes/</a></span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>License:</span>
+                        <span>Copyright (c) 2019 <a target="_blank" rel="noopener" href="http://creativecommons.org/licenses/by-nc/4.0/">CC-BY-NC-4.0</a> LICENSE</span>
+                    </p>
+                
+                
+                     <p class="copyright-item">
+                         <span>Slogan:</span>
+                         <span>Do you believe in <strong>DESTINY</strong>?</span>
+                     </p>
+                
+
+            </section>
+        
+        <section class="post-tags">
+            <div>
+                <span>Tag(s):</span>
+                <span class="tag">
+                    
+                    
+                        <a href="/tags/AI-Agent/"># AI Agent</a>
+                    
+                        <a href="/tags/Vibe-Coding/"># Vibe Coding</a>
+                    
+                        <a href="/tags/MCP/"># MCP</a>
+                    
+                        <a href="/tags/OpenClaw/"># OpenClaw</a>
+                    
+                        <a href="/tags/Hermes/"># Hermes</a>
+                    
+                        <a href="/tags/%E5%AE%89%E5%85%A8%E7%A0%94%E7%A9%B6/"># 安全研究</a>
+                    
+                        
+                </span>
+            </div>
+            <div>
+                <a href="javascript:window.history.back();">back</a>
+                <span>· </span>
+                <a href="/">home</a>
+            </div>
+        </section>
+        <section class="post-nav">
+            
+                <a class="prev" rel="prev" href="/2026/05/21/MCP%E4%B8%8EAI-Agent%E5%AE%89%E5%85%A8%E9%A3%8E%E9%99%A9%E5%88%86%E6%9E%90-%E6%8F%90%E7%A4%BA%E6%B3%A8%E5%85%A5%E5%B7%A5%E5%85%B7%E6%BB%A5%E7%94%A8%E4%B8%8E%E6%9D%83%E9%99%90%E8%BE%B9%E7%95%8C/">MCP 与 AI Agent 安全风险分析：提示注入、工具滥用与权限边界</a>
+            
+            
+            <a class="next" rel="next" href="/2026/05/21/%E5%86%85%E7%BD%91%E6%B8%97%E9%80%8F%E5%9F%BA%E7%A1%80-%E4%B8%BB%E6%9C%BA%E4%BF%A1%E6%81%AF%E6%94%B6%E9%9B%86%E4%B8%8E%E5%87%AD%E6%8D%AE%E6%90%9C%E9%9B%86/">内网渗透基础：主机信息收集与凭据搜集</a>
+            
+        </section>
+<script src="https://giscus.app/client.js"
+        data-repo="forkmmat/forkmmat.github.io"
+        data-repo-id="R_kgDOO0OA0g"
+        data-category="General"
+        data-category-id="DIC_kwDOO0OA0s4CtD6Y"
+        data-mapping="title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="zh-CN"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+</script>
+
+    </article>
+</div>
+
+            </div>
+            <footer id="footer" class="footer">
+    <div class="copyright">
+        <span>© rowen | Powered by <a href="https://hexo.io" target="_blank">Hexo</a> & <a href="https://github.com/Siricee/hexo-theme-Chic" target="_blank">Chic</a></span>
+    </div>
+</footer>
+
+    </div>
+</body>
+
+</html>
