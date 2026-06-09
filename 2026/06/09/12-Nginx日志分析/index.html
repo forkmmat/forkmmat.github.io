@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <meta name="author" content="rowen">
+
+
+
+
+
+<title>Nginx 日志分析 | Hexo</title>
+
+
+
+    <link rel="icon" href="/drink.ico">
+
+
+
+
+    <!-- stylesheets list from _config.yml -->
+    
+    <link rel="stylesheet" href="/css/style.css">
+    
+
+
+
+    <!-- scripts list from _config.yml -->
+    
+    <script src="/js/script.js"></script>
+    
+    <script src="/js/tocbot.min.js"></script>
+    
+
+
+
+    
+    
+        
+    
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+    <!-- 引入jQuery -->
+<script type="text/javascript" src="//libs.baidu.com/jquery/1.8.3/jquery.min.js"></script>
+<!-- 雪花特效2 -->
+ <script type="text/javascript" src="/js/snow2.js"></script>
+    <script>
+        // this function is used to check current theme before page loaded.
+        (() => {
+            const currentTheme = window.localStorage && window.localStorage.getItem('theme') || '';
+            const isDark = currentTheme === 'dark';
+            const pagebody = document.getElementsByTagName('body')[0]
+            if (isDark) {
+                pagebody.classList.add('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Dark"
+            } else {
+                pagebody.classList.remove('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Light"
+            }
+        })();
+    </script>
+<script>
+!
+function() {
+function n(n, e, t) {
+return n.getAttribute(e) || t
+}
+function e(n) {
+return document.getElementsByTagName(n)
+}
+function t() {
+var t = e("script"),
+o = t.length,
+i = t[o - 1];
+return {
+l: o,
+z: n(i, "zIndex", -1), //置于主页面背后
+o: n(i, "opacity", .5), //线条透明度
+c: n(i, "color", "0,0,0"), //线条颜色
+n: n(i, "count", 100) //线条数量
+}
+}
+function o() {
+a = m.width = window.innerWidth ||
+document.documentElement.clientWidth || document.body.clientWidth,
+c = m.height = window.innerHeight ||
+document.documentElement.clientHeight || document.body.clientHeight
+}
+function i() {
+r.clearRect(0, 0, a, c);
+var n, e, t, o, m, l;
+s.forEach(function(i, x) {
+for (i.x += i.xa, i.y += i.ya, i.xa *= i.x > a || i.x < 0 ? -1 :
+1, i.ya *= i.y > c || i.y < 0 ? -1 : 1, r.fillRect(i.x - .5, i.y - .5, 1,
+1), e = x + 1; e < u.length; e++) n = u[e],
+null !== n.x && null !== n.y && (o = i.x - n.x, m = i.y - n.y, l
+= o * o + m * m, l < n.max && (n === y && l >= n.max / 2 && (i.x -= .03 * o,
+i.y -= .03 * m), t = (n.max - l) / n.max, r.beginPath(), r.lineWidth = t /
+2, r.strokeStyle = "rgba(" + d.c + "," + (t + .2) + ")", r.moveTo(i.x, i.y),
+r.lineTo(n.x, n.y), r.stroke()))
+}),
+x(i)
+}
+var a, c, u, m = document.createElement("canvas"),
+d = t(),
+l = "c_n" + d.l,
+r = m.getContext("2d"),
+x = window.requestAnimationFrame || window.webkitRequestAnimationFrame
+|| window.mozRequestAnimationFrame || window.oRequestAnimationFrame ||
+window.msRequestAnimationFrame ||
+function(n) {
+window.setTimeout(n, 1e3 / 45)
+},
+w = Math.random,
+y = {
+x: null,
+y: null,
+max: 2e4
+};
+m.id = l,
+m.style.cssText = "position:fixed;top:0;left:0;z-index:" + d.z +
+";opacity:" + d.o,
+e("body")[0].appendChild(m),
+o(),
+window.onresize = o,
+window.onmousemove = function(n) {
+n = n || window.event,
+y.x = n.clientX,
+y.y = n.clientY
+},
+window.onmouseout = function() {
+y.x = null,
+y.y = null
+};
+for (var s = [], f = 0; d.n > f; f++) {
+var h = w() * a,
+g = w() * c,
+v = 2 * w() - 1,
+p = 2 * w() - 1;
+s.push({
+x: h,
+y: g,
+xa: v,
+ya: p,
+max: 6e3
+})
+}
+u = s.concat([y]),
+setTimeout(function() {
+i()
+},
+100)
+} ();
+</script>
+    <div class="wrapper">
+        <header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-header header-logo"><a href="/">bobo&#39;s Blog</a></div>
+            <div class="menu navbar-right">
+                
+                    <a class="menu-item" href="/archives">📖博文</a>
+                
+                    <a class="menu-item" href="/category">📚类别</a>
+                
+                    <a class="menu-item" href="/tag">🏷️标签</a>
+                
+                    <a class="menu-item" href="/about">💡关于</a>
+                
+                    <a class="menu-item" href="/links">🔗友链</a>
+                
+                <input id="switch_default" type="checkbox" class="switch_default">
+                <label for="switch_default" class="toggleBtn"></label>
+            </div>
+        </div>
+    </nav>
+
+    
+    <nav class="navbar-mobile" id="nav-mobile">
+        <div class="container">
+            <div class="navbar-header">
+                <div>
+                    <a href="/">bobo&#39;s Blog</a><a id="mobile-toggle-theme">·&nbsp;Light</a>
+                </div>
+                <div class="menu-toggle" onclick="mobileBtn()">&#9776; Menu</div>
+            </div>
+            <div class="menu" id="mobile-menu">
+                
+                    <a class="menu-item" href="/archives">📖博文</a>
+                
+                    <a class="menu-item" href="/category">📚类别</a>
+                
+                    <a class="menu-item" href="/tag">🏷️标签</a>
+                
+                    <a class="menu-item" href="/about">💡关于</a>
+                
+                    <a class="menu-item" href="/links">🔗友链</a>
+                
+            </div>
+        </div>
+    </nav>
+
+</header>
+<script>
+    var mobileBtn = function f() {
+        var toggleMenu = document.getElementsByClassName("menu-toggle")[0];
+        var mobileMenu = document.getElementById("mobile-menu");
+        if(toggleMenu.classList.contains("active")){
+           toggleMenu.classList.remove("active")
+            mobileMenu.classList.remove("active")
+        }else{
+            toggleMenu.classList.add("active")
+            mobileMenu.classList.add("active")
+        }
+    }
+</script>
+            <div class="main">
+                <div class="container">
+    
+    
+        <div class="post-toc">
+    <div class="tocbot-list">
+    </div>
+    <div class="tocbot-list-menu">
+        <a class="tocbot-toc-expand" onclick="expand_toc()">Expand all</a>
+        <a onclick="go_top()">Back to top</a>
+        <a onclick="go_bottom()">Go to bottom</a>
+    </div>
+</div>
+
+<script>
+    document.ready(
+        function () {
+            tocbot.init({
+                tocSelector: '.tocbot-list',
+                contentSelector: '.post-content',
+                headingSelector: 'h1, h2, h3, h4, h5',
+                collapseDepth: 1,
+                orderedList: false,
+                scrollSmooth: true,
+            })
+        }
+    )
+
+    function expand_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 6,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "collapse_toc()");
+        b.innerHTML = "Collapse all"
+    }
+
+    function collapse_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 1,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "expand_toc()");
+        b.innerHTML = "Expand all"
+    }
+
+    function go_top() {
+        window.scrollTo(0, 0);
+    }
+
+    function go_bottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+</script>
+    
+
+    
+    <article class="post-wrap">
+        <header class="post-header">
+            <h1 class="post-title">Nginx 日志分析</h1>
+            
+                <div class="post-meta">
+                    
+                        Author: <a itemprop="author" rel="author" href="/">rowen</a>
+                    
+
+                    
+                        <span class="post-time">
+                        Date: <a href="#">June 9, 2026&nbsp;&nbsp;10:12:00</a>
+                        </span>
+                    
+                    
+                        <span class="post-category">
+                    Category:
+                            
+                                <a href="/categories/%E9%9D%A2%E8%AF%95%E7%9F%A5%E8%AF%86%E7%82%B9/">面试知识点</a>
+                            
+                        </span>
+                    
+                </div>
+            
+        </header>
+
+        <div class="post-content">
+            <h1 id="Nginx-日志分析"><a href="#Nginx-日志分析" class="headerlink" title="Nginx 日志分析"></a>Nginx 日志分析</h1><h2 id="常见日志路径"><a href="#常见日志路径" class="headerlink" title="常见日志路径"></a>常见日志路径</h2><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">/var/log/nginx/access.log</span><br><span class="line">/var/log/nginx/error.log</span><br><span class="line">/usr/local/nginx/logs/access.log</span><br><span class="line">/usr/local/nginx/logs/error.log</span><br></pre></td></tr></table></figure>
+
+<h2 id="access-log-常见字段"><a href="#access-log-常见字段" class="headerlink" title="access.log 常见字段"></a>access.log 常见字段</h2><ul>
+<li>源 IP。</li>
+<li>访问时间。</li>
+<li>请求方法。</li>
+<li>URL。</li>
+<li>HTTP 版本。</li>
+<li>状态码。</li>
+<li>响应大小。</li>
+<li>Referer。</li>
+<li>User-Agent。</li>
+</ul>
+<h2 id="常见攻击识别"><a href="#常见攻击识别" class="headerlink" title="常见攻击识别"></a>常见攻击识别</h2><h3 id="SQL-注入"><a href="#SQL-注入" class="headerlink" title="SQL 注入"></a>SQL 注入</h3><p>特征：</p>
+<ul>
+<li><code>union select</code></li>
+<li><code>and 1=1</code></li>
+<li><code>or 1=1</code></li>
+<li><code>sleep</code></li>
+<li><code>extractvalue</code></li>
+<li><code>updatexml</code></li>
+<li>单引号、注释符。</li>
+</ul>
+<h3 id="目录扫描"><a href="#目录扫描" class="headerlink" title="目录扫描"></a>目录扫描</h3><p>特征：</p>
+<ul>
+<li>同一 IP 高频访问大量路径。</li>
+<li>大量 404&#x2F;403。</li>
+<li>访问 <code>.git</code>、<code>.env</code>、<code>admin</code>、<code>backup</code>、<code>phpinfo</code>。</li>
+</ul>
+<h3 id="弱口令爆破"><a href="#弱口令爆破" class="headerlink" title="弱口令爆破"></a>弱口令爆破</h3><p>特征：</p>
+<ul>
+<li>同一 IP 高频 POST 登录接口。</li>
+<li>状态码、响应长度相近。</li>
+<li>User-Agent 固定。</li>
+</ul>
+<h3 id="文件上传攻击"><a href="#文件上传攻击" class="headerlink" title="文件上传攻击"></a>文件上传攻击</h3><p>特征：</p>
+<ul>
+<li>访问 upload 接口。</li>
+<li>上传后访问 <code>.php</code>、<code>.jsp</code>、<code>.aspx</code> 等文件。</li>
+<li>高频 POST。</li>
+</ul>
+<h3 id="WebShell-访问"><a href="#WebShell-访问" class="headerlink" title="WebShell 访问"></a>WebShell 访问</h3><p>特征：</p>
+<ul>
+<li>固定 IP 访问可疑文件。</li>
+<li>高频 POST。</li>
+<li>参数中出现命令特征。</li>
+<li>文件名异常。</li>
+</ul>
+<h2 id="常用命令"><a href="#常用命令" class="headerlink" title="常用命令"></a>常用命令</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">tail</span> -f /var/log/nginx/access.log</span><br><span class="line">grep <span class="string">&quot;关键词&quot;</span> access.log</span><br><span class="line">awk <span class="string">&#x27;&#123;print $1&#125;&#x27;</span> access.log | <span class="built_in">sort</span> | <span class="built_in">uniq</span> -c | <span class="built_in">sort</span> -nr | <span class="built_in">head</span></span><br><span class="line">grep <span class="string">&quot;POST&quot;</span> access.log</span><br><span class="line">grep -Ei <span class="string">&quot;union|select|sleep|updatexml|extractvalue&quot;</span> access.log</span><br><span class="line">grep -Ei <span class="string">&quot;\.php|\.jsp|\.aspx&quot;</span> access.log</span><br></pre></td></tr></table></figure>
+
+<h2 id="面试标准回答"><a href="#面试标准回答" class="headerlink" title="面试标准回答"></a>面试标准回答</h2><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Nginx 日志我主要看 access.log 和 error.log，常见路径是 /var/log/nginx/ 或 /usr/local/nginx/logs/。分析时会关注源 IP、时间、请求方法、URL、状态码、响应大小、Referer 和 User-Agent。</span><br><span class="line"></span><br><span class="line">如果排查攻击，我会看同一 IP 的访问频率、是否访问敏感路径、是否有 SQL 注入 payload、是否大量 POST 登录接口、是否上传后访问可疑脚本文件。最后根据时间线整理攻击过程、影响范围和处置建议。</span><br></pre></td></tr></table></figure>
+
+        </div>
+
+        
+            <section class="post-copyright">
+                
+                    <p class="copyright-item">
+                        <span>Author:</span>
+                        <span>rowen</span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>Permalink:</span>
+                        <span><a href="https://forkmmat.github.io/2026/06/09/12-Nginx%E6%97%A5%E5%BF%97%E5%88%86%E6%9E%90/">https://forkmmat.github.io/2026/06/09/12-Nginx%E6%97%A5%E5%BF%97%E5%88%86%E6%9E%90/</a></span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>License:</span>
+                        <span>Copyright (c) 2019 <a target="_blank" rel="noopener" href="http://creativecommons.org/licenses/by-nc/4.0/">CC-BY-NC-4.0</a> LICENSE</span>
+                    </p>
+                
+                
+                     <p class="copyright-item">
+                         <span>Slogan:</span>
+                         <span>Do you believe in <strong>DESTINY</strong>?</span>
+                     </p>
+                
+
+            </section>
+        
+        <section class="post-tags">
+            <div>
+                <span>Tag(s):</span>
+                <span class="tag">
+                    
+                    
+                        <a href="/tags/%E9%9D%A2%E8%AF%95/"># 面试</a>
+                    
+                        <a href="/tags/%E5%AE%89%E5%85%A8%E6%9C%8D%E5%8A%A1/"># 安全服务</a>
+                    
+                        <a href="/tags/Nginx/"># Nginx</a>
+                    
+                        
+                </span>
+            </div>
+            <div>
+                <a href="javascript:window.history.back();">back</a>
+                <span>· </span>
+                <a href="/">home</a>
+            </div>
+        </section>
+        <section class="post-nav">
+            
+                <a class="prev" rel="prev" href="/2026/06/09/13-%E5%BA%94%E6%80%A5%E5%93%8D%E5%BA%94%E6%B5%81%E7%A8%8B/">应急响应流程</a>
+            
+            
+            <a class="next" rel="next" href="/2026/06/09/11-Linux%E8%BF%9B%E7%A8%8B%E7%AB%AF%E5%8F%A3%E6%96%87%E4%BB%B6%E5%8F%A5%E6%9F%84/">Linux 进程、端口、文件句柄</a>
+            
+        </section>
+<script src="https://giscus.app/client.js"
+        data-repo="forkmmat/forkmmat.github.io"
+        data-repo-id="R_kgDOO0OA0g"
+        data-category="General"
+        data-category-id="DIC_kwDOO0OA0s4CtD6Y"
+        data-mapping="title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="zh-CN"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+</script>
+
+    </article>
+</div>
+
+            </div>
+            <footer id="footer" class="footer">
+    <div class="copyright">
+        <span>© rowen | Powered by <a href="https://hexo.io" target="_blank">Hexo</a> & <a href="https://github.com/Siricee/hexo-theme-Chic" target="_blank">Chic</a></span>
+    </div>
+</footer>
+
+    </div>
+</body>
+
+</html>
