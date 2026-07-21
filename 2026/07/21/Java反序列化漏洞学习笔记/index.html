@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <meta name="author" content="rowen">
+
+
+
+
+
+<title>Java 反序列化漏洞学习笔记 | Hexo</title>
+
+
+
+    <link rel="icon" href="/drink.ico">
+
+
+
+
+    <!-- stylesheets list from _config.yml -->
+    
+    <link rel="stylesheet" href="/css/style.css">
+    
+
+
+
+    <!-- scripts list from _config.yml -->
+    
+    <script src="/js/script.js"></script>
+    
+    <script src="/js/tocbot.min.js"></script>
+    
+
+
+
+    
+    
+        
+    
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+    <!-- 引入jQuery -->
+<script type="text/javascript" src="//libs.baidu.com/jquery/1.8.3/jquery.min.js"></script>
+<!-- 雪花特效2 -->
+ <script type="text/javascript" src="/js/snow2.js"></script>
+    <script>
+        // this function is used to check current theme before page loaded.
+        (() => {
+            const currentTheme = window.localStorage && window.localStorage.getItem('theme') || '';
+            const isDark = currentTheme === 'dark';
+            const pagebody = document.getElementsByTagName('body')[0]
+            if (isDark) {
+                pagebody.classList.add('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Dark"
+            } else {
+                pagebody.classList.remove('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Light"
+            }
+        })();
+    </script>
+<script>
+!
+function() {
+function n(n, e, t) {
+return n.getAttribute(e) || t
+}
+function e(n) {
+return document.getElementsByTagName(n)
+}
+function t() {
+var t = e("script"),
+o = t.length,
+i = t[o - 1];
+return {
+l: o,
+z: n(i, "zIndex", -1), //置于主页面背后
+o: n(i, "opacity", .5), //线条透明度
+c: n(i, "color", "0,0,0"), //线条颜色
+n: n(i, "count", 100) //线条数量
+}
+}
+function o() {
+a = m.width = window.innerWidth ||
+document.documentElement.clientWidth || document.body.clientWidth,
+c = m.height = window.innerHeight ||
+document.documentElement.clientHeight || document.body.clientHeight
+}
+function i() {
+r.clearRect(0, 0, a, c);
+var n, e, t, o, m, l;
+s.forEach(function(i, x) {
+for (i.x += i.xa, i.y += i.ya, i.xa *= i.x > a || i.x < 0 ? -1 :
+1, i.ya *= i.y > c || i.y < 0 ? -1 : 1, r.fillRect(i.x - .5, i.y - .5, 1,
+1), e = x + 1; e < u.length; e++) n = u[e],
+null !== n.x && null !== n.y && (o = i.x - n.x, m = i.y - n.y, l
+= o * o + m * m, l < n.max && (n === y && l >= n.max / 2 && (i.x -= .03 * o,
+i.y -= .03 * m), t = (n.max - l) / n.max, r.beginPath(), r.lineWidth = t /
+2, r.strokeStyle = "rgba(" + d.c + "," + (t + .2) + ")", r.moveTo(i.x, i.y),
+r.lineTo(n.x, n.y), r.stroke()))
+}),
+x(i)
+}
+var a, c, u, m = document.createElement("canvas"),
+d = t(),
+l = "c_n" + d.l,
+r = m.getContext("2d"),
+x = window.requestAnimationFrame || window.webkitRequestAnimationFrame
+|| window.mozRequestAnimationFrame || window.oRequestAnimationFrame ||
+window.msRequestAnimationFrame ||
+function(n) {
+window.setTimeout(n, 1e3 / 45)
+},
+w = Math.random,
+y = {
+x: null,
+y: null,
+max: 2e4
+};
+m.id = l,
+m.style.cssText = "position:fixed;top:0;left:0;z-index:" + d.z +
+";opacity:" + d.o,
+e("body")[0].appendChild(m),
+o(),
+window.onresize = o,
+window.onmousemove = function(n) {
+n = n || window.event,
+y.x = n.clientX,
+y.y = n.clientY
+},
+window.onmouseout = function() {
+y.x = null,
+y.y = null
+};
+for (var s = [], f = 0; d.n > f; f++) {
+var h = w() * a,
+g = w() * c,
+v = 2 * w() - 1,
+p = 2 * w() - 1;
+s.push({
+x: h,
+y: g,
+xa: v,
+ya: p,
+max: 6e3
+})
+}
+u = s.concat([y]),
+setTimeout(function() {
+i()
+},
+100)
+} ();
+</script>
+    <div class="wrapper">
+        <header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-header header-logo"><a href="/">bobo&#39;s Blog</a></div>
+            <div class="menu navbar-right">
+                
+                    <a class="menu-item" href="/archives">📖博文</a>
+                
+                    <a class="menu-item" href="/category">📚类别</a>
+                
+                    <a class="menu-item" href="/tag">🏷️标签</a>
+                
+                    <a class="menu-item" href="/about">💡关于</a>
+                
+                    <a class="menu-item" href="/links">🔗友链</a>
+                
+                <input id="switch_default" type="checkbox" class="switch_default">
+                <label for="switch_default" class="toggleBtn"></label>
+            </div>
+        </div>
+    </nav>
+
+    
+    <nav class="navbar-mobile" id="nav-mobile">
+        <div class="container">
+            <div class="navbar-header">
+                <div>
+                    <a href="/">bobo&#39;s Blog</a><a id="mobile-toggle-theme">·&nbsp;Light</a>
+                </div>
+                <div class="menu-toggle" onclick="mobileBtn()">&#9776; Menu</div>
+            </div>
+            <div class="menu" id="mobile-menu">
+                
+                    <a class="menu-item" href="/archives">📖博文</a>
+                
+                    <a class="menu-item" href="/category">📚类别</a>
+                
+                    <a class="menu-item" href="/tag">🏷️标签</a>
+                
+                    <a class="menu-item" href="/about">💡关于</a>
+                
+                    <a class="menu-item" href="/links">🔗友链</a>
+                
+            </div>
+        </div>
+    </nav>
+
+</header>
+<script>
+    var mobileBtn = function f() {
+        var toggleMenu = document.getElementsByClassName("menu-toggle")[0];
+        var mobileMenu = document.getElementById("mobile-menu");
+        if(toggleMenu.classList.contains("active")){
+           toggleMenu.classList.remove("active")
+            mobileMenu.classList.remove("active")
+        }else{
+            toggleMenu.classList.add("active")
+            mobileMenu.classList.add("active")
+        }
+    }
+</script>
+            <div class="main">
+                <div class="container">
+    
+    
+        <div class="post-toc">
+    <div class="tocbot-list">
+    </div>
+    <div class="tocbot-list-menu">
+        <a class="tocbot-toc-expand" onclick="expand_toc()">Expand all</a>
+        <a onclick="go_top()">Back to top</a>
+        <a onclick="go_bottom()">Go to bottom</a>
+    </div>
+</div>
+
+<script>
+    document.ready(
+        function () {
+            tocbot.init({
+                tocSelector: '.tocbot-list',
+                contentSelector: '.post-content',
+                headingSelector: 'h1, h2, h3, h4, h5',
+                collapseDepth: 1,
+                orderedList: false,
+                scrollSmooth: true,
+            })
+        }
+    )
+
+    function expand_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 6,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "collapse_toc()");
+        b.innerHTML = "Collapse all"
+    }
+
+    function collapse_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 1,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "expand_toc()");
+        b.innerHTML = "Expand all"
+    }
+
+    function go_top() {
+        window.scrollTo(0, 0);
+    }
+
+    function go_bottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+</script>
+    
+
+    
+    <article class="post-wrap">
+        <header class="post-header">
+            <h1 class="post-title">Java 反序列化漏洞学习笔记</h1>
+            
+                <div class="post-meta">
+                    
+                        Author: <a itemprop="author" rel="author" href="/">rowen</a>
+                    
+
+                    
+                        <span class="post-time">
+                        Date: <a href="#">July 21, 2026&nbsp;&nbsp;17:20:00</a>
+                        </span>
+                    
+                    
+                        <span class="post-category">
+                    Category:
+                            
+                                <a href="/categories/Web%E5%AE%89%E5%85%A8/">Web安全</a>
+                            
+                        </span>
+                    
+                </div>
+            
+        </header>
+
+        <div class="post-content">
+            <blockquote>
+<p>本文仅用于安全学习、靶场复现与授权测试场景，重点关注漏洞原理、检测思路和修复建议。</p>
+</blockquote>
+<h1 id="Java-反序列化漏洞学习笔记"><a href="#Java-反序列化漏洞学习笔记" class="headerlink" title="Java 反序列化漏洞学习笔记"></a>Java 反序列化漏洞学习笔记</h1><blockquote>
+<p>两类 Java 反序列化攻击：XML 形式（XMLDecoder）与二进制形式（ObjectInputStream）。原理、Payload、检测特征、修复方案。</p>
+</blockquote>
+<hr>
+<h2 id="一、XML-形式-—-XMLDecoder-反序列化"><a href="#一、XML-形式-—-XMLDecoder-反序列化" class="headerlink" title="一、XML 形式 — XMLDecoder 反序列化"></a>一、XML 形式 — XMLDecoder 反序列化</h2><h3 id="1-1-原理"><a href="#1-1-原理" class="headerlink" title="1.1 原理"></a>1.1 原理</h3><p><code>java.beans.XMLDecoder</code> 是 JDK 自带的 XML→Java 对象反序列化工具。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 漏洞代码</span></span><br><span class="line"><span class="type">XMLDecoder</span> <span class="variable">decoder</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">XMLDecoder</span>(request.getInputStream());</span><br><span class="line"><span class="type">Object</span> <span class="variable">obj</span> <span class="operator">=</span> decoder.readObject();  <span class="comment">// ← 此处触发反序列化</span></span><br></pre></td></tr></table></figure>
+
+<p>解析 XML 时：</p>
+<ul>
+<li><code>&lt;object class=&quot;xxx&quot;&gt;</code> → 调用类的无参构造，实例化对象</li>
+<li><code>&lt;void method=&quot;xxx&quot;&gt;</code> → 调用该对象的方法</li>
+</ul>
+<p>攻击者构造恶意 XML，使服务端实例化 <code>ProcessBuilder</code> 并调用 <code>start()</code>，实现 RCE。</p>
+<p><strong>攻击链：</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">POST XML → XMLDecoder.readObject()</span><br><span class="line">  → &lt;object class=&quot;java.lang.ProcessBuilder&quot;&gt; → 实例化 ProcessBuilder</span><br><span class="line">  → &lt;void method=&quot;start&quot;&gt; → ProcessBuilder.start()</span><br><span class="line">  → 执行系统命令</span><br></pre></td></tr></table></figure>
+
+<h3 id="1-2-基础-Payload"><a href="#1-2-基础-Payload" class="headerlink" title="1.2 基础 Payload"></a>1.2 基础 Payload</h3><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?xml version=<span class="string">&quot;1.0&quot;</span> encoding=<span class="string">&quot;UTF-8&quot;</span>?&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">java</span> <span class="attr">class</span>=<span class="string">&quot;java.beans.XMLDecoder&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">object</span> <span class="attr">class</span>=<span class="string">&quot;java.lang.ProcessBuilder&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">array</span> <span class="attr">class</span>=<span class="string">&quot;java.lang.String&quot;</span> <span class="attr">length</span>=<span class="string">&quot;3&quot;</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">void</span> <span class="attr">index</span>=<span class="string">&quot;0&quot;</span>&gt;</span><span class="tag">&lt;<span class="name">string</span>&gt;</span>cmd.exe<span class="tag">&lt;/<span class="name">string</span>&gt;</span><span class="tag">&lt;/<span class="name">void</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">void</span> <span class="attr">index</span>=<span class="string">&quot;1&quot;</span>&gt;</span><span class="tag">&lt;<span class="name">string</span>&gt;</span>/c<span class="tag">&lt;/<span class="name">string</span>&gt;</span><span class="tag">&lt;/<span class="name">void</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">void</span> <span class="attr">index</span>=<span class="string">&quot;2&quot;</span>&gt;</span><span class="tag">&lt;<span class="name">string</span>&gt;</span>calc.exe<span class="tag">&lt;/<span class="name">string</span>&gt;</span><span class="tag">&lt;/<span class="name">void</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">array</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">void</span> <span class="attr">method</span>=<span class="string">&quot;start&quot;</span>/&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">object</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">java</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="1-3-Payload-变体"><a href="#1-3-Payload-变体" class="headerlink" title="1.3 Payload 变体"></a>1.3 Payload 变体</h3><p><strong>Runtime.exec 方式：</strong></p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?xml version=<span class="string">&quot;1.0&quot;</span> encoding=<span class="string">&quot;UTF-8&quot;</span>?&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">java</span> <span class="attr">class</span>=<span class="string">&quot;java.beans.XMLDecoder&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">object</span> <span class="attr">class</span>=<span class="string">&quot;java.lang.Runtime&quot;</span> <span class="attr">method</span>=<span class="string">&quot;getRuntime&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">void</span> <span class="attr">method</span>=<span class="string">&quot;exec&quot;</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">array</span> <span class="attr">class</span>=<span class="string">&quot;java.lang.String&quot;</span> <span class="attr">length</span>=<span class="string">&quot;3&quot;</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">void</span> <span class="attr">index</span>=<span class="string">&quot;0&quot;</span>&gt;</span><span class="tag">&lt;<span class="name">string</span>&gt;</span>cmd.exe<span class="tag">&lt;/<span class="name">string</span>&gt;</span><span class="tag">&lt;/<span class="name">void</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">void</span> <span class="attr">index</span>=<span class="string">&quot;1&quot;</span>&gt;</span><span class="tag">&lt;<span class="name">string</span>&gt;</span>/c<span class="tag">&lt;/<span class="name">string</span>&gt;</span><span class="tag">&lt;/<span class="name">void</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">void</span> <span class="attr">index</span>=<span class="string">&quot;2&quot;</span>&gt;</span><span class="tag">&lt;<span class="name">string</span>&gt;</span>whoami<span class="tag">&lt;/<span class="name">string</span>&gt;</span><span class="tag">&lt;/<span class="name">void</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;/<span class="name">array</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">void</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">object</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">java</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>反弹 Shell（PowerShell 版）</strong></p>
+<p>公开版本省略具体反连载荷，仅记录该类 payload 会体现出的行为特征，例如可疑 PowerShell、外连连接、长命令参数等，便于后续流量研判和防护加固。</p>
+<h3 id="1-4-检测特征"><a href="#1-4-检测特征" class="headerlink" title="1.4 检测特征"></a>1.4 检测特征</h3><table>
+<thead>
+<tr>
+<th>特征</th>
+<th>命中条件</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Content-Type</td>
+<td><code>application/xml</code>、<code>text/xml</code></td>
+</tr>
+<tr>
+<td>Body 标签</td>
+<td>含 <code>&lt;java class=&quot;java.beans.XMLDecoder&quot;&gt;</code></td>
+</tr>
+<tr>
+<td>危险类</td>
+<td><code>&lt;object class=&quot;java.lang.ProcessBuilder&quot;&gt;</code> 或 <code>java.lang.Runtime</code></td>
+</tr>
+<tr>
+<td>危险方法</td>
+<td><code>&lt;void method=&quot;start&quot;&gt;</code> 或 <code>exec</code></td>
+</tr>
+<tr>
+<td>命令参数</td>
+<td><code>&lt;string&gt;cmd.exe&lt;/string&gt;</code>、<code>/bin/bash</code> 等</td>
+</tr>
+</tbody></table>
+<p><strong>正则检测规则：</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"># 核心特征</span><br><span class="line">&lt;java\b.*class\s*=\s*[&quot;&#x27;]java\.beans\.XMLDecoder[&quot;&#x27;]</span><br><span class="line"></span><br><span class="line"># 危险类</span><br><span class="line">&lt;object\s+class\s*=\s*[&quot;&#x27;]java\.lang\.(ProcessBuilder|Runtime)[&quot;&#x27;]</span><br><span class="line"></span><br><span class="line"># 危险方法</span><br><span class="line">&lt;void\s+method\s*=\s*[&quot;&#x27;](start|exec)[&quot;&#x27;]</span><br></pre></td></tr></table></figure>
+
+<p><strong>一句话判断：</strong></p>
+<blockquote>
+<p>Body 中同时出现 <code>&lt;java</code> + <code>XMLDecoder</code> + <code>start</code> 或 <code>exec</code>，就是 XMLDecoder 反序列化攻击。</p>
+</blockquote>
+<hr>
+<h2 id="二、二进制形式-—-ObjectInputStream-反序列化"><a href="#二、二进制形式-—-ObjectInputStream-反序列化" class="headerlink" title="二、二进制形式 — ObjectInputStream 反序列化"></a>二、二进制形式 — ObjectInputStream 反序列化</h2><h3 id="2-1-原理"><a href="#2-1-原理" class="headerlink" title="2.1 原理"></a>2.1 原理</h3><p>Java 原生序列化机制通过 <code>ObjectInputStream.readObject()</code> 将字节流还原为对象。问题在于还原过程中会自动调用被还原对象的 <code>readObject()</code>、<code>readResolve()</code> 等方法，攻击者可构造恶意对象链（gadget chain）实现 RCE。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 漏洞代码</span></span><br><span class="line"><span class="type">ObjectInputStream</span> <span class="variable">ois</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ObjectInputStream</span>(request.getInputStream());</span><br><span class="line"><span class="type">Object</span> <span class="variable">obj</span> <span class="operator">=</span> ois.readObject();  <span class="comment">// ← 此处触发</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="2-2-序列化数据格式"><a href="#2-2-序列化数据格式" class="headerlink" title="2.2 序列化数据格式"></a>2.2 序列化数据格式</h3><p>Java 序列化的二进制数据有固定的魔术头和协议结构：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">偏移  内容              说明</span><br><span class="line">0x00  AC ED             魔术字节（STREAM_MAGIC）</span><br><span class="line">0x02  00 05             版本号（STREAM_VERSION）</span><br><span class="line">0x04  0x73              对象类型标识（TC_OBJECT）</span><br><span class="line">0x05  0x72              类描述符标识（TC_CLASSDESC）</span><br><span class="line">...   类名字节</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-3-Payload-特征"><a href="#2-3-Payload-特征" class="headerlink" title="2.3 Payload 特征"></a>2.3 Payload 特征</h3><table>
+<thead>
+<tr>
+<th>形式</th>
+<th>特征值</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>原始二进制</td>
+<td><code>ac ed 00 05</code></td>
+<td>Java 序列化魔术头</td>
+</tr>
+<tr>
+<td>Base64 编码</td>
+<td><code>rO0AB</code></td>
+<td>魔术头的 Base64 编码（最常见）</td>
+</tr>
+<tr>
+<td>Hex</td>
+<td><code>aced0005</code></td>
+<td>魔法头十六进制表示</td>
+</tr>
+</tbody></table>
+<p><strong>示例：原始二进制 payload 的 hex dump</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">00000000  ac ed 00 05 73 72 00 17  6a 61 76 61 2e 75 74 69  |....sr..java.uti|</span><br><span class="line">00000010  6c 2e 50 72 69 6f 72 69  74 79 51 75 65 75 65 00  |l.PriorityQueue.|</span><br></pre></td></tr></table></figure>
+
+<p><strong>示例：HTTP 请求中 Base64 编码的 payload</strong></p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">POST</span> <span class="string">/api/data</span> <span class="meta">HTTP/1.1</span></span><br><span class="line"><span class="attribute">Host</span><span class="punctuation">: </span>target.com</span><br><span class="line"><span class="attribute">Content-Type</span><span class="punctuation">: </span>application/octet-stream</span><br><span class="line"><span class="attribute">Content-Length</span><span class="punctuation">: </span>3456</span><br><span class="line"></span><br><span class="line"><span class="language-gams"><span class="function"><span class="title">rO0ABXNyABdqYXZhLnV0aWwuUHJpb3JpdHlRdWV1ZQAAAAAAAAABAwAC</span></span>...</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="2-4-常见-Gadget-Chain（ysoserial）"><a href="#2-4-常见-Gadget-Chain（ysoserial）" class="headerlink" title="2.4 常见 Gadget Chain（ysoserial）"></a>2.4 常见 Gadget Chain（ysoserial）</h3><table>
+<thead>
+<tr>
+<th>链名</th>
+<th>核心类</th>
+<th>适用版本</th>
+<th>特点</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>CommonsCollections1</td>
+<td><code>InvokerTransformer</code></td>
+<td>JDK &lt; 8u71</td>
+<td>最经典，利用 <code>ConstantTransformer</code> + <code>ChainedTransformer</code> + 反射</td>
+</tr>
+<tr>
+<td>CommonsCollections2</td>
+<td><code>PriorityQueue</code></td>
+<td>Commons Collections 4.x</td>
+<td>利用 <code>TemplatesImpl</code> 动态加载字节码，绕过 CC1 限制</td>
+</tr>
+<tr>
+<td>CommonsCollections3</td>
+<td><code>InstantiateTransformer</code></td>
+<td>JDK &lt; 8u71</td>
+<td>CC1 的变体，用 <code>TrAXFilter</code> 触发 <code>TemplatesImpl</code></td>
+</tr>
+<tr>
+<td>CommonsCollections4</td>
+<td><code>PriorityQueue</code></td>
+<td>Commons Collections 4.x</td>
+<td>CC2 + CC3 混合，同时兼容 4.x</td>
+</tr>
+<tr>
+<td>CommonsCollections5</td>
+<td><code>BadAttributeValueExpException</code></td>
+<td>JDK &lt; 8u232</td>
+<td>用 <code>BadAttributeValueExpException.toString()</code> 触发</td>
+</tr>
+<tr>
+<td>CommonsCollections6</td>
+<td><code>HashMap</code> &#x2F; <code>HashSet</code></td>
+<td>全版本兼容</td>
+<td>不依赖 JDK 内部 <code>AnnotationInvocationHandler</code>，通杀</td>
+</tr>
+<tr>
+<td>CommonsCollections7</td>
+<td><code>Hashtable</code></td>
+<td>全版本兼容</td>
+<td>利用哈希碰撞触发 <code>equals()</code> 方法</td>
+</tr>
+<tr>
+<td>CommonsBeanutils1</td>
+<td><code>BeanComparator</code></td>
+<td>依赖 commons-beanutils</td>
+<td>利用 <code>PropertyUtils.getProperty()</code> 触发 <code>TemplatesImpl</code></td>
+</tr>
+<tr>
+<td>Jdk7u21</td>
+<td><code>LinkedHashSet</code></td>
+<td>JDK 7u21 及之前</td>
+<td>JDK 原生链，无第三方依赖</td>
+</tr>
+<tr>
+<td>Jdk8u20</td>
+<td><code>LinkedHashSet</code></td>
+<td>JDK 8u20 及之前</td>
+<td>JDK8u21 修复后，利用 <code>AnnotationInvocationHandler</code> 绕过</td>
+</tr>
+<tr>
+<td>JdbcRowSetImpl</td>
+<td><code>JdbcRowSetImpl</code></td>
+<td>有 JNDI 可达环境</td>
+<td>JNDI 注入链，需配合 LDAP&#x2F;RMI 服务</td>
+</tr>
+<tr>
+<td>URLDNS</td>
+<td><code>HashMap</code> + <code>URL</code></td>
+<td>全版本通杀</td>
+<td>无危害但必通，常用于验证漏洞存在</td>
+</tr>
+</tbody></table>
+<p><strong>CommonsCollections6 典型调用链：</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">HashMap.readObject()                          // 反序列化入口</span><br><span class="line">  → HashMap.put()                             // 哈希表插入流程</span><br><span class="line">    → TiedMapEntry.hashCode()                 // CC6 关键入口</span><br><span class="line">      → TiedMapEntry.getValue()</span><br><span class="line">        → LazyMap.get()                       // 懒加载 Map</span><br><span class="line">          → ChainedTransformer.transform()    // Transformer 链</span><br><span class="line">            → ConstantTransformer.transform() // 返回 Runtime.class</span><br><span class="line">            → InvokerTransformer.transform()  // 反射调用 getRuntime()</span><br><span class="line">            → InvokerTransformer.transform()  // 反射调用 exec()</span><br><span class="line">              → Runtime.exec(&quot;calc.exe&quot;)      // ← RCE！</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-5-检测特征"><a href="#2-5-检测特征" class="headerlink" title="2.5 检测特征"></a>2.5 检测特征</h3><p><strong>流量层：</strong></p>
+<table>
+<thead>
+<tr>
+<th>检测维度</th>
+<th>特征</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>魔术头（Base64）</td>
+<td>请求 Body 或参数以 <code>rO0AB</code> 开头</td>
+</tr>
+<tr>
+<td>魔术头（二进制）</td>
+<td>请求 Body 开头为 <code>\xac\xed\x00\x05</code></td>
+</tr>
+<tr>
+<td>HTTP Content-Type</td>
+<td><code>application/octet-stream</code>、<code>application/binary</code>、<code>application/x-java-serialized-object</code></td>
+</tr>
+<tr>
+<td>常见参数名</td>
+<td><code>data</code>、<code>object</code>、<code>payload</code>、<code>ser</code>、<code>input</code></td>
+</tr>
+</tbody></table>
+<p><strong>Payload 层（解码后搜索的关键类名）：</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">CommonsCollections, PriorityQueue, BadAttributeValueExpException</span><br><span class="line">HashMap, Hashtable, LazyMap, TiedMapEntry</span><br><span class="line">InvokerTransformer, ChainedTransformer, ConstantTransformer</span><br><span class="line">TemplatesImpl, JdbcRowSetImpl, AnnotationInvocationHandler</span><br><span class="line">Runtime, ProcessBuilder</span><br></pre></td></tr></table></figure>
+
+<p><strong>正则检测规则：</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"># Base64 魔术头（最简单最有效）</span><br><span class="line">^rO0AB</span><br><span class="line"></span><br><span class="line"># 解码后类名特征</span><br><span class="line">CommonsCollections|InvokerTransformer|ChainedTransformer|TemplatesImpl|JdbcRowSetImpl</span><br><span class="line"></span><br><span class="line"># 恶意方法调用</span><br><span class="line">Runtime\.(getRuntime|exec)|ProcessBuilder</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-6-攻击流量三步判断法"><a href="#2-6-攻击流量三步判断法" class="headerlink" title="2.6 攻击流量三步判断法"></a>2.6 攻击流量三步判断法</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">第一步：看魔术头</span><br><span class="line">  Body/参数值 以 &quot;rO0AB&quot; 开头 → 直接判定为 Java 序列化数据</span><br><span class="line"></span><br><span class="line">第二步：看 HTTP 特征</span><br><span class="line">  Content-Type: octet-stream / binary / x-java-serialized-object → 命中</span><br><span class="line"></span><br><span class="line">第三步：解码 Base64 看类名（确认攻击意图）</span><br><span class="line">  含 CommonsCollections / JdbcRowSetImpl / TemplatesImpl / InvokerTransformer</span><br><span class="line">  → 攻击确认，不是正常业务序列化</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-7-正常业务序列化-vs-攻击-payload"><a href="#2-7-正常业务序列化-vs-攻击-payload" class="headerlink" title="2.7 正常业务序列化 vs 攻击 payload"></a>2.7 正常业务序列化 vs 攻击 payload</h3><table>
+<thead>
+<tr>
+<th>维度</th>
+<th>正常业务</th>
+<th>攻击 Payload</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>魔术头</td>
+<td><code>rO0AB</code>（相同）</td>
+<td><code>rO0AB</code>（相同）</td>
+</tr>
+<tr>
+<td>类名</td>
+<td><code>com.company.User</code></td>
+<td><code>org.apache...InvokerTransformer</code></td>
+</tr>
+<tr>
+<td>URL 路径</td>
+<td>登录&#x2F;注册接口</td>
+<td>异常接口&#x2F;未授权接口</td>
+</tr>
+<tr>
+<td>参数名</td>
+<td><code>userData</code>、<code>profile</code></td>
+<td><code>data</code>、<code>payload</code></td>
+</tr>
+<tr>
+<td>反常</td>
+<td>无</td>
+<td>序列化数据置于 GET 参数或 Cookie</td>
+</tr>
+</tbody></table>
+<p><strong>注意：</strong> 魔术头只证明是 Java 序列化数据，<strong>不能仅凭 <code>rO0AB</code> 就断定为攻击</strong>。需结合类名和上下文判断。</p>
+<hr>
+<h2 id="三、两类反序列化对比"><a href="#三、两类反序列化对比" class="headerlink" title="三、两类反序列化对比"></a>三、两类反序列化对比</h2><table>
+<thead>
+<tr>
+<th></th>
+<th>XMLDecoder（XML 形式）</th>
+<th>ObjectInputStream（二进制形式）</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>入口类</td>
+<td><code>java.beans.XMLDecoder</code></td>
+<td><code>java.io.ObjectInputStream</code></td>
+</tr>
+<tr>
+<td>输入格式</td>
+<td>XML 文本</td>
+<td>二进制字节流</td>
+</tr>
+<tr>
+<td>传输形式</td>
+<td>明码 XML 标签</td>
+<td>Base64 或原始二进制</td>
+</tr>
+<tr>
+<td>魔术标记</td>
+<td><code>&lt;java class=&quot;java.beans.XMLDecoder&quot;&gt;</code></td>
+<td><code>ac ed 00 05</code> &#x2F; <code>rO0AB</code></td>
+</tr>
+<tr>
+<td>Content-Type</td>
+<td><code>application/xml</code></td>
+<td><code>application/octet-stream</code></td>
+</tr>
+<tr>
+<td>核心执行类</td>
+<td><code>ProcessBuilder</code> &#x2F; <code>Runtime</code></td>
+<td><code>Runtime</code> + Gadget Chain</td>
+</tr>
+<tr>
+<td>工具链</td>
+<td>手写 XML</td>
+<td>ysoserial &#x2F; marshalsec</td>
+</tr>
+<tr>
+<td>依赖</td>
+<td>JDK 自带（零依赖）</td>
+<td>通常需第三方库（Commons Collections 等）</td>
+</tr>
+<tr>
+<td>JDK 版本影响</td>
+<td>全版本通杀</td>
+<td>高版本 JDK 部分链失效</td>
+</tr>
+<tr>
+<td>JEP 290 是否管控</td>
+<td><strong>不管</strong></td>
+<td>管（但可绕过）</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="四、修复方案"><a href="#四、修复方案" class="headerlink" title="四、修复方案"></a>四、修复方案</h2><h3 id="4-1-XMLDecoder"><a href="#4-1-XMLDecoder" class="headerlink" title="4.1 XMLDecoder"></a>4.1 XMLDecoder</h3><table>
+<thead>
+<tr>
+<th>方案</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>禁用 XMLDecoder</strong></td>
+<td>最直接，业务极少需要</td>
+</tr>
+<tr>
+<td>白名单类过滤</td>
+<td>包装 XMLDecoder，只允许安全类的 <code>&lt;object&gt;</code></td>
+</tr>
+<tr>
+<td>替换为安全方案</td>
+<td>Jackson &#x2F; Gson + 严格类型绑定</td>
+</tr>
+</tbody></table>
+<h3 id="4-2-ObjectInputStream"><a href="#4-2-ObjectInputStream" class="headerlink" title="4.2 ObjectInputStream"></a>4.2 ObjectInputStream</h3><table>
+<thead>
+<tr>
+<th>方案</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>JEP 290 序列化过滤器</strong></td>
+<td>JDK 9+ 内置，JDK 8u121+ 向后移植</td>
+</tr>
+<tr>
+<td>全局过滤器</td>
+<td><code>-Djdk.serialFilter=maxbytes=4096;java.lang.*;java.util.*;!*</code></td>
+</tr>
+<tr>
+<td>代码级过滤器</td>
+<td><code>ObjectInputFilter.Config.setObjectInputFilter()</code></td>
+</tr>
+<tr>
+<td>禁用反序列化</td>
+<td>不用 <code>ObjectInputStream</code>，改用 JSON &#x2F; Protobuf</td>
+</tr>
+<tr>
+<td>升级依赖</td>
+<td>更新 Commons Collections 等第三方库到安全版本</td>
+</tr>
+</tbody></table>
+<p><strong>JEP 290 过滤器示例：</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># JVM 参数方式</span></span><br><span class="line">-Djdk.serialFilter=maxbytes=1024;java.lang.String;java.util.HashMap;!*</span><br><span class="line"></span><br><span class="line"><span class="comment"># 代码方式</span></span><br><span class="line">ObjectInputFilter filter = ObjectInputFilter.Config.createFilter(</span><br><span class="line">    <span class="string">&quot;java.lang.*;java.util.*;!org.apache.commons.collections.*&quot;</span></span><br><span class="line">);</span><br><span class="line">ObjectInputFilter.Config.setObjectInputFilter(ois, filter);</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="五、真实案例"><a href="#五、真实案例" class="headerlink" title="五、真实案例"></a>五、真实案例</h2><table>
+<thead>
+<tr>
+<th>漏洞</th>
+<th>类型</th>
+<th>影响</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>WebLogic CVE-2017-3506 &#x2F; 10271</td>
+<td>XMLDecoder</td>
+<td>10.x 全版本 RCE，无需认证</td>
+</tr>
+<tr>
+<td>WebLogic CVE-2023-21839</td>
+<td>二进制 + JNDI</td>
+<td>远程绑定对象注入，绕过认证</td>
+</tr>
+<tr>
+<td>Shiro RememberMe CVE-2016-4437</td>
+<td>二进制</td>
+<td>AES-CBC 密钥硬编码，Cookie 反序列化</td>
+</tr>
+<tr>
+<td>Fastjson 1.2.24 - 1.2.80</td>
+<td>JSON（但链类似）</td>
+<td>AutoType 绕过 → JNDI 注入 → RCE</td>
+</tr>
+<tr>
+<td>JBoss CVE-2017-12149</td>
+<td>二进制</td>
+<td><code>/invoker/readonly</code> 未授权访问</td>
+</tr>
+<tr>
+<td>Jenkins CVE-2016-0792</td>
+<td>二进制</td>
+<td>XStream 反序列化 → RCE</td>
+</tr>
+<tr>
+<td>Spring Cloud Gateway</td>
+<td>二进制</td>
+<td>Actuator 未授权 + 反序列化</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="六、参考工具"><a href="#六、参考工具" class="headerlink" title="六、参考工具"></a>六、参考工具</h2><table>
+<thead>
+<tr>
+<th>工具</th>
+<th>用途</th>
+<th>地址</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>ysoserial</td>
+<td>二进制反序列化 payload 生成</td>
+<td>github.com&#x2F;frohoff&#x2F;ysoserial</td>
+</tr>
+<tr>
+<td>marshalsec</td>
+<td>JNDI注入 + 多种反序列化链</td>
+<td>github.com&#x2F;mbechler&#x2F;marshalsec</td>
+</tr>
+<tr>
+<td>JNDI-Injection-Exploit</td>
+<td>JNDI 注入利用</td>
+<td>github.com&#x2F;welk1n&#x2F;JNDI-Injection-Exploit</td>
+</tr>
+<tr>
+<td>SerializationDumper</td>
+<td>分析序列化字节流</td>
+<td>github.com&#x2F;NickstaDB&#x2F;SerializationDumper</td>
+</tr>
+</tbody></table>
+<hr>
+<p><em>整理日期：2026-07-21</em></p>
+
+        </div>
+
+        
+            <section class="post-copyright">
+                
+                    <p class="copyright-item">
+                        <span>Author:</span>
+                        <span>rowen</span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>Permalink:</span>
+                        <span><a href="https://forkmmat.github.io/2026/07/21/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">https://forkmmat.github.io/2026/07/21/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/</a></span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>License:</span>
+                        <span>Copyright (c) 2019 <a target="_blank" rel="noopener" href="http://creativecommons.org/licenses/by-nc/4.0/">CC-BY-NC-4.0</a> LICENSE</span>
+                    </p>
+                
+                
+                     <p class="copyright-item">
+                         <span>Slogan:</span>
+                         <span>Do you believe in <strong>DESTINY</strong>?</span>
+                     </p>
+                
+
+            </section>
+        
+        <section class="post-tags">
+            <div>
+                <span>Tag(s):</span>
+                <span class="tag">
+                    
+                    
+                        <a href="/tags/%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/"># 反序列化</a>
+                    
+                        <a href="/tags/%E6%B5%81%E9%87%8F%E5%88%86%E6%9E%90/"># 流量分析</a>
+                    
+                        <a href="/tags/Java/"># Java</a>
+                    
+                        <a href="/tags/Shiro/"># Shiro</a>
+                    
+                        
+                </span>
+            </div>
+            <div>
+                <a href="javascript:window.history.back();">back</a>
+                <span>· </span>
+                <a href="/">home</a>
+            </div>
+        </section>
+        <section class="post-nav">
+            
+                <a class="prev" rel="prev" href="/2026/07/21/%E5%B8%B8%E8%A7%81%E4%BC%81%E4%B8%9A%E7%B3%BB%E7%BB%9F%E4%B8%8EWeb%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%95/">常见企业系统与 Web 漏洞分析学习记录</a>
+            
+            
+            <a class="next" rel="next" href="/2026/07/21/XMLDecoder%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0%E7%AC%94%E8%AE%B0/">XMLDecoder 反序列化漏洞复现笔记</a>
+            
+        </section>
+<script src="https://giscus.app/client.js"
+        data-repo="forkmmat/forkmmat.github.io"
+        data-repo-id="R_kgDOO0OA0g"
+        data-category="General"
+        data-category-id="DIC_kwDOO0OA0s4CtD6Y"
+        data-mapping="title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="zh-CN"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+</script>
+
+    </article>
+</div>
+
+            </div>
+            <footer id="footer" class="footer">
+    <div class="copyright">
+        <span>© rowen | Powered by <a href="https://hexo.io" target="_blank">Hexo</a> & <a href="https://github.com/Siricee/hexo-theme-Chic" target="_blank">Chic</a></span>
+    </div>
+</footer>
+
+    </div>
+</body>
+
+</html>
