@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <meta name="author" content="rowen">
+
+
+
+
+
+<title>Apache Shiro RememberMe 反序列化：从原理到告警研判证据链 | Hexo</title>
+
+
+
+    <link rel="icon" href="/drink.ico">
+
+
+
+
+    <!-- stylesheets list from _config.yml -->
+    
+    <link rel="stylesheet" href="/css/style.css">
+    
+
+
+
+    <!-- scripts list from _config.yml -->
+    
+    <script src="/js/script.js"></script>
+    
+    <script src="/js/tocbot.min.js"></script>
+    
+
+
+
+    
+    
+        
+    
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+    <!-- 引入jQuery -->
+<script type="text/javascript" src="//libs.baidu.com/jquery/1.8.3/jquery.min.js"></script>
+<!-- 雪花特效2 -->
+ <script type="text/javascript" src="/js/snow2.js"></script>
+    <script>
+        // this function is used to check current theme before page loaded.
+        (() => {
+            const currentTheme = window.localStorage && window.localStorage.getItem('theme') || '';
+            const isDark = currentTheme === 'dark';
+            const pagebody = document.getElementsByTagName('body')[0]
+            if (isDark) {
+                pagebody.classList.add('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Dark"
+            } else {
+                pagebody.classList.remove('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Light"
+            }
+        })();
+    </script>
+<script>
+!
+function() {
+function n(n, e, t) {
+return n.getAttribute(e) || t
+}
+function e(n) {
+return document.getElementsByTagName(n)
+}
+function t() {
+var t = e("script"),
+o = t.length,
+i = t[o - 1];
+return {
+l: o,
+z: n(i, "zIndex", -1), //置于主页面背后
+o: n(i, "opacity", .5), //线条透明度
+c: n(i, "color", "0,0,0"), //线条颜色
+n: n(i, "count", 100) //线条数量
+}
+}
+function o() {
+a = m.width = window.innerWidth ||
+document.documentElement.clientWidth || document.body.clientWidth,
+c = m.height = window.innerHeight ||
+document.documentElement.clientHeight || document.body.clientHeight
+}
+function i() {
+r.clearRect(0, 0, a, c);
+var n, e, t, o, m, l;
+s.forEach(function(i, x) {
+for (i.x += i.xa, i.y += i.ya, i.xa *= i.x > a || i.x < 0 ? -1 :
+1, i.ya *= i.y > c || i.y < 0 ? -1 : 1, r.fillRect(i.x - .5, i.y - .5, 1,
+1), e = x + 1; e < u.length; e++) n = u[e],
+null !== n.x && null !== n.y && (o = i.x - n.x, m = i.y - n.y, l
+= o * o + m * m, l < n.max && (n === y && l >= n.max / 2 && (i.x -= .03 * o,
+i.y -= .03 * m), t = (n.max - l) / n.max, r.beginPath(), r.lineWidth = t /
+2, r.strokeStyle = "rgba(" + d.c + "," + (t + .2) + ")", r.moveTo(i.x, i.y),
+r.lineTo(n.x, n.y), r.stroke()))
+}),
+x(i)
+}
+var a, c, u, m = document.createElement("canvas"),
+d = t(),
+l = "c_n" + d.l,
+r = m.getContext("2d"),
+x = window.requestAnimationFrame || window.webkitRequestAnimationFrame
+|| window.mozRequestAnimationFrame || window.oRequestAnimationFrame ||
+window.msRequestAnimationFrame ||
+function(n) {
+window.setTimeout(n, 1e3 / 45)
+},
+w = Math.random,
+y = {
+x: null,
+y: null,
+max: 2e4
+};
+m.id = l,
+m.style.cssText = "position:fixed;top:0;left:0;z-index:" + d.z +
+";opacity:" + d.o,
+e("body")[0].appendChild(m),
+o(),
+window.onresize = o,
+window.onmousemove = function(n) {
+n = n || window.event,
+y.x = n.clientX,
+y.y = n.clientY
+},
+window.onmouseout = function() {
+y.x = null,
+y.y = null
+};
+for (var s = [], f = 0; d.n > f; f++) {
+var h = w() * a,
+g = w() * c,
+v = 2 * w() - 1,
+p = 2 * w() - 1;
+s.push({
+x: h,
+y: g,
+xa: v,
+ya: p,
+max: 6e3
+})
+}
+u = s.concat([y]),
+setTimeout(function() {
+i()
+},
+100)
+} ();
+</script>
+    <div class="wrapper">
+        <header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-header header-logo"><a href="/">bobo&#39;s Blog</a></div>
+            <div class="menu navbar-right">
+                
+                    <a class="menu-item" href="/archives">📖博文</a>
+                
+                    <a class="menu-item" href="/category">📚类别</a>
+                
+                    <a class="menu-item" href="/tag">🏷️标签</a>
+                
+                    <a class="menu-item" href="/about">💡关于</a>
+                
+                    <a class="menu-item" href="/links">🔗友链</a>
+                
+                <input id="switch_default" type="checkbox" class="switch_default">
+                <label for="switch_default" class="toggleBtn"></label>
+            </div>
+        </div>
+    </nav>
+
+    
+    <nav class="navbar-mobile" id="nav-mobile">
+        <div class="container">
+            <div class="navbar-header">
+                <div>
+                    <a href="/">bobo&#39;s Blog</a><a id="mobile-toggle-theme">·&nbsp;Light</a>
+                </div>
+                <div class="menu-toggle" onclick="mobileBtn()">&#9776; Menu</div>
+            </div>
+            <div class="menu" id="mobile-menu">
+                
+                    <a class="menu-item" href="/archives">📖博文</a>
+                
+                    <a class="menu-item" href="/category">📚类别</a>
+                
+                    <a class="menu-item" href="/tag">🏷️标签</a>
+                
+                    <a class="menu-item" href="/about">💡关于</a>
+                
+                    <a class="menu-item" href="/links">🔗友链</a>
+                
+            </div>
+        </div>
+    </nav>
+
+</header>
+<script>
+    var mobileBtn = function f() {
+        var toggleMenu = document.getElementsByClassName("menu-toggle")[0];
+        var mobileMenu = document.getElementById("mobile-menu");
+        if(toggleMenu.classList.contains("active")){
+           toggleMenu.classList.remove("active")
+            mobileMenu.classList.remove("active")
+        }else{
+            toggleMenu.classList.add("active")
+            mobileMenu.classList.add("active")
+        }
+    }
+</script>
+            <div class="main">
+                <div class="container">
+    
+    
+        <div class="post-toc">
+    <div class="tocbot-list">
+    </div>
+    <div class="tocbot-list-menu">
+        <a class="tocbot-toc-expand" onclick="expand_toc()">Expand all</a>
+        <a onclick="go_top()">Back to top</a>
+        <a onclick="go_bottom()">Go to bottom</a>
+    </div>
+</div>
+
+<script>
+    document.ready(
+        function () {
+            tocbot.init({
+                tocSelector: '.tocbot-list',
+                contentSelector: '.post-content',
+                headingSelector: 'h1, h2, h3, h4, h5',
+                collapseDepth: 1,
+                orderedList: false,
+                scrollSmooth: true,
+            })
+        }
+    )
+
+    function expand_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 6,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "collapse_toc()");
+        b.innerHTML = "Collapse all"
+    }
+
+    function collapse_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 1,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "expand_toc()");
+        b.innerHTML = "Expand all"
+    }
+
+    function go_top() {
+        window.scrollTo(0, 0);
+    }
+
+    function go_bottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+</script>
+    
+
+    
+    <article class="post-wrap">
+        <header class="post-header">
+            <h1 class="post-title">Apache Shiro RememberMe 反序列化：从原理到告警研判证据链</h1>
+            
+                <div class="post-meta">
+                    
+                        Author: <a itemprop="author" rel="author" href="/">rowen</a>
+                    
+
+                    
+                        <span class="post-time">
+                        Date: <a href="#">October 10, 2026&nbsp;&nbsp;10:04:00</a>
+                        </span>
+                    
+                    
+                        <span class="post-category">
+                    Category:
+                            
+                                <a href="/categories/Web%E5%AE%89%E5%85%A8/">Web安全</a>
+                            
+                        </span>
+                    
+                </div>
+            
+        </header>
+
+        <div class="post-content">
+            <h1 id="Apache-Shiro-RememberMe-反序列化：从原理到告警研判证据链"><a href="#Apache-Shiro-RememberMe-反序列化：从原理到告警研判证据链" class="headerlink" title="Apache Shiro RememberMe 反序列化：从原理到告警研判证据链"></a>Apache Shiro RememberMe 反序列化：从原理到告警研判证据链</h1><h2 id="前言：研判-Shiro-告警要回答的五个问题"><a href="#前言：研判-Shiro-告警要回答的五个问题" class="headerlink" title="前言：研判 Shiro 告警要回答的五个问题"></a>前言：研判 Shiro 告警要回答的五个问题</h2><p>Shiro 反序列化是 Java Web 安全中非常典型的告警类型。刚接触时容易把几个概念混在一起：</p>
+<ul>
+<li>响应出现 <code>rememberMe=deleteMe</code>，是不是已经攻击成功？</li>
+<li>Cookie 中出现很长的 <code>rememberMe</code>，是不是一定是恶意 Payload？</li>
+<li>Shiro-550 和 Shiro-721 都是反序列化，到底有什么区别？</li>
+<li>安全设备命中”Shiro 反序列化”后，应该看响应包，还是查服务器？</li>
+<li>查到旧版本、默认密钥或 Gadget 特征，能不能直接定性为 RCE 成功？</li>
+</ul>
+<p>核心结论先给出：</p>
+<blockquote>
+<p><strong>Shiro 框架指纹、受影响版本、恶意反序列化对象和命令执行结果，是四个不同层次的证据。只有把流量证据、应用证据和主机证据关联起来，才能判断风险是否真正落地。</strong></p>
+</blockquote>
+<h2 id="一、RememberMe-为什么会和反序列化扯上关系"><a href="#一、RememberMe-为什么会和反序列化扯上关系" class="headerlink" title="一、RememberMe 为什么会和反序列化扯上关系"></a>一、RememberMe 为什么会和反序列化扯上关系</h2><p>Apache Shiro 是 Java 生态的安全框架，提供认证、授权、会话管理和 RememberMe（记住我）能力。</p>
+<p>传统 RememberMe 机制的写入流程：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">登录成功并勾选&quot;记住我&quot;</span><br><span class="line">    ↓</span><br><span class="line">收集 PrincipalCollection 身份信息</span><br><span class="line">    ↓</span><br><span class="line">Java 序列化为字节数据</span><br><span class="line">    ↓</span><br><span class="line">AES 加密</span><br><span class="line">    ↓</span><br><span class="line">Base64 编码</span><br><span class="line">    ↓</span><br><span class="line">写入 rememberMe Cookie</span><br></pre></td></tr></table></figure>
+
+<p>浏览器后续访问时流程反过来：Base64 解码 → AES 解密 → <strong>Java 反序列化</strong> → 恢复身份对象。</p>
+<p>危险点在于：**<code>rememberMe</code> 来自客户端，是外部可控数据**。只要攻击者能构造出服务端可正确解密的数据，且解密结果是恶意 Java 序列化对象、目标依赖里存在可利用的 Gadget Chain，就可能在反序列化过程中触发非预期代码执行。</p>
+<p>一条完整利用链需要同时满足：</p>
+<ol>
+<li>目标启用了 RememberMe 处理；</li>
+<li>目标处于受影响版本或存在等价的不安全实现；</li>
+<li>攻击者能生成服务端可接受的密文；</li>
+<li>服务端类路径存在匹配的 Gadget Chain；</li>
+<li>恶意对象确实进入反序列化流程；</li>
+<li>最终操作未被 Java 版本、权限、容器、EDR 等阻断。</li>
+</ol>
+<p>所以：<strong>发现 Shiro ≠ 存在漏洞；存在旧版本 ≠ 一定可利用；出现恶意 Cookie ≠ 命令已执行。</strong></p>
+<h2 id="二、Shiro-550-vs-Shiro-721"><a href="#二、Shiro-550-vs-Shiro-721" class="headerlink" title="二、Shiro-550 vs Shiro-721"></a>二、Shiro-550 vs Shiro-721</h2><table>
+<thead>
+<tr>
+<th>对比项</th>
+<th>Shiro-550</th>
+<th>Shiro-721</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>对应 CVE</td>
+<td>CVE-2016-4437</td>
+<td>CVE-2019-12422</td>
+</tr>
+<tr>
+<td>NVD CVSS v3.1</td>
+<td>9.8 Critical</td>
+<td>7.5 High</td>
+</tr>
+<tr>
+<td>影响范围</td>
+<td>Shiro ≤ 1.2.4（修复起 1.2.5）</td>
+<td>Shiro ≤ 1.4.1（修复起 1.4.2）</td>
+</tr>
+<tr>
+<td>主要突破点</td>
+<td>已知或泄露的密钥</td>
+<td>AES-CBC Padding Oracle</td>
+</tr>
+<tr>
+<td>是否必须知道密钥</td>
+<td>通常需要</td>
+<td>不一定</td>
+</tr>
+<tr>
+<td>是否需要合法 Cookie</td>
+<td>不一定</td>
+<td>通常需要</td>
+</tr>
+<tr>
+<td>利用交互次数</td>
+<td>相对较少</td>
+<td>需要多次请求</td>
+</tr>
+</tbody></table>
+<p>一句话区分：</p>
+<blockquote>
+<p>**Shiro-550 是”门锁钥匙被公开”**——旧版本存在公开固定的默认 RememberMe 密钥（<code>kPH+bIxk5D2deZiIxcaaaA==</code>），攻击者知道密钥就能加密恶意序列化对象。</p>
+<p>**Shiro-721 是”不知道钥匙，但可以根据门锁对不同输入的反馈逐步推导有效密文”**——利用 CBC 模式和服务端响应差异做 Padding Oracle 攻击。</p>
+</blockquote>
+<p>一个容易被忽略的点：升级到 1.2.5 只是解决了<strong>已知默认密钥</strong>。如果开发后来又配置了从公开示例复制的固定密钥、多系统共用的弱密钥、可从配置&#x2F;镜像&#x2F;仓库泄露的密钥、或长期不轮换的硬编码密钥，相似风险会重新出现。**”不是默认密钥”不代表密钥管理安全。**</p>
+<h2 id="三、研判第一步：rememberMe-deleteMe-是什么"><a href="#三、研判第一步：rememberMe-deleteMe-是什么" class="headerlink" title="三、研判第一步：rememberMe=deleteMe 是什么"></a>三、研判第一步：<code>rememberMe=deleteMe</code> 是什么</h2><p>探测 Shiro 的常见方式：</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">Cookie</span><span class="punctuation">: </span>rememberMe=1</span><br></pre></td></tr></table></figure>
+
+<p>如果目标由 Shiro 处理，响应可能出现：</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">Set-Cookie</span><span class="punctuation">: </span>rememberMe=deleteMe; Path=/; Max-Age=0</span><br></pre></td></tr></table></figure>
+
+<p><strong>它能说明什么</strong>：请求到达了处理 RememberMe 的组件；目标很可能用了 Shiro；如果由陌生外部源发起，可能处于框架探测阶段。</p>
+<p><strong>它不能说明什么</strong>：不能说明是受影响版本、用了默认密钥、攻击者已找到正确密钥、恶意对象已反序列化、命令已执行或主机已失陷。</p>
+<p><strong>误报来源</strong>：用户保存了失效的旧 Cookie、应用更新或密钥轮换、多节点密钥配置不一致、Cookie 被代理截断污染、自动化测试携带异常 Cookie、安全设备只按 <code>rememberMe</code> 长度或关键字匹配。</p>
+<blockquote>
+<p><strong><code>rememberMe=deleteMe</code> 是框架指纹和探测线索，不是漏洞利用成功的标志。</strong></p>
+</blockquote>
+<h2 id="四、研判第二步：长-Cookie-是正常业务还是恶意-Payload"><a href="#四、研判第二步：长-Cookie-是正常业务还是恶意-Payload" class="headerlink" title="四、研判第二步：长 Cookie 是正常业务还是恶意 Payload"></a>四、研判第二步：长 Cookie 是正常业务还是恶意 Payload</h2><p>正常与恶意 Cookie 外观上都是：长、Base64 字符、肉眼不可读。只按”Cookie 很长”告警会产生大量误报。</p>
+<p>区分方法（在<strong>已授权的离线环境</strong>用实际密钥解密分析）：</p>
+<p><strong>正常身份数据</strong>的解密结果指向 Shiro 身份对象：<code>PrincipalCollection</code>、Realm 名称、用户名&#x2F;用户 ID 等业务身份结构。</p>
+<p><strong>恶意对象</strong>的解密结果出现这些特征时风险等级立即上调：</p>
+<ul>
+<li><code>ysoserial</code> 等Payload 生成工具痕迹</li>
+<li><code>TemplatesImpl</code>、<code>BeanComparator</code> 等高风险 Gadget 类</li>
+<li><code>Runtime.getRuntime().exec</code>、<code>ProcessBuilder</code> 等进程创建路径</li>
+<li><code>whoami</code>、<code>cmd.exe</code>、<code>curl</code>、<code>wget</code> 等命令字符串</li>
+<li>DNS&#x2F;HTTP&#x2F;LDAP&#x2F;RMI 外联地址</li>
+<li>与身份对象完全无关的复杂对象图</li>
+</ul>
+<p>但仍要区分两个结论：</p>
+<ol>
+<li><strong>解密后发现恶意对象结构</strong> → 证明有明确攻击意图，且攻击者可能掌握有效构造条件；</li>
+<li><strong>恶意对象已执行成功</strong> → 还需要响应、进程、文件、网络或日志证据。</li>
+</ol>
+<p>Gadget 不匹配、类不存在、Java 版本不兼容或被安全控制阻断时，Payload 再漂亮也不会形成实际命令执行。</p>
+<p><strong>实操红线</strong>：不要把生产环境 Cookie 上传到在线解密网站，解密结果可能包含用户身份、Realm&#x2F;类名&#x2F;技术栈、内部业务字段甚至认证材料。现场用经过审批的本地离线工具；只做字节和结构分析，不要通过 <code>ObjectInputStream.readObject()</code> 或加载 Gadget 类来“查看”未知载荷，避免分析过程触发执行。</p>
+<h2 id="五、研判第三步：攻击到底有没有成功"><a href="#五、研判第三步：攻击到底有没有成功" class="headerlink" title="五、研判第三步：攻击到底有没有成功"></a>五、研判第三步：攻击到底有没有成功</h2><h3 id="有回显场景"><a href="#有回显场景" class="headerlink" title="有回显场景"></a>有回显场景</h3><p>响应中出现与测试命令严格对应的内容（当前用户名、主机名、唯一随机标记等）是强成功证据。但要排除：页面本来就含同样字符串、网关&#x2F;扫描器回显了请求内容、响应属于缓存或其他请求。<strong>用请求 ID、五元组、时间戳和唯一标记确认请求与响应的对应关系。</strong></p>
+<h3 id="无回显场景（更常见）"><a href="#无回显场景（更常见）" class="headerlink" title="无回显场景（更常见）"></a>无回显场景（更常见）</h3><p>Java 反序列化经常没有 HTTP 回显。<strong>不能因为”响应正常”就判断攻击失败</strong>，继续查四类主机证据：</p>
+<table>
+<thead>
+<tr>
+<th>证据类型</th>
+<th>排查点</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>进程</td>
+<td>Java 进程是否创建 <code>cmd.exe</code>&#x2F;<code>powershell</code>&#x2F;<code>curl</code>&#x2F;<code>wget</code> 子进程；父子关系与命令行参数是否与 Payload 一致；时间是否吻合</td>
+</tr>
+<tr>
+<td>文件</td>
+<td>Web&#x2F;临时&#x2F;上传目录新文件；脚本、WebShell、计划任务、异常 JAR；哈希是否命中情报</td>
+</tr>
+<tr>
+<td>网络</td>
+<td>Java 进程异常 DNS 查询；向陌生 IP&#x2F;域名的 HTTP&#x2F;LDAP&#x2F;RMI 连接；第二阶段载荷下载；反连&#x2F;横向</td>
+</tr>
+<tr>
+<td>日志</td>
+<td>应用日志的 <code>ClassNotFoundException</code>、<code>BadPaddingException</code> 等解密&#x2F;反序列化异常；EDR&#x2F;HIDS 的 Java 子进程记录</td>
+</tr>
+</tbody></table>
+<h3 id="HTTP-状态码不能直接定性"><a href="#HTTP-状态码不能直接定性" class="headerlink" title="HTTP 状态码不能直接定性"></a>HTTP 状态码不能直接定性</h3><table>
+<thead>
+<tr>
+<th>现象</th>
+<th>正确理解</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>HTTP 200</td>
+<td>正常返回页面，不代表命令执行成功</td>
+</tr>
+<tr>
+<td>HTTP 302</td>
+<td>可能只是跳登录页</td>
+</tr>
+<tr>
+<td>HTTP 500</td>
+<td>可能是 Payload 触发异常，也可能是普通应用错误</td>
+</tr>
+<tr>
+<td><code>rememberMe=deleteMe</code></td>
+<td>Cookie 被判无效或处理失败</td>
+</tr>
+<tr>
+<td>响应变慢</td>
+<td>可能与测试行为有关，也受负载影响</td>
+</tr>
+<tr>
+<td>DNS 外联命中唯一域名</td>
+<td>较强的带外执行证据，仍需确认来源进程和时间</td>
+</tr>
+</tbody></table>
+<h2 id="六、版本核验的正确姿势"><a href="#六、版本核验的正确姿势" class="headerlink" title="六、版本核验的正确姿势"></a>六、版本核验的正确姿势</h2><p>不要只依赖登录页指纹或扫描器猜版本。更可靠的方式：</p>
+<ol>
+<li>查 Maven <code>pom.xml</code> &#x2F; Gradle 依赖锁定文件；</li>
+<li>查部署包 <code>WEB-INF/lib</code> 里的 <code>shiro-core-*.jar</code>、<code>shiro-web-*.jar</code>；</li>
+<li>读 JAR 的 <code>META-INF/MANIFEST.MF</code> 或算哈希比对；</li>
+<li>核对<strong>运行进程实际加载的 JAR</strong>，而不是源码声明——防止”代码已升级、运行包未替换”；</li>
+<li>容器镜像和历史遗留包单独排查。</li>
+</ol>
+<h2 id="七、把研判固化成流程"><a href="#七、把研判固化成流程" class="headerlink" title="七、把研判固化成流程"></a>七、把研判固化成流程</h2><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">Shiro 告警</span><br><span class="line">  ↓ ① 指纹层：rememberMe=deleteMe？→ 提供框架或探测线索，需交叉核验</span><br><span class="line">  ↓ ② 意图层：Cookie 解密出 Gadget/命令字符串？→ 证明攻击意图与构造能力</span><br><span class="line">  ↓ ③ 版本层：受影响版本 + 可用密钥？→ 证明漏洞成立条件</span><br><span class="line">  ↓ ④ 结果层：回显/进程/文件/网络/日志证据？→ 证明利用成功</span><br><span class="line">  ↓ ⑤ 影响层：数据泄露/横向/持久化？→ 定级与处置</span><br></pre></td></tr></table></figure>
+
+<p>每一层只回答自己能回答的问题，不越层下结论——这就是 Shiro 告警研判最核心的方法论。</p>
+<h2 id="修复建议（给防守方）"><a href="#修复建议（给防守方）" class="headerlink" title="修复建议（给防守方）"></a>修复建议（给防守方）</h2><ol>
+<li>升级到最新版本，杜绝默认密钥；</li>
+<li>配置<strong>随机、独立、定期轮换</strong>的 RememberMe 密钥，禁止从示例代码复制、多系统共用；</li>
+<li>评估是否真的需要 RememberMe 功能，不需要就关闭；</li>
+<li>对 <code>rememberMe</code> Cookie 设置合理的长度上限与频率监控；</li>
+<li>主机侧对 Java 进程的子进程创建、异常外联做检测。</li>
+</ol>
+<hr>
+<p><em>本文整理自驻场期间对 Shiro 告警的专题研究与研判实践，所有 Payload 相关内容仅用于防御研判学习。</em></p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li><a target="_blank" rel="noopener" href="https://shiro.apache.org/security-reports.html">Apache Shiro 安全公告</a></li>
+</ul>
+
+        </div>
+
+        
+            <section class="post-copyright">
+                
+                    <p class="copyright-item">
+                        <span>Author:</span>
+                        <span>rowen</span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>Permalink:</span>
+                        <span><a href="https://forkmmat.github.io/2026/10/10/04-Shiro-RememberMe%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96-%E4%BB%8E%E5%8E%9F%E7%90%86%E5%88%B0%E5%91%8A%E8%AD%A6%E7%A0%94%E5%88%A4/">https://forkmmat.github.io/2026/10/10/04-Shiro-RememberMe%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96-%E4%BB%8E%E5%8E%9F%E7%90%86%E5%88%B0%E5%91%8A%E8%AD%A6%E7%A0%94%E5%88%A4/</a></span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>License:</span>
+                        <span>Copyright (c) 2019 <a target="_blank" rel="noopener" href="http://creativecommons.org/licenses/by-nc/4.0/">CC-BY-NC-4.0</a> LICENSE</span>
+                    </p>
+                
+                
+                     <p class="copyright-item">
+                         <span>Slogan:</span>
+                         <span>Do you believe in <strong>DESTINY</strong>?</span>
+                     </p>
+                
+
+            </section>
+        
+        <section class="post-tags">
+            <div>
+                <span>Tag(s):</span>
+                <span class="tag">
+                    
+                    
+                        <a href="/tags/%E5%91%8A%E8%AD%A6%E7%A0%94%E5%88%A4/"># 告警研判</a>
+                    
+                        <a href="/tags/Shiro/"># Shiro</a>
+                    
+                        <a href="/tags/%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/"># 反序列化</a>
+                    
+                        <a href="/tags/Shiro-550/"># Shiro-550</a>
+                    
+                        <a href="/tags/Shiro-721/"># Shiro-721</a>
+                    
+                        
+                </span>
+            </div>
+            <div>
+                <a href="javascript:window.history.back();">back</a>
+                <span>· </span>
+                <a href="/">home</a>
+            </div>
+        </section>
+        <section class="post-nav">
+            
+                <a class="prev" rel="prev" href="/2026/10/10/05-AI%E5%BA%94%E7%94%A8%E5%AE%89%E5%85%A8-%E6%8F%90%E7%A4%BA%E8%AF%8D%E6%B3%A8%E5%85%A5%E5%8D%81%E7%B1%BB%E6%94%BB%E5%87%BB%E9%9D%A2%E4%B8%8E%E7%A0%94%E5%88%A4/">AI 应用安全：提示词注入的十类攻击面与研判思路</a>
+            
+            
+            <a class="next" rel="next" href="/2026/10/10/03-Python%E6%BC%8F%E6%B4%9E%E6%83%85%E6%8A%A5%E6%B5%81%E6%B0%B4%E7%BA%BF-%E7%BB%84%E4%BB%B6%E6%B8%85%E5%8D%95%E4%B8%8ECVE%E4%BA%A4%E5%8F%89%E5%8C%B9%E9%85%8D/">用 Python 打造漏洞情报流水线：组件清单与 CVE 交叉匹配实战</a>
+            
+        </section>
+<script src="https://giscus.app/client.js"
+        data-repo="forkmmat/forkmmat.github.io"
+        data-repo-id="R_kgDOO0OA0g"
+        data-category="General"
+        data-category-id="DIC_kwDOO0OA0s4CtD6Y"
+        data-mapping="title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="zh-CN"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+</script>
+
+    </article>
+</div>
+
+            </div>
+            <footer id="footer" class="footer">
+    <div class="copyright">
+        <span>© rowen | Powered by <a href="https://hexo.io" target="_blank">Hexo</a> & <a href="https://github.com/Siricee/hexo-theme-Chic" target="_blank">Chic</a></span>
+    </div>
+</footer>
+
+    </div>
+</body>
+
+</html>

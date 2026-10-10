@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <meta name="author" content="rowen">
+
+
+
+
+
+<title>用 Python 打造漏洞情报流水线：组件清单与 CVE 交叉匹配实战 | Hexo</title>
+
+
+
+    <link rel="icon" href="/drink.ico">
+
+
+
+
+    <!-- stylesheets list from _config.yml -->
+    
+    <link rel="stylesheet" href="/css/style.css">
+    
+
+
+
+    <!-- scripts list from _config.yml -->
+    
+    <script src="/js/script.js"></script>
+    
+    <script src="/js/tocbot.min.js"></script>
+    
+
+
+
+    
+    
+        
+    
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+    <!-- 引入jQuery -->
+<script type="text/javascript" src="//libs.baidu.com/jquery/1.8.3/jquery.min.js"></script>
+<!-- 雪花特效2 -->
+ <script type="text/javascript" src="/js/snow2.js"></script>
+    <script>
+        // this function is used to check current theme before page loaded.
+        (() => {
+            const currentTheme = window.localStorage && window.localStorage.getItem('theme') || '';
+            const isDark = currentTheme === 'dark';
+            const pagebody = document.getElementsByTagName('body')[0]
+            if (isDark) {
+                pagebody.classList.add('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Dark"
+            } else {
+                pagebody.classList.remove('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Light"
+            }
+        })();
+    </script>
+<script>
+!
+function() {
+function n(n, e, t) {
+return n.getAttribute(e) || t
+}
+function e(n) {
+return document.getElementsByTagName(n)
+}
+function t() {
+var t = e("script"),
+o = t.length,
+i = t[o - 1];
+return {
+l: o,
+z: n(i, "zIndex", -1), //置于主页面背后
+o: n(i, "opacity", .5), //线条透明度
+c: n(i, "color", "0,0,0"), //线条颜色
+n: n(i, "count", 100) //线条数量
+}
+}
+function o() {
+a = m.width = window.innerWidth ||
+document.documentElement.clientWidth || document.body.clientWidth,
+c = m.height = window.innerHeight ||
+document.documentElement.clientHeight || document.body.clientHeight
+}
+function i() {
+r.clearRect(0, 0, a, c);
+var n, e, t, o, m, l;
+s.forEach(function(i, x) {
+for (i.x += i.xa, i.y += i.ya, i.xa *= i.x > a || i.x < 0 ? -1 :
+1, i.ya *= i.y > c || i.y < 0 ? -1 : 1, r.fillRect(i.x - .5, i.y - .5, 1,
+1), e = x + 1; e < u.length; e++) n = u[e],
+null !== n.x && null !== n.y && (o = i.x - n.x, m = i.y - n.y, l
+= o * o + m * m, l < n.max && (n === y && l >= n.max / 2 && (i.x -= .03 * o,
+i.y -= .03 * m), t = (n.max - l) / n.max, r.beginPath(), r.lineWidth = t /
+2, r.strokeStyle = "rgba(" + d.c + "," + (t + .2) + ")", r.moveTo(i.x, i.y),
+r.lineTo(n.x, n.y), r.stroke()))
+}),
+x(i)
+}
+var a, c, u, m = document.createElement("canvas"),
+d = t(),
+l = "c_n" + d.l,
+r = m.getContext("2d"),
+x = window.requestAnimationFrame || window.webkitRequestAnimationFrame
+|| window.mozRequestAnimationFrame || window.oRequestAnimationFrame ||
+window.msRequestAnimationFrame ||
+function(n) {
+window.setTimeout(n, 1e3 / 45)
+},
+w = Math.random,
+y = {
+x: null,
+y: null,
+max: 2e4
+};
+m.id = l,
+m.style.cssText = "position:fixed;top:0;left:0;z-index:" + d.z +
+";opacity:" + d.o,
+e("body")[0].appendChild(m),
+o(),
+window.onresize = o,
+window.onmousemove = function(n) {
+n = n || window.event,
+y.x = n.clientX,
+y.y = n.clientY
+},
+window.onmouseout = function() {
+y.x = null,
+y.y = null
+};
+for (var s = [], f = 0; d.n > f; f++) {
+var h = w() * a,
+g = w() * c,
+v = 2 * w() - 1,
+p = 2 * w() - 1;
+s.push({
+x: h,
+y: g,
+xa: v,
+ya: p,
+max: 6e3
+})
+}
+u = s.concat([y]),
+setTimeout(function() {
+i()
+},
+100)
+} ();
+</script>
+    <div class="wrapper">
+        <header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-header header-logo"><a href="/">bobo&#39;s Blog</a></div>
+            <div class="menu navbar-right">
+                
+                    <a class="menu-item" href="/archives">📖博文</a>
+                
+                    <a class="menu-item" href="/category">📚类别</a>
+                
+                    <a class="menu-item" href="/tag">🏷️标签</a>
+                
+                    <a class="menu-item" href="/about">💡关于</a>
+                
+                    <a class="menu-item" href="/links">🔗友链</a>
+                
+                <input id="switch_default" type="checkbox" class="switch_default">
+                <label for="switch_default" class="toggleBtn"></label>
+            </div>
+        </div>
+    </nav>
+
+    
+    <nav class="navbar-mobile" id="nav-mobile">
+        <div class="container">
+            <div class="navbar-header">
+                <div>
+                    <a href="/">bobo&#39;s Blog</a><a id="mobile-toggle-theme">·&nbsp;Light</a>
+                </div>
+                <div class="menu-toggle" onclick="mobileBtn()">&#9776; Menu</div>
+            </div>
+            <div class="menu" id="mobile-menu">
+                
+                    <a class="menu-item" href="/archives">📖博文</a>
+                
+                    <a class="menu-item" href="/category">📚类别</a>
+                
+                    <a class="menu-item" href="/tag">🏷️标签</a>
+                
+                    <a class="menu-item" href="/about">💡关于</a>
+                
+                    <a class="menu-item" href="/links">🔗友链</a>
+                
+            </div>
+        </div>
+    </nav>
+
+</header>
+<script>
+    var mobileBtn = function f() {
+        var toggleMenu = document.getElementsByClassName("menu-toggle")[0];
+        var mobileMenu = document.getElementById("mobile-menu");
+        if(toggleMenu.classList.contains("active")){
+           toggleMenu.classList.remove("active")
+            mobileMenu.classList.remove("active")
+        }else{
+            toggleMenu.classList.add("active")
+            mobileMenu.classList.add("active")
+        }
+    }
+</script>
+            <div class="main">
+                <div class="container">
+    
+    
+        <div class="post-toc">
+    <div class="tocbot-list">
+    </div>
+    <div class="tocbot-list-menu">
+        <a class="tocbot-toc-expand" onclick="expand_toc()">Expand all</a>
+        <a onclick="go_top()">Back to top</a>
+        <a onclick="go_bottom()">Go to bottom</a>
+    </div>
+</div>
+
+<script>
+    document.ready(
+        function () {
+            tocbot.init({
+                tocSelector: '.tocbot-list',
+                contentSelector: '.post-content',
+                headingSelector: 'h1, h2, h3, h4, h5',
+                collapseDepth: 1,
+                orderedList: false,
+                scrollSmooth: true,
+            })
+        }
+    )
+
+    function expand_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 6,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "collapse_toc()");
+        b.innerHTML = "Collapse all"
+    }
+
+    function collapse_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 1,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "expand_toc()");
+        b.innerHTML = "Expand all"
+    }
+
+    function go_top() {
+        window.scrollTo(0, 0);
+    }
+
+    function go_bottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+</script>
+    
+
+    
+    <article class="post-wrap">
+        <header class="post-header">
+            <h1 class="post-title">用 Python 打造漏洞情报流水线：组件清单与 CVE 交叉匹配实战</h1>
+            
+                <div class="post-meta">
+                    
+                        Author: <a itemprop="author" rel="author" href="/">rowen</a>
+                    
+
+                    
+                        <span class="post-time">
+                        Date: <a href="#">October 10, 2026&nbsp;&nbsp;10:03:00</a>
+                        </span>
+                    
+                    
+                        <span class="post-category">
+                    Category:
+                            
+                                <a href="/categories/%E5%AE%89%E5%85%A8%E8%BF%90%E8%90%A5/">安全运营</a>
+                            
+                        </span>
+                    
+                </div>
+            
+        </header>
+
+        <div class="post-content">
+            <h1 id="用-Python-打造漏洞情报流水线：组件清单与-CVE-交叉匹配实战"><a href="#用-Python-打造漏洞情报流水线：组件清单与-CVE-交叉匹配实战" class="headerlink" title="用 Python 打造漏洞情报流水线：组件清单与 CVE 交叉匹配实战"></a>用 Python 打造漏洞情报流水线：组件清单与 CVE 交叉匹配实战</h1><h2 id="场景"><a href="#场景" class="headerlink" title="场景"></a>场景</h2><p>NVD 每日新增条目数量会变化。安全服务的实际问题从来不是”没有漏洞信息”，而是：</p>
+<ol>
+<li>当天新增的几百条 CVE 里，<strong>哪些与客户在用组件有关</strong>？</li>
+<li>命中之后，<strong>哪些是真实命中，哪些是关键词误报</strong>？</li>
+<li>筛完之后，<strong>怎么快速形成可报送的通报</strong>？</li>
+</ol>
+<p>这篇文章分享一套我在驻场期间打磨的流水线：<strong>多源拉取 → 组件交叉匹配 → 去噪 → 人工复核 → 通报输出</strong>。</p>
+<h2 id="一、多源聚合"><a href="#一、多源聚合" class="headerlink" title="一、多源聚合"></a>一、多源聚合</h2><p>单一数据源不够用。各数据源的角色分工：</p>
+<table>
+<thead>
+<tr>
+<th>数据源</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>NVD 2.0 API</td>
+<td>主查询源：CVSS、CPE、CWE、参考链接</td>
+</tr>
+<tr>
+<td>CVE.org</td>
+<td>详情入口链接</td>
+</tr>
+<tr>
+<td>FIRST EPSS</td>
+<td>利用概率参考（0-1，越高越可能被利用）</td>
+</tr>
+<tr>
+<td>CISA KEV</td>
+<td>是否在已知被在野利用目录中</td>
+</tr>
+<tr>
+<td>阿里云 AVD</td>
+<td>中文详情页</td>
+</tr>
+<tr>
+<td>奇安信 TI</td>
+<td>漏洞库入口</td>
+</tr>
+</tbody></table>
+<p>NVD 2.0 API 查询要点：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># NVD API 按发布时间过滤</span></span><br><span class="line"><span class="comment"># 注意时区：北京时间当天 = UTC 前一天 16:00 起</span></span><br><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">query_nvd</span>(<span class="params">start_utc, end_utc</span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;演示分页逻辑；生产使用时还需限速、重试、去重与审计记录。&quot;&quot;&quot;</span></span><br><span class="line">    url = <span class="string">&quot;https://services.nvd.nist.gov/rest/json/cves/2.0&quot;</span></span><br><span class="line">    params = &#123;</span><br><span class="line">        <span class="string">&quot;pubStartDate&quot;</span>: start_utc,   <span class="comment"># 如 &quot;2026-08-20T16:00:00.000&quot;</span></span><br><span class="line">        <span class="string">&quot;pubEndDate&quot;</span>: end_utc,</span><br><span class="line">        <span class="string">&quot;resultsPerPage&quot;</span>: <span class="number">2000</span>,</span><br><span class="line">        <span class="string">&quot;startIndex&quot;</span>: <span class="number">0</span>,</span><br><span class="line">    &#125;</span><br><span class="line">    items = []</span><br><span class="line">    <span class="keyword">with</span> requests.Session() <span class="keyword">as</span> session:</span><br><span class="line">        <span class="keyword">while</span> <span class="literal">True</span>:</span><br><span class="line">            r = session.get(url, params=params, timeout=<span class="number">30</span>)</span><br><span class="line">            r.raise_for_status()</span><br><span class="line">            data = r.json()</span><br><span class="line">            batch = data.get(<span class="string">&quot;vulnerabilities&quot;</span>, [])</span><br><span class="line">            total = <span class="built_in">int</span>(data[<span class="string">&quot;totalResults&quot;</span>])</span><br><span class="line">            <span class="keyword">if</span> <span class="keyword">not</span> batch:</span><br><span class="line">                <span class="keyword">if</span> params[<span class="string">&quot;startIndex&quot;</span>] &lt; total:</span><br><span class="line">                    <span class="keyword">raise</span> RuntimeError(<span class="string">&quot;分页提前结束，不能作为完整查询结果&quot;</span>)</span><br><span class="line">                <span class="keyword">break</span></span><br><span class="line">            items.extend(batch)</span><br><span class="line">            params[<span class="string">&quot;startIndex&quot;</span>] += <span class="built_in">len</span>(batch)</span><br><span class="line">            <span class="keyword">if</span> params[<span class="string">&quot;startIndex&quot;</span>] &gt;= total:</span><br><span class="line">                <span class="keyword">break</span></span><br><span class="line">    <span class="keyword">return</span> items</span><br></pre></td></tr></table></figure>
+
+<p><strong>两个必踩的坑</strong>：</p>
+<ol>
+<li><strong>分页截断</strong>：不能假定单次响应就是全部结果。应根据 <code>totalResults</code>、<code>startIndex</code> 和实际返回数量循环翻页，并处理接口限速和错误；即使设置较大的 <code>resultsPerPage</code>，也仍需检查是否完整。</li>
+<li><strong>时区换算</strong>：北京时间”当天”对应 UTC 是前一天 16:00 起。日报口径必须在文档里同时写明北京时间窗口和实际使用的 UTC 参数，否则复盘时对不上数。</li>
+</ol>
+<h2 id="二、组件清单-×-CVE-交叉匹配"><a href="#二、组件清单-×-CVE-交叉匹配" class="headerlink" title="二、组件清单 × CVE 交叉匹配"></a>二、组件清单 × CVE 交叉匹配</h2><p>匹配输入是经授权整理的在用组件清单，覆盖数据库&#x2F;搜索、容器云原生、Java 中间件、语言运行时等。公开示例不包含客户资产明细或真实清单规模。</p>
+<p>匹配字段取三个：CVE 的 <strong>description（描述）</strong>、<strong>CPE</strong>、<strong>affected product</strong>。三字段命中任意一个即视为候选。</p>
+<p>下面的 <code>match</code> 接收的是预先归一化的记录，不是 NVD 原始响应。需要先从 <code>cve.descriptions</code> 提取描述，从 <code>cve.configurations</code> 中递归提取 CPE 与版本条件，并按数据源结构整理产品字段；不能把原始嵌套 JSON 直接传入这个函数。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">match</span>(<span class="params">cve, components</span>):</span><br><span class="line">    text = <span class="string">&quot; &quot;</span>.join([</span><br><span class="line">        cve.get(<span class="string">&quot;description&quot;</span>, <span class="string">&quot;&quot;</span>),</span><br><span class="line">        cve.get(<span class="string">&quot;cpe&quot;</span>, <span class="string">&quot;&quot;</span>),</span><br><span class="line">        cve.get(<span class="string">&quot;affected_product&quot;</span>, <span class="string">&quot;&quot;</span>),</span><br><span class="line">    ]).lower()</span><br><span class="line">    <span class="keyword">return</span> [c <span class="keyword">for</span> c <span class="keyword">in</span> components <span class="keyword">if</span> c.lower() <span class="keyword">in</span> text]</span><br></pre></td></tr></table></figure>
+
+<h3 id="去噪：比匹配更重要的环节"><a href="#去噪：比匹配更重要的环节" class="headerlink" title="去噪：比匹配更重要的环节"></a>去噪：比匹配更重要的环节</h3><p>直接跑上面的代码，会被短词关键词干掉准确性。实测的坑：</p>
+<ul>
+<li>组件清单里的 <strong><code>R</code></strong> 会命中所有描述里含字母 r 的 CVE</li>
+<li><strong><code>go</code></strong> 会命中 “Google””MongoDB””Cargo”……</li>
+<li><strong><code>Git</code></strong> 会命中 “Digital””Legit”</li>
+</ul>
+<p>处理方式：</p>
+<ol>
+<li><strong>短词白名单跳过</strong>：长度 ≤ 3 的组件名（R、go、gcc、php 等）不做子串匹配，改用词边界正则或直接人工核对；</li>
+<li><strong>大小写与词形</strong>：<code>react</code> 要匹配 “React” 但不能匹配 “reaction”——用 <code>\b</code> 词边界；</li>
+<li><strong>结果复核</strong>：对命中统计做分布检查，某个组件命中数异常高（如一次命中 30+ 条），大概率是短词误报。</li>
+</ol>
+<h2 id="三、输出格式示例"><a href="#三、输出格式示例" class="headerlink" title="三、输出格式示例"></a>三、输出格式示例</h2><p>以下数字为虚构演示值，只说明报表结构，不代表真实项目资产或某个时间窗口的查询结果：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">NVD 时间窗口总 CVE：500 条</span><br><span class="line">命中组件相关 CVE：20 条</span><br><span class="line">其中 CRITICAL 2 条，HIGH 8 条</span><br><span class="line"></span><br><span class="line">命中分布（前几名）：</span><br><span class="line">示例组件 A：8、示例组件 B：5、示例组件 C：3、其他：4</span><br></pre></td></tr></table></figure>
+
+<p>输出按 CVSS 降序排列的优先关注清单，每条包含：命中组件、发布时间、CVSS 分值与向量、摘要、NVD&#x2F;CVE.org&#x2F;AVD&#x2F;TI 链接、参考链接。</p>
+<h2 id="四、人工复核：脚本筛完-≠-结论"><a href="#四、人工复核：脚本筛完-≠-结论" class="headerlink" title="四、人工复核：脚本筛完 ≠ 结论"></a>四、人工复核：脚本筛完 ≠ 结论</h2><p><strong>这是整个流水线里最不能省的一步。</strong>自动命中数量不等于需要处置的漏洞数量。复核要点：</p>
+<ol>
+<li><strong>核对真实产品名</strong>：CVE 描述里的 “Kubernetes” 可能是某个依赖 Kubernetes 的第三方项目（如 Prowler 的 kubeconfig 处理问题），不是 Kubernetes 本身的漏洞——不能只看命中的关键词标签。</li>
+<li><strong>核对版本范围</strong>：CPE 的 affected range 与客户实际版本比对。例如某次 MongoDB 相关情报命中 30+ 条，逐条核对版本后确认客户版本不在受影响范围，无需紧急处置——这一条结论比 30 条命中更有价值。</li>
+<li><strong>可利用性判断</strong>：结合资产重要性、可达性、攻击前提和补偿控制排序。未认证远程利用通常优先；DoS、需要用户交互或特定条件的漏洞不能机械降级，关键业务可用性和真实使用场景同样重要。</li>
+<li><strong>EPSS 与 KEV 加权</strong>：EPSS 高分或在 CISA KEV 目录中的，处置优先级上调。</li>
+</ol>
+<h2 id="五、筛选标准"><a href="#五、筛选标准" class="headerlink" title="五、筛选标准"></a>五、筛选标准</h2><p>只保留”有实战威胁”的条目，不凑数：</p>
+<p><strong>保留</strong>：未认证&#x2F;低门槛认证的 RCE、命令注入、反序列化、认证绕过、严重越权、影响数据 SQL 注入、高危文件上传&#x2F;读取、可打内网的 SSRF。</p>
+<p><strong>降低优先级或转专项复核</strong>：纯版本信息、需要用户交互、DoS 或特定场景利用等条目，应核对实际影响后决定。不得仅按漏洞类型排除，也不能把“本轮不优先通报”等同于“不受影响”。</p>
+<h2 id="六、产出与闭环"><a href="#六、产出与闭环" class="headerlink" title="六、产出与闭环"></a>六、产出与闭环</h2><p>最终形成三件东西：</p>
+<ol>
+<li><strong>Markdown 情报清单</strong>（结构化：组件&#x2F;时间&#x2F;CVSS&#x2F;摘要&#x2F;链接），可直接进日报；</li>
+<li><strong>Word&#x2F;PDF 通报</strong>（面向客户的正式版本）；</li>
+<li><strong>留档数据</strong>：原始查询结果 + 匹配脚本 + 匹配结果，保证每条结论可溯源回查。</li>
+</ol>
+<p>流程闭环：<strong>情报收集 → 影响判断 → 结果报送</strong>。第二天复盘时能回答”这条 CVE 为什么报&#x2F;为什么不报”，这才是情报工作的可信度来源。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><ul>
+<li>情报流水线的难点不在”拉数据”，在<strong>去噪</strong>和<strong>人工复核</strong>；</li>
+<li>时区和分页是两个最隐蔽的技术坑；</li>
+<li><strong>命中数不是 KPI，结论准确才是</strong>——30 条命中核对后”不受影响”的结论，比 30 条原文粘贴有价值得多。</li>
+</ul>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li><a target="_blank" rel="noopener" href="https://nvd.nist.gov/developers/vulnerabilities">NVD 漏洞 API 文档</a></li>
+<li><a target="_blank" rel="noopener" href="https://nvd.nist.gov/developers/start-here">NVD API 使用建议</a></li>
+</ul>
+
+        </div>
+
+        
+            <section class="post-copyright">
+                
+                    <p class="copyright-item">
+                        <span>Author:</span>
+                        <span>rowen</span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>Permalink:</span>
+                        <span><a href="https://forkmmat.github.io/2026/10/10/03-Python%E6%BC%8F%E6%B4%9E%E6%83%85%E6%8A%A5%E6%B5%81%E6%B0%B4%E7%BA%BF-%E7%BB%84%E4%BB%B6%E6%B8%85%E5%8D%95%E4%B8%8ECVE%E4%BA%A4%E5%8F%89%E5%8C%B9%E9%85%8D/">https://forkmmat.github.io/2026/10/10/03-Python%E6%BC%8F%E6%B4%9E%E6%83%85%E6%8A%A5%E6%B5%81%E6%B0%B4%E7%BA%BF-%E7%BB%84%E4%BB%B6%E6%B8%85%E5%8D%95%E4%B8%8ECVE%E4%BA%A4%E5%8F%89%E5%8C%B9%E9%85%8D/</a></span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>License:</span>
+                        <span>Copyright (c) 2019 <a target="_blank" rel="noopener" href="http://creativecommons.org/licenses/by-nc/4.0/">CC-BY-NC-4.0</a> LICENSE</span>
+                    </p>
+                
+                
+                     <p class="copyright-item">
+                         <span>Slogan:</span>
+                         <span>Do you believe in <strong>DESTINY</strong>?</span>
+                     </p>
+                
+
+            </section>
+        
+        <section class="post-tags">
+            <div>
+                <span>Tag(s):</span>
+                <span class="tag">
+                    
+                    
+                        <a href="/tags/Python/"># Python</a>
+                    
+                        <a href="/tags/NVD/"># NVD</a>
+                    
+                        <a href="/tags/CVE/"># CVE</a>
+                    
+                        <a href="/tags/%E6%BC%8F%E6%B4%9E%E6%83%85%E6%8A%A5/"># 漏洞情报</a>
+                    
+                        <a href="/tags/%E8%87%AA%E5%8A%A8%E5%8C%96/"># 自动化</a>
+                    
+                        
+                </span>
+            </div>
+            <div>
+                <a href="javascript:window.history.back();">back</a>
+                <span>· </span>
+                <a href="/">home</a>
+            </div>
+        </section>
+        <section class="post-nav">
+            
+                <a class="prev" rel="prev" href="/2026/10/10/04-Shiro-RememberMe%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96-%E4%BB%8E%E5%8E%9F%E7%90%86%E5%88%B0%E5%91%8A%E8%AD%A6%E7%A0%94%E5%88%A4/">Apache Shiro RememberMe 反序列化：从原理到告警研判证据链</a>
+            
+            
+            <a class="next" rel="next" href="/2026/10/10/02-GoAccess%E6%8F%90%E5%8F%96XFF%E7%9C%9F%E5%AE%9E%E6%BA%90IP%E8%B8%A9%E5%9D%91%E8%AE%B0/">GoAccess 提取 X-Forwarded-For 真实源 IP 踩坑记：%x 不是 XFF</a>
+            
+        </section>
+<script src="https://giscus.app/client.js"
+        data-repo="forkmmat/forkmmat.github.io"
+        data-repo-id="R_kgDOO0OA0g"
+        data-category="General"
+        data-category-id="DIC_kwDOO0OA0s4CtD6Y"
+        data-mapping="title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="zh-CN"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+</script>
+
+    </article>
+</div>
+
+            </div>
+            <footer id="footer" class="footer">
+    <div class="copyright">
+        <span>© rowen | Powered by <a href="https://hexo.io" target="_blank">Hexo</a> & <a href="https://github.com/Siricee/hexo-theme-Chic" target="_blank">Chic</a></span>
+    </div>
+</footer>
+
+    </div>
+</body>
+
+</html>
